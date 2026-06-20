@@ -80,7 +80,40 @@ La plage d'exposition naturelle est clampée à `[380, 780]` dans le code.
 - Peut être posé dans un Prism Stand pour l'attunement
 - Stack de 64
 
-### Étape 2 — Attunement via Prism Stand
+### Étape 2a — Attunement via faisceau + verre teinté (Early game, rapide)
+
+La méthode la plus accessible dès le début : tirer un faisceau à travers du **verre teinté** vers un Prism Stand contenant un Raw Crystal.
+
+```
+[Light Emitter] ──► [Verre teinté] ──► [Prism Stand (Raw Crystal)] → Gem
+   (beam blanc)      (filtre grossier)    (absorbe la longueur d'onde)
+```
+
+**Le verre teinté filtre le beam vers une plage approximative :**
+
+| Couleur verre | Longueur d'onde produite | Variation aléatoire |
+|---|---|---|
+| Rouge | ~700 nm | ±40 nm |
+| Orange | ~630 nm | ±40 nm |
+| Jaune | ~575 nm | ±40 nm |
+| Vert | ~530 nm | ±40 nm |
+| Cyan | ~495 nm | ±40 nm |
+| Bleu | ~465 nm | ±40 nm |
+| Violet | ~415 nm | ±40 nm |
+| Blanc / incolore | ~590 nm | ±60 nm |
+| Noir | Bloque le beam | — |
+
+**Caractéristiques :**
+- Durée d'attunement : **1 minute** (bien plus rapide que le soleil)
+- La variation `±40 nm` est intentionnelle : la gemme obtenue est **rarement à la valeur optimale d'une machine**
+- C'est la méthode de démarrage — fonctionnelle mais imprécise
+- Plusieurs panneaux de verre en série n'affinent pas davantage (le premier verre fixe la plage)
+
+> **Design intent** : le joueur obtient une gemme verte à ~548 nm alors que la Photosynthesis Accelerator est optimale à 530 nm. La machine fonctionne à 70% d'efficacité. Il a envie de raffiner sa gemme.
+
+---
+
+### Étape 2b — Attunement via lumière naturelle (Early game, lent mais plus précis)
 
 Le `Prism Stand` détecte la lumière ambiente et attribue une longueur d'onde au Raw Crystal.
 
@@ -220,6 +253,64 @@ Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
 - Intensité visuelle proportionnelle au débit (PH/tick)
 - Effets de scintillement si le débit fluctue (ex: Solar Collector en fin de journée)
 - Particules d'impact là où le beam touche un bloc solide
+
+---
+
+## Système d'efficacité des machines
+
+Chaque machine réceptrice a une **longueur d'onde optimale**. L'efficacité dépend de la distance entre la longueur d'onde du beam reçu et cet optimum.
+
+### Formule d'efficacité
+
+```
+delta = |wavelength_beam - wavelength_optimale|
+
+efficacité =
+  delta ≤ 5 nm   → 100% (parfait)
+  delta ≤ 20 nm  →  80%
+  delta ≤ 50 nm  →  55%
+  delta ≤ 100 nm →  30%
+  delta > 100 nm →   0% (machine inactive, trop loin de l'optimum)
+```
+
+L'efficacité affecte :
+- La **vitesse** de traitement (Crystal Furnace, Photosynthesis Accelerator…)
+- Le **rendement** (chance de doubler les outputs)
+- La **consommation** (une machine sous-optimale consomme autant mais produit moins)
+
+### Longueurs d'onde optimales par machine
+
+| Machine | Optimum | Plage fonctionnelle | Effet à 100% |
+|---|---|---|---|
+| Crystal Furnace | 700 nm | 600–780 nm | Cuisson 3× + 10% ore doubling |
+| Photosynthesis Accelerator | 530 nm | 430–630 nm | Croissance 3× + bonemeal aura |
+| Spectral Refiner | Toute longueur visible | 380–780 nm | 1 nm/s (pas d'optimum unique) |
+| Light Battery (charge) | Toute longueur visible | 380–780 nm | Absorption maximale |
+| UV Sterilizer | 340 nm | 300–380 nm | 2 dégâts/s rayon 5 |
+| Thermal Forge | 900 nm | 780–1400 nm | Cuisson 5× + alloys |
+| Spectral Transmitter | 1200 nm | 1400+ nm | Transmission sans perte |
+| X-Ray Scanner | 0.5 nm | < 10 nm | Reveal complet |
+
+### Indicateur visuel d'efficacité
+
+Le GUI de chaque machine affiche :
+- La longueur d'onde reçue (en nm)
+- La longueur d'onde optimale (en nm)
+- Un indicateur coloré :
+  - **Vert** : efficacité ≥ 80%
+  - **Jaune** : efficacité 30–79%
+  - **Rouge** : efficacité < 30%
+  - **Gris** : machine inactive (hors plage)
+
+### Boucle de progression induite
+
+```
+Verre teinté → gemme ≈ approx. → machine à ~55% efficacité
+                                          ↓
+                             Joueur veut mieux → Spectral Refiner
+                                          ↓
+                             gemme à ±5 nm de l'optimum → 100% efficacité
+```
 
 ---
 
