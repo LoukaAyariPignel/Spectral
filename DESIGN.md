@@ -260,25 +260,76 @@ Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
 
 Chaque machine a une **longueur d'onde optimale exacte**. La machine n'est à **100% que lorsque la longueur d'onde du beam correspond exactement** à cet optimum. La moindre déviation réduit l'efficacité.
 
+### Les deux paramètres d'un beam
+
+Chaque faisceau porte deux valeurs indépendantes :
+- **Longueur d'onde** `λ` (nm) — détermine quelle machine peut l'utiliser
+- **Qualité** `q` (0.0 → 1.0) — mesure la cohérence/pureté du beam
+
 ### Formule d'efficacité
 
 ```
-delta = |wavelength_beam - wavelength_optimale|
+delta = |λ_beam - λ_optimale|
 
-efficacité =
-  delta = 0.0 nm  → 100% (parfait — uniquement atteignable avec un refiner de haut tier)
-  delta ≤ 1 nm    →  90%
-  delta ≤ 3 nm    →  75%
-  delta ≤ 10 nm   →  50%
-  delta ≤ 30 nm   →  25%
-  delta ≤ 80 nm   →  10% (machine démarre à peine)
-  delta > 80 nm   →   0% (machine inactive)
+correspondance_λ =
+  delta = 0.0 nm  → 1.00
+  delta ≤ 1 nm    → 0.90
+  delta ≤ 3 nm    → 0.75
+  delta ≤ 10 nm   → 0.50
+  delta ≤ 30 nm   → 0.25
+  delta ≤ 80 nm   → 0.10
+  delta > 80 nm   → 0.00 (machine inactive)
+
+efficacité_finale = correspondance_λ × qualité
 ```
+
+**Exemple :** beam à 533 nm (delta 3 nm sur optimum 530) avec qualité 0.85 → `0.75 × 0.85 = 63.75%`
 
 L'efficacité affecte :
 - La **vitesse** de traitement (Crystal Furnace, Photosynthesis Accelerator…)
 - Le **rendement** (chance de doubler les outputs)
-- La **consommation** : une machine à 50% d'efficacité consomme autant de PH mais produit 2× moins
+- La **consommation** : une machine consomme toujours le même PH/tick mais produit proportionnellement moins
+
+### Qualité transmise par la gemme
+
+La qualité d'un beam est fixée par la gemme dans le Prism Stand qui le filtre :
+
+| Origine de la gemme | Qualité transmise |
+|---|---|
+| Attunement verre teinté (±40 nm) | 0.50 |
+| Attunement solaire naturel (±8 nm) | 0.70 |
+| Spectral Refiner Tier 1 (pas 5.0 nm) | 0.75 |
+| Spectral Refiner Tier 2 (pas 1.0 nm) | 0.85 |
+| Spectral Refiner Tier 3 (pas 0.1 nm) | 0.95 |
+| Spectral Refiner Tier 4 (pas 0.01 nm) | 1.00 |
+
+Un beam non filtré (sorti directement de l'émetteur) a une qualité de `1.0` mais une longueur d'onde neutre non optimale.
+
+### Fusion naturelle de deux beams
+
+Quand deux beams se croisent dans le monde, ils **fusionnent automatiquement** sans bloc dédié.
+
+```
+λ_résultat        = (λ1 + λ2) / 2
+cohérence         = max(0.0,  1.0 - |λ1 - λ2| / 400)
+qualité_résultat  = ((q1 + q2) / 2) × cohérence
+débit_résultat    = débit1 + débit2  (les PH s'additionnent toujours)
+```
+
+**Pourquoi la cohérence ?**  
+Deux longueurs d'onde très différentes mélangées produisent une lumière incohérente (comme mélanger des couleurs complémentaires → gris). Plus les λ sont proches, plus la fusion est propre.
+
+**Exemples :**
+
+| Beam 1 | Beam 2 | λ résultat | Cohérence | Qualité résultat |
+|---|---|---|---|---|
+| 530 nm, q=1.0 | 530 nm, q=1.0 | 530 nm | 1.00 | 1.00 ✓ |
+| 530 nm, q=0.5 | 530 nm, q=0.5 | 530 nm | 1.00 | 0.50 |
+| 480 nm, q=1.0 | 580 nm, q=1.0 | 530 nm | 0.75 | 0.75 |
+| 400 nm, q=1.0 | 660 nm, q=1.0 | 530 nm | 0.35 | 0.35 ✗ |
+| 400 nm, q=0.5 | 660 nm, q=0.5 | 530 nm | 0.35 | 0.175 ✗✗ |
+
+> **Règle** : on ne peut pas "tricher" en combinant deux beams éloignés pour tomber pile sur un optimum — la cohérence s'effondre. En revanche, fusionner deux beams identiques de haute qualité est intéressant pour doubler le débit sans pénalité.
 
 ### Longueurs d'onde optimales par machine
 
