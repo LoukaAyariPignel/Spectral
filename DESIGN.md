@@ -956,19 +956,237 @@ END GAME
 | GUI | `AbstractContainerScreen` + `MenuType` |
 | Datagen | NeoForge `DataGenerator` |
 
-### Équivalences Fabric → NeoForge
+### Version cible
+
+**Minecraft 1.21.1 — NeoForge 21.1.x**
+
+| Critère | 1.21.1 | 1.21.4 | 1.21.5 |
+|---|---|---|---|
+| Stabilité NeoForge | ★★★★★ | ★★★★☆ | ★★★☆☆ |
+| Documentation / tutoriels | Très abondante | Bonne | Limitée |
+| Écosystème mods compatibles | Très large | Large | Restreint |
+| Data Components | ✓ Mature | ✓ Mature | ✓ Mature |
+
+> **Pourquoi 1.21.1 ?** C'est la version NeoForge la plus documentée, avec le plus grand écosystème de mods de référence. Data Components (utilisé pour la gemme) y est pleinement supporté. Migration vers 1.21.4+ possible facilement une fois le core stable.
+
+---
+
+### Migration Fabric → NeoForge : détail complet
+
+#### 1. Build system
+
+**Supprimer :**
+- Plugin `fabric-loom` dans `build.gradle`
+- Toutes les dépendances Fabric (`fabric-loader`, `fabric-api`, `yarn`)
+
+**Remplacer par (build.gradle) :**
+```groovy
+plugins {
+    id 'net.neoforged.gradle.userdev' version '7.0.x'
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:21.1.x"
+}
+```
+
+**gradle.properties :**
+```properties
+# Supprimer
+fabric_version=...
+yarn_mappings=...
+
+# Ajouter
+neo_version=21.1.x           # version NeoForge exacte
+minecraft_version=1.21.1
+```
+
+---
+
+#### 2. Métadonnées du mod
+
+**Supprimer :**
+- `src/main/resources/fabric.mod.json`
+- `src/main/resources/gemmology.mixins.json` (le mixin était vide de toute façon)
+
+**Créer `src/main/resources/META-INF/neoforge.mods.toml` :**
+```toml
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "CC0-1.0"
+
+[[mods]]
+    modId = "gemmology"
+    version = "1.0.0"
+    displayName = "Gemmology"
+    description = "Light-based energy mod."
+
+[[dependencies.gemmology]]
+    modId = "neoforge"
+    type = "required"
+    versionRange = "[21.1,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.gemmology]]
+    modId = "minecraft"
+    type = "required"
+    versionRange = "[1.21.1,1.22)"
+    ordering = "NONE"
+    side = "BOTH"
+```
+
+**Créer `src/main/resources/pack.mcmeta` :**
+```json
+{
+  "pack": {
+    "description": "Gemmology resources",
+    "pack_format": 34
+  }
+}
+```
+
+---
+
+#### 3. Classe principale (`Gemmology.java`)
+
+**Fabric :**
+```java
+public class Gemmology implements ModInitializer {
+    @Override
+    public void onInitialize() {
+        ModItems.registerModItems();
+        ModComponents.initialize();
+    }
+}
+```
+
+**NeoForge :**
+```java
+@Mod(Gemmology.MOD_ID)
+public class Gemmology {
+    public static final String MOD_ID = "gemmology";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    public Gemmology(IEventBus modEventBus) {
+        ModItems.ITEMS.register(modEventBus);
+        ModComponents.COMPONENTS.register(modEventBus);
+        ModBlocks.BLOCKS.register(modEventBus);
+
+        modEventBus.addListener(this::commonSetup);
+    }
+
+    private void commonSetup(FMLCommonSetupEvent event) {
+        LOGGER.info("Gemmology initialized.");
+    }
+}
+```
+
+---
+
+#### 4. Registre des items (`ModItems.java`)
+
+**Fabric :**
+```java
+public static final Item GEM = Registry.register(
+    Registries.ITEM,
+    Identifier.of(MOD_ID, "gem"),
+    new GemItem(new Item.Settings())
+);
+```
+
+**NeoForge :**
+```java
+public static final DeferredRegister<Item> ITEMS =
+    DeferredRegister.create(Registries.ITEM, Gemmology.MOD_ID);
+
+public static final DeferredHolder<Item, GemItem> GEM =
+    ITEMS.register("gem", () -> new GemItem(new Item.Properties()));
+```
+
+Tab créatif — **Fabric** (`ItemGroupEvents`) → **NeoForge** (`BuildCreativeModeTabContentsEvent`) :
+```java
+// Dans ModEvents.java
+@SubscribeEvent
+public static void onBuildContents(BuildCreativeModeTabContentsEvent event) {
+    if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
+        event.accept(ModItems.GEM);
+    }
+}
+```
+
+---
+
+#### 5. Composant de données (`ModComponents.java`)
+
+**Fabric :**
+```java
+public static final ComponentType<Float> WAVE_LENGTH = Registry.register(
+    Registries.DATA_COMPONENT_TYPE,
+    Identifier.of(MOD_ID, "wave_length"),
+    ComponentType.<Float>builder().codec(Codec.FLOAT).build()
+);
+```
+
+**NeoForge :**
+```java
+public static final DeferredRegister<DataComponentType<?>> COMPONENTS =
+    DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Gemmology.MOD_ID);
+
+public static final DeferredHolder<DataComponentType<?>, DataComponentType<Float>> WAVE_LENGTH =
+    COMPONENTS.register("wave_length",
+        () -> DataComponentType.<Float>builder().persistent(Codec.FLOAT).build()
+    );
+```
+
+---
+
+#### 6. `GemItem.java`
+
+Changements mineurs :
 
 | Fabric | NeoForge |
 |---|---|
-| `fabric.mod.json` | `META-INF/neoforge.mods.toml` |
-| `ModInitializer.onInitialize()` | `@Mod` + `@EventBusSubscriber` |
-| `ClientModInitializer` | `FMLClientSetupEvent` |
-| `Registry.register()` | `DeferredRegister<T>.register()` |
-| `ColorProviderRegistry.ITEM.register()` | `RegisterColorHandlersEvent.Item` |
-| `ItemGroupEvents.modifyEntriesEvent()` | `BuildCreativeModeTabContentsEvent` |
-| `BlockApiLookup` (énergie Fabric) | `IEnergyStorage` (Capabilities NeoForge) |
-| TR Energy (optionnel) | **FE natif** |
-| `WorldRenderEvents` | `RenderLevelStageEvent` |
+| `onCraft(ItemStack, World)` | `onCraftedBy(ItemStack, Level, Player)` |
+| `appendTooltip(stack, ctx, list, type)` | `appendHoverText(stack, ctx, list, type)` |
+| `TooltipContext` | `Item.TooltipContext` |
+| `World world` | `Level level` |
+| `world.isClient()` | `level.isClientSide()` |
+
+---
+
+#### 7. Client — couleur des gemmes (`GemmologyClient.java`)
+
+**Fabric :**
+```java
+public class GemmologyClient implements ClientModInitializer {
+    @Override
+    public void onInitializeClient() {
+        ColorProviderRegistry.ITEM.register((stack, layer) -> { ... }, ModItems.GEM);
+    }
+}
+```
+
+**NeoForge :**
+```java
+@EventBusSubscriber(modid = Gemmology.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
+public class GemmologyClient {
+    @SubscribeEvent
+    public static void onRegisterItemColors(RegisterColorHandlersEvent.Item event) {
+        event.register((stack, layer) -> { ... }, ModItems.GEM.get());
+    }
+}
+```
+
+---
+
+#### 8. Ce qui reste identique
+
+- Logique interne de `GemItem` (wavelength, tooltip texte)
+- Algorithme `getColorFromWavelength()` — 100% Java pur, aucun changement
+- DataComponents codec (`Codec.FLOAT`) — identique
+- Structure des packages
+- Datagen (providers similaires, légères différences d'API)
 
 ### Packages prévus
 
