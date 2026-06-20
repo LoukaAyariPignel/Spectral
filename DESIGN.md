@@ -517,11 +517,11 @@ Le débit (PH/tick) d'un beam dépend de la source qui alimente le Light Emitter
 
 **Recette craft :**
 ```
-[Verre]   [Verre]   [Verre]
-[Quartz]  [Gemme]   [Quartz]    → 1 Solar Collector
-[Fer]     [Fer]     [Fer]
+[Verre]   [Verre]        [Verre]
+[Cuivre]  [Raw Crystal]  [Cuivre]    → 1 Solar Collector
+[Fer]     [Redstone]     [Fer]
 ```
-(Gemme de n'importe quelle longueur d'onde — elle sert de capteur)
+(Le Raw Crystal agit comme capteur photonique brut — il n'a pas besoin d'être accordé)
 
 ---
 
@@ -620,10 +620,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Pierre]  [Fer]     [Pierre]
-[Fer]     [Quartz]  [Fer]      → 1 Thermal Generator
-[Pierre]  [Redstone][Pierre]
+[Pierre Lisse] [Fer]          [Pierre Lisse]
+[Fer]          [Raw Crystal]  [Fer]           → 1 Thermal Generator
+[Pierre Lisse] [Redstone]     [Pierre Lisse]
 ```
+(Le Raw Crystal converti la chaleur de combustion en Photons)
 
 ---
 
@@ -642,10 +643,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Fer]       [Quartz]    [Fer]
-[Redstone]  [Gemme]     [Redstone]    → 1 Light Emitter
-[Fer]       [Quartz]    [Fer]
+[Quartz]  [Verre]    [Quartz]
+[Fer]     [Gemme]    [Fer]       → 1 Light Emitter
+[Quartz]  [Redstone] [Quartz]
 ```
+(La gemme est le cœur émetteur — la longueur d'onde initiale du beam sera celle de la gemme si une est insérée, sinon 600 nm neutre)
 
 ---
 
@@ -668,10 +670,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Verre]   [Verre]   [Verre]
-[Quartz]  [Air]     [Quartz]    → 1 Prism Stand
-[Quartz]  [Fer]     [Quartz]
+[Verre]  [Raw Crystal] [Verre]
+[Quartz] [Air]         [Quartz]    → 1 Prism Stand
+[Pierre] [Fer]         [Pierre]
 ```
+(Le Raw Crystal est le foyer optique — c'est lui qui capte la lumière ambiente)
 
 ---
 
@@ -708,9 +711,10 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 **Recette craft :**
 ```
 [Or]      [Redstone] [Or]
-[Redstone][Diamant]  [Redstone]    → 1 Energy Converter
+[Diamant] [Gemme]    [Diamant]    → 1 Energy Converter
 [Or]      [Redstone] [Or]
 ```
+(La gemme est le transducteur entre l'énergie électrique et les Photons)
 
 **Dépendance optionnelle :** `team_reborn_energy` — si absent au runtime, le bloc est enregistré mais inactif (pas de crash). La recette reste craftable mais le bloc ne reçoit pas d'énergie externe.
 
@@ -727,10 +731,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Fer]       [Quartz]    [Fer]
-[Verre]     [Gemme]     [Verre]    → 1 Light Battery
-[Fer]       [Redstone]  [Fer]
+[Cuivre] [Verre]    [Cuivre]
+[Gemme]  [Quartz]   [Gemme]     → 1 Light Battery
+[Cuivre] [Redstone] [Cuivre]
 ```
+(Deux gemmes encadrent le cœur de quartz — elles absorbent et restituent les Photons)
 
 ---
 
@@ -750,9 +755,9 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Pierre]  [Pierre]  [Pierre]
-[Pierre]  [Air]     [Pierre]    → 1 Crystal Furnace
-[Pierre]  [Quartz]  [Pierre]
+[Briques de Pierre] [Verre]  [Briques de Pierre]
+[Fer]               [Gemme]  [Fer]                → 1 Crystal Furnace
+[Briques de Pierre] [Quartz] [Briques de Pierre]
 ```
 
 ---
@@ -774,11 +779,10 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Verre]     [Feuilles]  [Verre]
-[Fer]       [Gemme]     [Fer]       → 1 Photosynthesis Accelerator
-[Fer]       [Terre]     [Fer]
+[Verre]   [Poudre d'Os] [Verre]
+[Cuivre]  [Gemme]       [Cuivre]    → 1 Photosynthesis Accelerator
+[Fer]     [Quartz]      [Fer]
 ```
-(Gemme verte ~530 nm recommandée dans la recette mais pas obligatoire)
 
 ---
 
@@ -801,10 +805,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Or]      [Quartz]  [Or]
-[Quartz]  [Diamant] [Quartz]    → 1 Spectral Refiner
-[Fer]     [Redstone][Fer]
+[Or]              [Améthyste]  [Or]
+[Dampening Glass] [Diamant]    [Dampening Glass]    → 1 Spectral Refiner (Tier 1)
+[Fer]             [Redstone]   [Fer]
 ```
+(Le Dampening Glass assure la stabilité optique nécessaire à la précision du raffinement)
 
 ---
 
@@ -838,10 +843,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette Tier 1 :**
 ```
-[Air]   [Verre]  [Air]
-[Fer]   [Quartz] [Fer]    → 1 Basic Beam Splitter
-[Air]   [Verre]  [Air]
+[Verre]           [Raw Crystal]    [Verre]
+[Dampening Glass] [Quartz]         [Dampening Glass]    → 1 Basic Beam Splitter
+[Verre]           [Raw Crystal]    [Verre]
 ```
+(Le Raw Crystal divise le beam, le Dampening Glass évite le bruit introduit par la division)
 
 **Upgrade :** Chaque tier s'obtient en upgrageant le tier précédent dans une station dédiée (pas de recette from scratch).
 
@@ -866,9 +872,9 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Fer]      [Verre]    [Fer]
-[Redstone] [Quartz]   [Redstone]    → 1 Light Gate
-[Fer]      [Verre]    [Fer]
+[Fer]      [Dampening Glass] [Fer]
+[Redstone] [Or]              [Redstone]    → 1 Light Gate
+[Fer]      [Dampening Glass] [Fer]
 ```
 
 ---
@@ -926,10 +932,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft (4 câbles) :**
 ```
-[Or]           [Quartz Nether]  [Or]
-[Gemme (≥T1)] [Blaze Rod]      [Gemme (≥T1)]    → 4 Fiber Optic Cable
-[Or]           [Quartz Nether]  [Or]
+[Or]          [Quartz Nether] [Or]
+[Raw Crystal] [Blaze Rod]     [Raw Crystal]    → 4 Fiber Optic Cable
+[Or]          [Quartz Nether] [Or]
 ```
+(Le Raw Crystal fondu par la Blaze Rod forme le cœur de la fibre ; l'or assure la gaine conductrice)
 
 **Rendu visuel :**
 - Câble fin (modèle type pipe) avec une teinte colorée selon la λ du beam qu'il transporte
@@ -964,10 +971,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Fer]      [Quartz]   [Fer]
-[Verre]    [Redstone] [Verre]    → 1 Wavelength Sensor
-[Fer]      [Quartz]   [Fer]
+[Dampening Glass] [Or]           [Dampening Glass]
+[Quartz]          [Redstone]     [Quartz]           → 1 Wavelength Sensor
+[Fer]             [Quartz Nether][Fer]
 ```
+(Le Dampening Glass lit le beam sans le perturber ; le Quartz Nether amplifie le signal redstone)
 
 ---
 
@@ -983,11 +991,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Verre]  [Air]    [Verre]
-[Gemme]  [Fer]    [Gemme]    → 1 Spectral Goggles
-[Fer]    [Cuir]   [Fer]
+[Or]    [Cuir]           [Or]
+[Gemme] [Fiber Optic Cable] [Gemme]    → 1 Spectral Goggles
+[Or]    [Verre]          [Or]
 ```
-(Les deux gemmes doivent avoir des longueurs d'onde différentes — une rouge ~700 nm et une bleue ~450 nm)
+(Les deux gemmes sont les oculaires — une rouge ~700 nm et une bleue ~450 nm pour couvrir tout le spectre visible. La fibre optique relie les deux lentilles pour transmettre les données de beam en overlay)
 
 ---
 
