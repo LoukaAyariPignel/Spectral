@@ -277,7 +277,7 @@ Exemple : trajet de 20 blocs, couverture totale en Dampening Glass
 | Air | +0.005/bloc | — |
 | Verre transparent | 0 | Traverse sans modification |
 | Verre teinté (vanilla) | 0 | Décale λ de ±30 nm |
-| **Dampening Glass** | **0** | **Traverse sans modification de λ** |
+| **Dampening Glass** | **+0.0015/bloc (−70%)** | **Traverse sans modification de λ** |
 | **Fiber Optic Cable** | **0** (tout le trajet) | **Routage libre, pas de line-of-sight** |
 | Eau | +0.005/bloc | −5 PH/bloc |
 | Prism Stand (avec gemme) | 0 | Remplace λ, −15% débit |
@@ -308,9 +308,9 @@ Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
 
 ## Système d'efficacité des machines
 
-Chaque machine a une **longueur d'onde optimale exacte**. La machine n'est à **100% que lorsque la longueur d'onde du beam correspond exactement** à cet optimum. La moindre déviation réduit l'efficacité.
+Chaque machine a une **longueur d'onde optimale exacte**. La machine n'est à **100% que si la longueur d'onde du beam correspond exactement à l'optimum ET que le bruit est nul**. Le bruit rend la longueur d'onde du beam imprécise à la réception — même une gemme parfaite ne suffit pas sans fibre optique.
 
-### Les deux paramètres d'un beam
+### Les paramètres d'un beam
 
 Chaque faisceau porte trois valeurs indépendantes :
 - **Longueur d'onde** `λ` (nm) — détermine quelle machine peut l'utiliser
@@ -319,22 +319,39 @@ Chaque faisceau porte trois valeurs indépendantes :
 
 ### Formule d'efficacité
 
+Le bruit s'ajoute au delta de longueur d'onde effectif reçu par la machine. Même avec une gemme parfaitement accordée, du bruit dans le trajet dégrade la correspondance λ comme si la longueur d'onde était légèrement décalée.
+
 ```
-delta = |λ_beam - λ_optimale|
+delta_effectif = |λ_beam - λ_optimale| + bruit × 50
 
 correspondance_λ =
-  delta = 0.0 nm  → 1.00
-  delta ≤ 1 nm    → 0.90
-  delta ≤ 3 nm    → 0.75
-  delta ≤ 10 nm   → 0.50
-  delta ≤ 30 nm   → 0.25
-  delta ≤ 80 nm   → 0.10
-  delta > 80 nm   → 0.00 (machine inactive)
+  delta_effectif = 0.0 nm  → 1.00   ← impossible avec bruit > 0
+  delta_effectif ≤ 1 nm    → 0.90
+  delta_effectif ≤ 3 nm    → 0.75
+  delta_effectif ≤ 10 nm   → 0.50
+  delta_effectif ≤ 30 nm   → 0.25
+  delta_effectif ≤ 80 nm   → 0.10
+  delta_effectif > 80 nm   → 0.00 (machine inactive)
 
-efficacité_finale = correspondance_λ × qualité × (1 - bruit)
+efficacité_finale = correspondance_λ × qualité
 ```
 
-**Exemple :** beam à 533 nm (delta 3 nm sur optimum 530), qualité 0.85, bruit 0.10 → `0.75 × 0.85 × 0.90 = 57.4%`
+**Conséquence directe :** atteindre `correspondance_λ = 1.00` (delta_effectif = 0) n'est possible que si `bruit = 0`, c'est-à-dire uniquement avec la **Fiber Optic Cable** sur l'intégralité du trajet.
+
+**Exemples avec une gemme parfaite (λ = optimum exact) :**
+
+| Trajet | Bruit | delta_effectif | correspondance_λ |
+|---|---|---|---|
+| Fibre optique | 0.000 | 0.0 nm | 1.00 ✓ |
+| 5 blocs air | 0.025 | 1.25 nm | 0.90 |
+| 10 blocs air | 0.050 | 2.5 nm | 0.75 |
+| 20 blocs air | 0.100 | 5.0 nm | 0.75 |
+| 32 blocs air | 0.160 | 8.0 nm | 0.50 |
+| 20 blocs air + Dampening Glass total | 0.030 | 1.5 nm | 0.90 |
+
+**Exemple complet :** gemme à 533 nm (delta réel 3 nm sur optimum 530), qualité 0.85, 20 blocs d'air (bruit 0.10) :
+`delta_effectif = 3 + 0.10 × 50 = 8 nm → correspondance 0.50`
+`efficacité = 0.50 × 0.85 = 42.5%`
 
 L'efficacité affecte :
 - La **vitesse** de traitement (Crystal Furnace, Photosynthesis Accelerator…)
@@ -903,11 +920,13 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 | Dampening Glass | 0 par bloc couvert | Ligne droite | Bas |
 | **Fiber Optic Cable** | **0 total** | **Libre (tout angle)** | **Élevé** |
 
+**Progression :** mid-game — nécessite le Nether (Blaze Rod, Gold, Nether Quartz) et une gemme raffinée (Spectral Refiner Tier 1 minimum).
+
 **Recette craft (4 câbles) :**
 ```
-[Verre]        [Quartz]         [Verre]
-[Gemme (≥T1)] [Cristal Nether] [Gemme (≥T1)]    → 4 Fiber Optic Cable
-[Verre]        [Quartz]         [Verre]
+[Or]           [Quartz Nether]  [Or]
+[Gemme (≥T1)] [Blaze Rod]      [Gemme (≥T1)]    → 4 Fiber Optic Cable
+[Or]           [Quartz Nether]  [Or]
 ```
 
 **Rendu visuel :**
