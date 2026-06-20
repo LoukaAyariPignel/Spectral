@@ -258,7 +258,7 @@ Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
 
 ## Système d'efficacité des machines
 
-Chaque machine réceptrice a une **longueur d'onde optimale**. L'efficacité dépend de la distance entre la longueur d'onde du beam reçu et cet optimum.
+Chaque machine a une **longueur d'onde optimale exacte**. La machine n'est à **100% que lorsque la longueur d'onde du beam correspond exactement** à cet optimum. La moindre déviation réduit l'efficacité.
 
 ### Formule d'efficacité
 
@@ -266,50 +266,101 @@ Chaque machine réceptrice a une **longueur d'onde optimale**. L'efficacité dé
 delta = |wavelength_beam - wavelength_optimale|
 
 efficacité =
-  delta ≤ 5 nm   → 100% (parfait)
-  delta ≤ 20 nm  →  80%
-  delta ≤ 50 nm  →  55%
-  delta ≤ 100 nm →  30%
-  delta > 100 nm →   0% (machine inactive, trop loin de l'optimum)
+  delta = 0.0 nm  → 100% (parfait — uniquement atteignable avec un refiner de haut tier)
+  delta ≤ 1 nm    →  90%
+  delta ≤ 3 nm    →  75%
+  delta ≤ 10 nm   →  50%
+  delta ≤ 30 nm   →  25%
+  delta ≤ 80 nm   →  10% (machine démarre à peine)
+  delta > 80 nm   →   0% (machine inactive)
 ```
 
 L'efficacité affecte :
 - La **vitesse** de traitement (Crystal Furnace, Photosynthesis Accelerator…)
 - Le **rendement** (chance de doubler les outputs)
-- La **consommation** (une machine sous-optimale consomme autant mais produit moins)
+- La **consommation** : une machine à 50% d'efficacité consomme autant de PH mais produit 2× moins
 
 ### Longueurs d'onde optimales par machine
 
-| Machine | Optimum | Plage fonctionnelle | Effet à 100% |
+| Machine | Optimum exact | Plage active (>0%) | Effet à 100% |
 |---|---|---|---|
-| Crystal Furnace | 700 nm | 600–780 nm | Cuisson 3× + 10% ore doubling |
-| Photosynthesis Accelerator | 530 nm | 430–630 nm | Croissance 3× + bonemeal aura |
-| Spectral Refiner | Toute longueur visible | 380–780 nm | 1 nm/s (pas d'optimum unique) |
-| Light Battery (charge) | Toute longueur visible | 380–780 nm | Absorption maximale |
-| UV Sterilizer | 340 nm | 300–380 nm | 2 dégâts/s rayon 5 |
-| Thermal Forge | 900 nm | 780–1400 nm | Cuisson 5× + alloys |
-| Spectral Transmitter | 1200 nm | 1400+ nm | Transmission sans perte |
+| Crystal Furnace | 700.0 nm | 620–780 nm | Cuisson 3× + 10% ore doubling |
+| Photosynthesis Accelerator | 530.0 nm | 450–610 nm | Croissance 3× + bonemeal aura |
+| Light Battery (charge) | Aucun optimum | 380–780 nm | Absorption maximale (pas d'efficacité) |
+| UV Sterilizer | 340.0 nm | 300–380 nm | 2 dégâts/s rayon 5 |
+| Thermal Forge | 900.0 nm | 780–1400 nm | Cuisson 5× + alloys |
+| Spectral Transmitter | 1200.0 nm | 1400+ nm | Transmission sans perte |
 | X-Ray Scanner | 0.5 nm | < 10 nm | Reveal complet |
 
-### Indicateur visuel d'efficacité
+> La Light Battery est la seule machine sans optimum — elle stocke les PH quelle que soit la longueur d'onde.
 
-Le GUI de chaque machine affiche :
-- La longueur d'onde reçue (en nm)
-- La longueur d'onde optimale (en nm)
-- Un indicateur coloré :
-  - **Vert** : efficacité ≥ 80%
-  - **Jaune** : efficacité 30–79%
-  - **Rouge** : efficacité < 30%
-  - **Gris** : machine inactive (hors plage)
+---
 
-### Boucle de progression induite
+## Tiers du Spectral Refiner
+
+Le Spectral Refiner existe en **4 tiers**. Le tier détermine le **pas minimal de changement** (la précision) à chaque opération. Atteindre exactement l'optimum d'une machine nécessite un refiner suffisamment précis.
+
+### Pourquoi le pas compte
+
+L'optimum d'une machine est une valeur exacte (ex: `530.0 nm`). Si ton refiner ne peut changer la longueur d'onde que par paliers de 5 nm, il est impossible d'atteindre exactement 530.0 — tu te retrouves à 530 nm ou 535 nm, jamais pile à la cible si la gemme vient d'une valeur non-multiple de 5.
 
 ```
-Verre teinté → gemme ≈ approx. → machine à ~55% efficacité
-                                          ↓
-                             Joueur veut mieux → Spectral Refiner
-                                          ↓
-                             gemme à ±5 nm de l'optimum → 100% efficacité
+Exemple : gemme à 548.3 nm, cible 530.0 nm
+
+Tier 1 (pas 5.0 nm) :  548.3 → 543.3 → 538.3 → 533.3 → 528.3  ← bloqué, ne peut pas atteindre 530.0
+Tier 2 (pas 1.0 nm) :  548.3 → 547.3 → ... → 531.3 → 530.3 → 529.3  ← dépasse, ne peut pas faire 530.0
+Tier 3 (pas 0.1 nm) :  548.3 → ... → 530.3 → 530.2 → 530.1 → 530.0  ← atteint exactement !
+Tier 4 (pas 0.01 nm) : Permet d'atteindre n'importe quelle valeur à 2 décimales
+```
+
+### Tableau des tiers
+
+| Tier | Nom | Pas (nm/op) | Précision max | Efficacité max atteignable | Recette |
+|---|---|---|---|---|---|
+| 1 | Crude Spectral Refiner | 5.0 nm | ±2.5 nm de la cible | ~75% | Fer + Quartz + gemme quelconque |
+| 2 | Spectral Refiner | 1.0 nm | ±0.5 nm de la cible | ~90% | Or + Diamant + gemme raffinée |
+| 3 | Precision Spectral Refiner | 0.1 nm | ±0.05 nm de la cible | ~99% | Netherite + Amethyste + gemme précise |
+| 4 | Quantum Spectral Refiner | 0.01 nm | ±0.005 nm de la cible | 100% | Matériaux end-game (Photon Alloy, Echo Shard…) |
+
+**Chaque tier est une upgrade du précédent** (on insère le refiner Tier N dans une station d'upgrade pour obtenir le Tier N+1 — pas de recette from scratch).
+
+### Vitesse de raffinage par tier
+
+| Tier | Vitesse | Consommation |
+|---|---|---|
+| 1 | 1 pas / 2 secondes (40 ticks) | 10 PH/tick |
+| 2 | 1 pas / seconde (20 ticks) | 20 PH/tick |
+| 3 | 2 pas / seconde (10 ticks) | 35 PH/tick |
+| 4 | 5 pas / seconde (4 ticks) | 60 PH/tick |
+
+### Indicateur visuel d'efficacité (GUI des machines)
+
+Le GUI de chaque machine affiche :
+- La longueur d'onde reçue (ex: `533.3 nm`)
+- La longueur d'onde optimale (ex: `530.0 nm`)
+- Le delta (ex: `Δ 3.3 nm`)
+- Un indicateur coloré :
+  - **Vert vif** : 100% (delta = 0.0)
+  - **Vert** : ≥ 75%
+  - **Jaune** : 25–74%
+  - **Orange** : 10–24%
+  - **Rouge** : < 10%
+  - **Gris** : 0% (hors plage)
+
+### Boucle de progression complète
+
+```
+[Verre teinté + beam]
+       ↓
+Gemme ≈ 548.3 nm → Crystal Furnace à 50% (delta 151.7 nm sur optimum 700.0)
+       ↓ (le joueur veut mieux)
+[Crude Spectral Refiner Tier 1, pas 5 nm]
+       ↓
+Gemme ≈ 703.3 nm → Crystal Furnace à 90% (delta 3.3 nm)
+       ↓ (le joueur veut 100%)
+[Spectral Refiner Tier 3, pas 0.1 nm]
+       ↓
+Gemme = 700.0 nm → Crystal Furnace à 100% !
 ```
 
 ---
