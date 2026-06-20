@@ -2,7 +2,7 @@
 
 ## Vision générale
 
-Un mod Fabric (Minecraft 1.21.1, Java 21) qui transforme la lumière en source d'énergie.  
+Un mod **NeoForge** (Minecraft 1.21.1, Java 21) qui transforme la lumière en source d'énergie.  
 La lumière est collectée, convertie en **Photons (PH)**, transportée via des **faisceaux**, filtrée par des **gemmes**, et consommée par des **machines**.  
 Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa couleur et les effets qu'elle peut produire sur un faisceau.
 
@@ -943,80 +943,119 @@ END GAME
 
 ## Architecture technique
 
+### Stack technique
+
+| Composant | Choix |
+|---|---|
+| Mod loader | **NeoForge** (1.21.1) |
+| Build system | ForgeGradle + MDK NeoForge |
+| Java | 21 |
+| Énergie inter-mods | **Forge Energy (FE / RF)** natif |
+| Registres | `DeferredRegister<T>` |
+| Événements | Bus NeoForge (`@SubscribeEvent`) |
+| GUI | `AbstractContainerScreen` + `MenuType` |
+| Datagen | NeoForge `DataGenerator` |
+
+### Équivalences Fabric → NeoForge
+
+| Fabric | NeoForge |
+|---|---|
+| `fabric.mod.json` | `META-INF/neoforge.mods.toml` |
+| `ModInitializer.onInitialize()` | `@Mod` + `@EventBusSubscriber` |
+| `ClientModInitializer` | `FMLClientSetupEvent` |
+| `Registry.register()` | `DeferredRegister<T>.register()` |
+| `ColorProviderRegistry.ITEM.register()` | `RegisterColorHandlersEvent.Item` |
+| `ItemGroupEvents.modifyEntriesEvent()` | `BuildCreativeModeTabContentsEvent` |
+| `BlockApiLookup` (énergie Fabric) | `IEnergyStorage` (Capabilities NeoForge) |
+| TR Energy (optionnel) | **FE natif** |
+| `WorldRenderEvents` | `RenderLevelStageEvent` |
+
 ### Packages prévus
 
 ```
 fr.skylined.gemmology/
-├── Gemmology.java                    (existant — main init)
-├── GemmologyClient.java              (existant — color provider)
-├── GemmologyDataGenerator.java       (existant — datagen)
+├── Gemmology.java                    (point d'entrée @Mod)
+├── GemmologyClient.java              (setup client — FMLClientSetupEvent)
+├── GemmologyDataGenerator.java       (datagen entry)
 ├── component/
-│   └── ModComponents.java            (existant — WAVE_LENGTH component)
+│   └── ModComponents.java            (DataComponentType WAVE_LENGTH — DeferredRegister)
 ├── item/
-│   ├── ModItems.java                 (existant + Raw Crystal + Spectral Goggles)
+│   ├── ModItems.java                 (DeferredRegister<Item>)
 │   └── custom/
-│       ├── GemItem.java              (existant)
-│       ├── RawCrystalItem.java       (nouveau)
-│       └── SpectralGogglesItem.java  (nouveau — ArmorItem avec overlay client)
+│       ├── GemItem.java
+│       ├── RawCrystalItem.java
+│       └── SpectralGogglesItem.java  (ArmorItem + overlay client)
 ├── block/
-│   ├── ModBlocks.java                (nouveau — registre blocs)
+│   ├── ModBlocks.java                (DeferredRegister<Block>)
 │   └── custom/
 │       ├── SolarCollectorBlock.java
 │       ├── ConcentratingLensBlock.java
 │       ├── ThermalGeneratorBlock.java
-│       ├── EnergyConverterBlock.java       (TR Energy → PH, dépendance optionnelle)
+│       ├── EnergyConverterBlock.java       (IEnergyStorage → PH, FE natif)
 │       ├── LightEmitterBlock.java
 │       ├── PrismStandBlock.java
 │       ├── CrystalFurnaceBlock.java
 │       ├── PhotosynthesisAcceleratorBlock.java
-│       ├── SpectralRefinerBlock.java       (tiers 1–4 via même classe + niveau stocké)
+│       ├── SpectralRefinerBlock.java       (tiers 1–4, niveau en BlockEntity)
 │       ├── LightBatteryBlock.java
-│       ├── BeamSplitterBlock.java          (tiers 1–4 via même classe + niveau + sorties actives stockés)
+│       ├── BeamSplitterBlock.java          (tiers 1–4, sorties actives en BlockEntity)
 │       ├── LightGateBlock.java
 │       └── WavelengthSensorBlock.java
 ├── blockentity/
-│   ├── ModBlockEntities.java
-│   ├── PrismStandBlockEntity.java
-│   ├── LightEmitterBlockEntity.java
-│   └── (un BlockEntity par machine avec GUI)
+│   ├── ModBlockEntities.java         (DeferredRegister<BlockEntityType>)
+│   └── custom/
+│       └── (un BlockEntity par machine)
+├── menu/
+│   ├── ModMenuTypes.java             (DeferredRegister<MenuType>)
+│   └── custom/
+│       └── (un AbstractContainerMenu + Screen par machine avec GUI)
 ├── beam/
-│   ├── LightBeam.java                (données d'un faisceau : direction, longueur d'onde, débit)
-│   └── LightBeamManager.java         (calcul/propagation des faisceaux par tick)
-├── energy/
-│   └── PhotonStorage.java            (interface de stockage PH, implémentée par Solar/Battery)
-├── screen/
-│   ├── ModScreenHandlers.java
-│   └── (un ScreenHandler + Screen par machine avec GUI)
+│   ├── LightBeam.java                (record : λ, qualité, débit, direction)
+│   └── LightBeamManager.java         (propagation raycasting, recalcul sur neighborChanged)
+├── capability/
+│   └── PhotonStorage.java            (implémentation IEnergyStorage pour PH internes)
 ├── datagen/
-│   └── (providers existants + nouveaux pour blocs/tags/loot)
-├── util/
-│   └── WavelengthUtil.java           (constantes MIN/MAX, conversion couleur, clamping)
-└── mixin/                            (vide pour l'instant — ExampleMixin à supprimer)
+│   └── (providers NeoForge : recettes, loot tables, tags, modèles)
+├── event/
+│   └── ModEvents.java                (couleurs items, tabs créatif, etc.)
+└── util/
+    └── WavelengthUtil.java           (constantes, formule efficacité, formule fusion)
 ```
 
 ### Points techniques clés
 
-**Faisceaux :**
-- Raycasting via `world.raycast()` à chaque tick sur les BlockEntity actifs (LightEmitter)
-- Résultat stocké dans le BlockEntity (liste de blocs touchés + longueur d'onde courante)
-- Re-calcul seulement si un bloc dans la trajectoire change (via `neighborUpdate`)
-- Rendu client : `WorldRenderEvents.AFTER_TRANSLUCENT_BLOCKS` pour le cylindre lumineux
+**Registres (NeoForge) :**
+```java
+public static final DeferredRegister<Item> ITEMS =
+    DeferredRegister.create(Registries.ITEM, Gemmology.MOD_ID);
 
-**Énergie (Photons) :**
-- Pas de câbles : l'énergie circule uniquement via les faisceaux
-- Interface `PhotonStorage` : `int receivePhotons(int amount)` / `int extractPhotons(int amount)` / `int getStoredPhotons()`
-- Découverte des adjacents via `BlockApiLookup` (Fabric Transfer API ou API custom)
+public static final DeferredHolder<Item, GemItem> GEM =
+    ITEMS.register("gem", () -> new GemItem(new Item.Properties()));
+```
+
+**Faisceaux :**
+- Raycasting via `level.clip()` à chaque tick sur les BlockEntity actifs
+- Re-calcul uniquement sur `onNeighborChange()` ou update de chunk
+- Rendu client : `RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS`
+
+**Énergie (FE natif) :**
+- `IEnergyStorage` pour Solar Collector, Thermal Generator, Light Battery, Energy Converter
+- Capabilities NeoForge : `BlockCapabilityCache` pour la découverte des adjacents
+- Taux de conversion Energy Converter : `10 FE → 1 PH`
 
 **Light Detection (Prism Stand) :**
-- `world.getLightLevel(LightType.SKY, pos.up())` pour la lumière du ciel
-- `world.getTimeOfDay() % 24000L` pour l'heure du jour
-- `world.getBiome(pos)` pour le biome
-- `world.isRaining()` / `world.isThundering()` pour la météo
-- Scan des blocs voisins (rayon 3) pour torches/lave/feu
+- `level.getBrightness(LightLayer.SKY, pos.above())` pour la lumière du ciel
+- `level.getDayTime() % 24000L` pour l'heure du jour
+- `level.getBiome(pos)` pour le biome
+- `level.isRaining()` / `level.isThundering()` pour la météo
 
-**Rendu des gemmes :**
-- `ColorProviderRegistry.ITEM.register()` — déjà en place
-- Extension pour les gemmes UV/IR : couleur noire (`0x111111`) + shader ou particules côté client
+**Couleur des gemmes (NeoForge) :**
+```java
+@SubscribeEvent
+public static void onRegisterItemColors(RegisterColorHandlersEvent.Item event) {
+    event.register((stack, layer) -> { ... }, ModItems.GEM.get());
+}
+```
 
 ---
 
