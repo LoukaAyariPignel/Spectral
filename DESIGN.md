@@ -583,6 +583,116 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 
 ---
 
+### Beam Splitter
+
+**Description** : Reçoit un faisceau et le divise en plusieurs faisceaux de sortie. La longueur d'onde et la qualité sont préservées ; le débit est réparti entre les sorties.
+
+Existe en **3 tiers** selon le nombre de sorties et la perte par division :
+
+| Tier | Nom | Sorties | Perte par division | Recette |
+|---|---|---|---|---|
+| 1 | Basic Beam Splitter | 2 sorties (50% / 50%) | 15% du débit total | Fer + Verre + Quartz |
+| 2 | Beam Splitter | 3 sorties (33% / 33% / 33%) | 8% du débit total | Or + Cristal + Quartz |
+| 3 | Precision Beam Splitter | 4 sorties (25% / 25% / 25% / 25%) | 3% du débit total | Diamant + Amethyste + Quartz |
+
+**Comportement :**
+- Le beam entre par la face arrière
+- Les sorties sont les 2, 3 ou 4 autres faces (configurables via rotation + interaction)
+- La longueur d'onde et la qualité sont **identiques** sur toutes les sorties
+- Seul le débit (PH/tick) est divisé
+
+**Exemple Tier 1 :** beam entrant 40 PH/tick → 2 sorties à 17 PH/tick chacune (15% perdus)  
+**Exemple Tier 3 :** beam entrant 100 PH/tick → 4 sorties à 24.25 PH/tick chacune (3% perdus)
+
+**GUI :** Affichage du débit entrant, débit par sortie, perte totale
+
+**Recette Tier 1 :**
+```
+[Air]   [Verre]  [Air]
+[Fer]   [Quartz] [Fer]    → 1 Basic Beam Splitter
+[Air]   [Verre]  [Air]
+```
+
+---
+
+### Light Gate
+
+**Description** : Bloc transparent au beam par défaut. Un signal redstone inverse son état (ouvert → fermé ou fermé → ouvert selon la configuration).
+
+**Comportement :**
+- **Sans signal redstone :** laisse passer le beam sans modification (transparent)
+- **Avec signal redstone :** bloque le beam complètement
+- Mode inversable (sneak + clic droit) : par défaut bloqué, s'ouvre avec redstone
+- La longueur d'onde, la qualité et le débit sont préservés quand ouvert
+
+**Usages :**
+- Allumer/éteindre des machines à distance
+- Systèmes automatisés (horloge redstone → pulses de beam)
+- Sécurité (couper l'alimentation d'une zone)
+
+**GUI :** Aucun — uniquement interaction directe (sneak + clic droit pour changer le mode)
+
+**Recette craft :**
+```
+[Fer]      [Verre]    [Fer]
+[Redstone] [Quartz]   [Redstone]    → 1 Light Gate
+[Fer]      [Verre]    [Fer]
+```
+
+---
+
+### Wavelength Sensor
+
+**Description** : Détecte un faisceau passant devant lui et émet un signal redstone proportionnel à la longueur d'onde ou à la qualité.
+
+**Comportement :**
+- Se place sur le côté d'un beam (pas dans son trajet — il lit le beam sans l'arrêter)
+- Mode configurable (sneak + clic droit) :
+  - **Mode λ :** signal redstone = `(λ - 380) / 400 × 15` (arrondi à l'entier 0–15)
+  - **Mode qualité :** signal redstone = `qualité × 15` (arrondi à l'entier 0–15)
+- Si aucun beam détecté : signal = 0
+
+**Exemples mode λ :**
+- 380 nm → signal 0
+- 580 nm → signal 7
+- 780 nm → signal 15
+
+**Usages :**
+- Déclencher une machine quand le bon beam est présent
+- Comparateur redstone pour trier selon la longueur d'onde
+- Alarme si le beam change de qualité
+
+**GUI :** Aucun — affichage du mode actuel sur le bloc (icône λ ou q)
+
+**Recette craft :**
+```
+[Fer]      [Quartz]   [Fer]
+[Verre]    [Redstone] [Verre]    → 1 Wavelength Sensor
+[Fer]      [Quartz]   [Fer]
+```
+
+---
+
+### Spectral Goggles
+
+**Description** : Item équipable (slot casque) permettant de voir les faisceaux UV et IR, invisibles à l'œil nu, et d'afficher des informations sur les beams visibles.
+
+**Effets portés :**
+- Les beams UV (< 380 nm) apparaissent en violet translucide
+- Les beams IR (> 780 nm) apparaissent en rouge translucide
+- Sur tous les beams visibles : affichage en overlay de `λ = XXX.X nm | q = 0.XX | X PH/t`
+- Mise en évidence des machines actives dans un rayon de 8 blocs (contour vert = active, rouge = inactive)
+
+**Recette craft :**
+```
+[Verre]  [Air]    [Verre]
+[Gemme]  [Fer]    [Gemme]    → 1 Spectral Goggles
+[Fer]    [Cuir]   [Fer]
+```
+(Les deux gemmes doivent avoir des longueurs d'onde différentes — une rouge ~700 nm et une bleue ~450 nm)
+
+---
+
 ### UV Sterilizer (Late game — Tier 2)
 
 **Description** : Émet un rayonnement UV dans une zone, tuant/repoussant les mobs hostiles.
@@ -594,7 +704,6 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 - Mobs hostiles dans un rayon de 10 blocs : ralentissement + aveuglement
 - Joueurs dans le rayon : effet "Nausée" si exposés plus de 30 secondes sans protection
 - Les plantes et cultures dans le rayon poussent 2× plus vite (UV stimule la chlorophylle)
-- Stérilise l'eau (dans des cauldrons) → eau purifiée (futur usage potions)
 
 **Recette craft :** Nécessite une gemme UV proche (via Chromatic Compressor)
 
@@ -708,20 +817,24 @@ fr.skylined.gemmology/
 ├── component/
 │   └── ModComponents.java            (existant — WAVE_LENGTH component)
 ├── item/
-│   ├── ModItems.java                 (existant + Raw Crystal)
+│   ├── ModItems.java                 (existant + Raw Crystal + Spectral Goggles)
 │   └── custom/
 │       ├── GemItem.java              (existant)
-│       └── RawCrystalItem.java       (nouveau)
+│       ├── RawCrystalItem.java       (nouveau)
+│       └── SpectralGogglesItem.java  (nouveau — ArmorItem avec overlay client)
 ├── block/
 │   ├── ModBlocks.java                (nouveau — registre blocs)
 │   └── custom/
-│       ├── PrismStandBlock.java
-│       ├── LightEmitterBlock.java
 │       ├── SolarCollectorBlock.java
+│       ├── LightEmitterBlock.java
+│       ├── PrismStandBlock.java
 │       ├── CrystalFurnaceBlock.java
 │       ├── PhotosynthesisAcceleratorBlock.java
-│       ├── SpectralRefinerBlock.java
-│       └── LightBatteryBlock.java
+│       ├── SpectralRefinerBlock.java       (tiers 1–4 via même classe + niveau stocké)
+│       ├── LightBatteryBlock.java
+│       ├── BeamSplitterBlock.java          (tiers 1–3 via même classe + niveau stocké)
+│       ├── LightGateBlock.java
+│       └── WavelengthSensorBlock.java
 ├── blockentity/
 │   ├── ModBlockEntities.java
 │   ├── PrismStandBlockEntity.java
@@ -768,17 +881,52 @@ fr.skylined.gemmology/
 
 ---
 
-## Ordre d'implémentation recommandé
+## Effets visuels
+
+> **Reportés à plus tard.** La version initiale se concentre sur le fonctionnement mécanique du mod. Les effets visuels (rendu du faisceau, particules, animations des machines, rendu des gemmes UV/IR) seront ajoutés une fois que la logique de base est validée en jeu.
+
+Ce qui sera fait plus tard :
+- Rendu cylindrique du faisceau lumineux (couleur selon λ)
+- Faisceaux UV/IR invisibles (particules à la place)
+- Animations machines actives/inactives
+- Overlay des Spectral Goggles
+- Halo lumineux des gemmes hors-visible
+
+---
+
+## Ordre d'implémentation
+
+### Phase 1 — Version basique (vérifier le fonctionnement)
 
 1. **Nettoyage du code existant** (typos, constantes, imports, mixin vide)
-2. **`WavelengthUtil.java`** (constantes partagées, méthodes utilitaires)
+2. **`WavelengthUtil.java`** (constantes MIN/MAX, formule efficacité, formule fusion)
 3. **`RawCrystalItem` + `RawCrystalOre`** (item + bloc + génération monde)
-4. **`PrismStandBlock` + `PrismStandBlockEntity`** (attunement + GUI)
-5. **`SolarCollectorBlock` + `LightEmitterBlock`** (production + émission faisceau)
-6. **`LightBeam` + `LightBeamManager`** (propagation + rendu faisceau)
-7. **`CrystalFurnaceBlock`** (premier consommateur de faisceau)
-8. **`LightBatteryBlock`** (stockage énergie)
-9. **`PhotosynthesisAcceleratorBlock`** (second consommateur)
-10. **`SpectralRefinerBlock`** (raffinement longueur d'onde)
-11. **Machines late game** (Chromatic Compressor, Thermal Expander, Thermal Forge)
-12. **Machines end game** (Spectral Forge, Transmitter/Receiver, X-Ray Scanner)
+4. **`LightBeam.java`** (structure de données : λ, qualité, débit, direction)
+5. **`LightBeamManager.java`** (propagation par raycasting, détection intersections)
+6. **`SolarCollectorBlock`** (production PH/tick selon lumière du ciel)
+7. **`LightEmitterBlock`** (convertit PH → beam, émission directionelle)
+8. **`PrismStandBlock`** (attunement Raw Crystal + filtrage beam)
+9. **`CrystalFurnaceBlock`** (premier consommateur — four accéléré)
+10. **`LightBatteryBlock`** (stockage PH)
+11. **`BasicBeamSplitterBlock`** (Tier 1 — 2 sorties)
+12. **`LightGateBlock`** (contrôle redstone)
+13. **`WavelengthSensorBlock`** (sortie redstone selon λ ou qualité)
+14. **`SpectralRefinerBlock` Tier 1** (Crude — pas 5 nm)
+15. **`PhotosynthesisAcceleratorBlock`** (second consommateur)
+16. **`SpectralGogglesItem`** (overlay basique sans effets visuels avancés)
+
+### Phase 2 — Extension (après validation)
+
+17. **Spectral Refiner Tiers 2–4** (upgrades du Tier 1)
+18. **Beam Splitter Tiers 2–3**
+19. **Chromatic Compressor + Thermal Expander** (gemmes UV/IR)
+20. **Machines late game** (UV Sterilizer, Thermal Forge)
+21. **Spectral Forge** (gemmes Tier 4–5)
+22. **Machines end game** (Transmitter/Receiver, X-Ray Scanner)
+
+### Phase 3 — Effets visuels (en parallèle ou après Phase 2)
+
+23. **Rendu faisceau** (cylindre lumineux coloré)
+24. **Overlay Spectral Goggles**
+25. **Particules et animations machines**
+26. **Rendu gemmes UV/IR** (halos, particules)
