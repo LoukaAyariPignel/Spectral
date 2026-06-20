@@ -63,7 +63,7 @@ La plage d'exposition naturelle est clampée à `[380, 780]` dans le code.
 
 **Génération dans le monde :**
 - Biomes : tous les biomes (légèrement plus fréquent dans les biomes froids et sombres)
-- Niveaux Y : -20 à -80 (deep underground, similaire à l'améthyste)
+- Niveaux Y : -20 à -64 (deep underground, similaire à l'améthyste)
 - Taille de veine : 1 à 4 blocs
 - Fréquence : plus rare que le fer, légèrement plus commun que le diamant
 - Nécessite un pickaxe en fer ou mieux pour être miné
