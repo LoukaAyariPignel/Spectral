@@ -956,18 +956,33 @@ END GAME
 | GUI | `AbstractContainerScreen` + `MenuType` |
 | Datagen | NeoForge `DataGenerator` |
 
+### Forge ou NeoForge ?
+
+**NeoForge**, sans hésitation pour un nouveau mod en 2025.
+
+En juillet 2023, la quasi-totalité de l'équipe de développement de Forge a forké le projet pour créer NeoForge suite à des conflits internes. Depuis :
+
+- **Forge** — reçoit des mises à jour minimales. Essentiellement maintenu pour 1.20.1 et versions antérieures. Quasi abandonné pour 1.21+.
+- **NeoForge** — développement actif, APIs modernes, meilleures performances. C'est là où vont tous les nouveaux mods tech (Applied Energistics, Mekanism, Create...).
+
+---
+
 ### Version cible
 
 **Minecraft 1.21.1 — NeoForge 21.1.x**
 
-| Critère | 1.21.1 | 1.21.4 | 1.21.5 |
-|---|---|---|---|
-| Stabilité NeoForge | ★★★★★ | ★★★★☆ | ★★★☆☆ |
-| Documentation / tutoriels | Très abondante | Bonne | Limitée |
-| Écosystème mods compatibles | Très large | Large | Restreint |
-| Data Components | ✓ Mature | ✓ Mature | ✓ Mature |
+| Version | Loader | Écosystème mods | Data Components | Choix |
+|---|---|---|---|---|
+| 1.20.1 | Forge | ★★★★★ (record historique) | ✗ (NBT uniquement) | ✗ Incompatible avec notre système |
+| **1.21.1** | **NeoForge** | **★★★★☆ Très large** | **✓ Mature** | **✓ Recommandé** |
+| 1.21.4 | NeoForge | ★★★☆☆ En croissance | ✓ Mature | Alternative future |
+| 1.21.5 | NeoForge | ★★☆☆☆ Limité | ✓ Mature | Trop récent |
 
-> **Pourquoi 1.21.1 ?** C'est la version NeoForge la plus documentée, avec le plus grand écosystème de mods de référence. Data Components (utilisé pour la gemme) y est pleinement supporté. Migration vers 1.21.4+ possible facilement une fois le core stable.
+> **Pourquoi pas 1.20.1 malgré son énorme écosystème ?**  
+> Les Data Components n'existent pas avant 1.20.5. Le stockage de la longueur d'onde de la gemme repose entièrement dessus — en 1.20.1 il faudrait utiliser NBT, moins propre et moins stable. Ce serait réécrire le système principal du mod.
+
+> **Pourquoi 1.21.1 plutôt que 1.21.4 ?**  
+> 1.21.1 a le plus grand écosystème NeoForge actuellement, la meilleure documentation, et NeoForge 21.1.x est très stable. Migration vers 1.21.4 simple une fois le core stable.
 
 ---
 
