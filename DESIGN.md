@@ -585,26 +585,34 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 
 ### Beam Splitter
 
-**Description** : Reçoit un faisceau et le divise en plusieurs faisceaux de sortie. La longueur d'onde et la qualité sont préservées ; le débit est réparti entre les sorties.
+**Description** : Reçoit un faisceau et le divise en plusieurs faisceaux de sortie. La longueur d'onde et la qualité sont préservées ; le débit est réparti entre les sorties **actives**.
 
-Existe en **3 tiers** selon le nombre de sorties et la perte par division :
+Existe en **4 tiers** selon le nombre de sorties et la perte par division :
 
-| Tier | Nom | Sorties | Perte par division | Recette |
+| Tier | Nom | Sorties max | Perte par division | Recette |
 |---|---|---|---|---|
-| 1 | Basic Beam Splitter | 2 sorties (50% / 50%) | 15% du débit total | Fer + Verre + Quartz |
-| 2 | Beam Splitter | 3 sorties (33% / 33% / 33%) | 8% du débit total | Or + Cristal + Quartz |
-| 3 | Precision Beam Splitter | 4 sorties (25% / 25% / 25% / 25%) | 3% du débit total | Diamant + Amethyste + Quartz |
+| 1 | Basic Beam Splitter | 2 sorties | 15% du débit total | Fer + Verre + Quartz |
+| 2 | Beam Splitter | 3 sorties | 8% du débit total | Or + Cristal + Quartz |
+| 3 | Precision Beam Splitter | 4 sorties | 3% du débit total | Diamant + Amethyste + Quartz |
+| 4 | Perfect Beam Splitter | 4 sorties | 0% (sans perte) | Matériaux end-game (Photon Alloy) |
 
 **Comportement :**
 - Le beam entre par la face arrière
-- Les sorties sont les 2, 3 ou 4 autres faces (configurables via rotation + interaction)
-- La longueur d'onde et la qualité sont **identiques** sur toutes les sorties
-- Seul le débit (PH/tick) est divisé
+- Les sorties disponibles sont les faces avant, gauche, droite (et bas selon le tier)
+- La longueur d'onde et la qualité sont **identiques** sur toutes les sorties actives
+- Le débit (PH/tick) est divisé **uniquement entre les sorties actives** (les sorties désactivées ne reçoivent rien)
+- Si une seule sortie est active : elle reçoit 100% du débit (moins la perte)
 
-**Exemple Tier 1 :** beam entrant 40 PH/tick → 2 sorties à 17 PH/tick chacune (15% perdus)  
-**Exemple Tier 3 :** beam entrant 100 PH/tick → 4 sorties à 24.25 PH/tick chacune (3% perdus)
+**GUI (clic droit sur le bloc) :**
+- Affiche les 4 faces de sortie possibles sous forme de boutons (Nord / Sud / Est / Ouest ou relatif au bloc)
+- Chaque bouton peut être activé (vert) ou désactivé (gris) par clic
+- Les sorties non disponibles pour le tier actuel sont grisées et non cliquables
+- Affichage en temps réel : débit entrant → débit par sortie active
+- Exemple Tier 2, 2 sorties actives sur 3 : `40 PH/t entrant → 18.4 PH/t × 2 sorties (8% perdus)`
 
-**GUI :** Affichage du débit entrant, débit par sortie, perte totale
+**Exemple Tier 1 :** beam entrant 40 PH/tick → 2 sorties actives à 17 PH/tick chacune (15% perdus)  
+**Exemple Tier 3 :** beam entrant 100 PH/tick, 3 sorties actives → 32.25 PH/tick chacune (3% perdus)  
+**Exemple Tier 4 :** beam entrant 100 PH/tick, 4 sorties actives → 25 PH/tick chacune (0% perdus)
 
 **Recette Tier 1 :**
 ```
@@ -832,7 +840,7 @@ fr.skylined.gemmology/
 │       ├── PhotosynthesisAcceleratorBlock.java
 │       ├── SpectralRefinerBlock.java       (tiers 1–4 via même classe + niveau stocké)
 │       ├── LightBatteryBlock.java
-│       ├── BeamSplitterBlock.java          (tiers 1–3 via même classe + niveau stocké)
+│       ├── BeamSplitterBlock.java          (tiers 1–4 via même classe + niveau + sorties actives stockés)
 │       ├── LightGateBlock.java
 │       └── WavelengthSensorBlock.java
 ├── blockentity/
