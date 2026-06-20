@@ -2,7 +2,7 @@
 
 ## Vision générale
 
-Un mod **NeoForge** (Minecraft 1.21.1, Java 21) qui transforme la lumière en source d'énergie.  
+Un mod **NeoForge** (Minecraft 26.1, Java 21) qui transforme la lumière en source d'énergie.  
 La lumière est collectée, convertie en **Photons (PH)**, transportée via des **faisceaux**, filtrée par des **gemmes**, et consommée par des **machines**.  
 Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa couleur et les effets qu'elle peut produire sur un faisceau.
 
@@ -947,7 +947,7 @@ END GAME
 
 | Composant | Choix |
 |---|---|
-| Mod loader | **NeoForge** (1.21.1) |
+| Mod loader | **NeoForge** (26.1) |
 | Build system | ForgeGradle + MDK NeoForge |
 | Java | 21 |
 | Énergie inter-mods | **Forge Energy (FE / RF)** natif |
@@ -982,20 +982,20 @@ En 2026, Mojang a basculé vers un **versioning calendaire** (26.1, 26.2, …). 
 
 ### Version cible
 
-**Minecraft 1.21.1 — NeoForge 21.1.233**
+**Minecraft 26.1 — NeoForge 26.1.2.76**
 
 | Version MC | NeoForge stable | Écosystème mods | Data Components | Statut |
 |---|---|---|---|---|
 | 1.20.1 | Forge (legacy) | ★★★★★ (record historique) | ✗ (NBT uniquement) | ✗ Incompatible |
-| **1.21.1** | **21.1.233** | **★★★★☆ Très large** | **✓ Mature** | **✓ Recommandé** |
-| 26.1 | 26.1.2.76 | ★★★☆☆ En croissance | ✓ Mature | Alternative (nouvelle ère MC) |
+| 1.21.1 | 21.1.233 | ★★★★☆ Très large | ✓ Mature | Alternative (ancienne ère MC) |
+| **26.1** | **26.1.2.76** | **★★★☆☆ En croissance** | **✓ Mature** | **✓ Choisi** |
 | 26.2 | 26.2.0.6-beta | ★★☆☆☆ Limité | ✓ Mature | Trop récent (beta) |
 
 > **Pourquoi pas 1.20.1 malgré son énorme écosystème ?**  
 > Les Data Components n'existent pas avant 1.20.5. Le stockage de la longueur d'onde de la gemme repose entièrement dessus — en 1.20.1 il faudrait utiliser NBT, moins propre et moins stable.
 
-> **Pourquoi 1.21.1 plutôt que MC 26.1 ?**  
-> 1.21.1 (NeoForge 21.1.233) a le plus grand écosystème NeoForge, la meilleure documentation, et est entièrement stable. MC 26.1 est la nouvelle ère calendaire mais l'écosystème de mods est encore en construction. Migration vers 26.1 possible une fois le core stable et l'écosystème mûr.
+> **Pourquoi MC 26.1 plutôt que 1.21.1 ?**  
+> MC 26.1 est la nouvelle ère calendaire de Minecraft (2026). NeoForge 26.1.2.76 est stable. On préfère partir sur une base moderne plutôt que de partir sur 1.21.1 et devoir migrer ensuite. L'écosystème est en croissance mais suffisant pour un nouveau mod.
 
 ---
 
@@ -1014,7 +1014,7 @@ plugins {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:21.1.233"
+    implementation "net.neoforged:neoforge:26.1.2.76"
 }
 ```
 
@@ -1025,8 +1025,8 @@ fabric_version=...
 yarn_mappings=...
 
 # Ajouter
-neo_version=21.1.233         # dernière stable MC 1.21.1 (juin 2026)
-minecraft_version=1.21.1
+neo_version=26.1.2.76        # dernière stable MC 26.1 (juin 2026)
+minecraft_version=26.1
 ```
 
 ---
@@ -1052,14 +1052,14 @@ license = "CC0-1.0"
 [[dependencies.gemmology]]
     modId = "neoforge"
     type = "required"
-    versionRange = "[21.1.233,)"
+    versionRange = "[26.1.2.76,)"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.gemmology]]
     modId = "minecraft"
     type = "required"
-    versionRange = "[1.21.1,1.22)"
+    versionRange = "[26.1,27)"
     ordering = "NONE"
     side = "BOTH"
 ```
