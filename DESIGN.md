@@ -568,6 +568,47 @@ Le débit (PH/tick) d'un beam dépend de la source qui alimente le Light Emitter
 
 ---
 
+### Energy Converter (RF/FE → Photons)
+
+**Description** : Convertit l'énergie d'autres mods tech en Photons. Permet d'utiliser l'infrastructure énergétique existante d'autres mods pour alimenter les machines Gemmology.
+
+> **Note technique — Fabric vs Forge :**  
+> RF et FE sont des standards **Forge/NeoForge** uniquement. Sur Fabric, l'équivalent standard est **Team Reborn Energy (TR Energy)**, utilisé par Tech Reborn, Industrial Revolution, et la majorité des mods tech Fabric. L'Energy Converter cible donc **TR Energy** en priorité.  
+> Si un pont RF↔TR existe via un mod tiers (ex: *Modern Industrialization*), la compatibilité RF/FE est automatique.
+
+**Comportement :**
+- Accepte du TR Energy (E) en entrée via l'interface standard `EnergyStorage`
+- Convertit en PH et les stocke dans son buffer interne
+- Alimente un Light Emitter ou une Light Battery adjacent
+
+**Taux de conversion :**
+```
+10 E (TR Energy) → 1 PH
+```
+
+**Exemples :**
+- 200 E/tick entrant → 20 PH/tick (Spectral Refiner T1 alimenté)
+- 800 E/tick entrant → 80 PH/tick (Thermal Forge alimenté)
+
+**Caractéristiques :**
+- Fonctionne 24h/24, indépendant du soleil
+- Buffer interne : 100 000 PH
+- Taux de conversion configurable via le GUI (pour limiter la consommation d'énergie externe)
+- Compatible avec tout mod exposant une interface TR Energy
+
+**GUI :** Énergie entrante (E/tick), taux de conversion, PH/tick produits, buffer
+
+**Recette craft :**
+```
+[Or]      [Redstone] [Or]
+[Redstone][Diamant]  [Redstone]    → 1 Energy Converter
+[Or]      [Redstone] [Or]
+```
+
+**Dépendance optionnelle :** `team_reborn_energy` — si absent au runtime, le bloc est enregistré mais inactif (pas de crash). La recette reste craftable mais le bloc ne reçoit pas d'énergie externe.
+
+---
+
 ### Light Battery (Condensateur Lumineux)
 
 **Description** : Stocke les Photons reçus par un faisceau ou un Solar Collector adjacent.
@@ -878,6 +919,7 @@ END GAME
 | Solar Collector + 4 Lens | 50 | Plein soleil, ciel dégagé |
 | N Solar Collectors | N × 10 | Plein soleil |
 | Thermal Generator (lava) | 30 | Aucune |
+| Energy Converter | Illimité (dépend du mod source) | TR Energy requis |
 
 **Consommation des machines :**
 
@@ -922,6 +964,7 @@ fr.skylined.gemmology/
 │       ├── SolarCollectorBlock.java
 │       ├── ConcentratingLensBlock.java
 │       ├── ThermalGeneratorBlock.java
+│       ├── EnergyConverterBlock.java       (TR Energy → PH, dépendance optionnelle)
 │       ├── LightEmitterBlock.java
 │       ├── PrismStandBlock.java
 │       ├── CrystalFurnaceBlock.java
