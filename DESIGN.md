@@ -585,34 +585,31 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 
 ### Beam Splitter
 
-**Description** : Reçoit un faisceau et le divise en plusieurs faisceaux de sortie. La longueur d'onde et la qualité sont préservées ; le débit est réparti entre les sorties **actives**.
+**Description** : Reçoit un faisceau et le divise en plusieurs faisceaux de sortie. **Aucun tier n'a de perte** — la progression porte uniquement sur le nombre de sorties disponibles. C'est un bloc mid game, le dernier tier étant accessible en début de late game.
 
-Existe en **4 tiers** selon le nombre de sorties et la perte par division :
-
-| Tier | Nom | Sorties max | Perte par division | Recette |
+| Tier | Nom | Sorties max | Perte | Progression |
 |---|---|---|---|---|
-| 1 | Basic Beam Splitter | 2 sorties | 15% du débit total | Fer + Verre + Quartz |
-| 2 | Beam Splitter | 3 sorties | 8% du débit total | Or + Cristal + Quartz |
-| 3 | Precision Beam Splitter | 4 sorties | 3% du débit total | Diamant + Amethyste + Quartz |
-| 4 | Perfect Beam Splitter | 4 sorties | 0% (sans perte) | Matériaux end-game (Photon Alloy) |
+| 1 | Basic Beam Splitter | 2 sorties | 0% | Début mid game |
+| 2 | Beam Splitter | 3 sorties | 0% | Mid game |
+| 3 | Advanced Beam Splitter | 4 sorties | 0% | Fin mid game |
+| 4 | Perfect Beam Splitter | 5 sorties | 0% | Début late game |
+
+> Un bloc a 6 faces. Le beam entre par 1 face → 5 faces de sortie possibles au maximum (Tier 4).
 
 **Comportement :**
-- Le beam entre par la face arrière
-- Les sorties disponibles sont les faces avant, gauche, droite (et bas selon le tier)
-- La longueur d'onde et la qualité sont **identiques** sur toutes les sorties actives
-- Le débit (PH/tick) est divisé **uniquement entre les sorties actives** (les sorties désactivées ne reçoivent rien)
-- Si une seule sortie est active : elle reçoit 100% du débit (moins la perte)
+- Le beam entre par la face arrière (fixée à la pose)
+- Le débit (PH/tick) est divisé **uniquement entre les sorties actives** — les sorties désactivées ne reçoivent rien
+- La longueur d'onde et la qualité sont identiques sur toutes les sorties actives
+- Si une seule sortie est active : elle reçoit 100% du débit
+
+**Exemple Tier 2, 2 sorties actives sur 3 :** beam 60 PH/tick → 30 PH/tick sur chaque sortie active  
+**Exemple Tier 4, 3 sorties actives sur 5 :** beam 90 PH/tick → 30 PH/tick sur chaque sortie active
 
 **GUI (clic droit sur le bloc) :**
-- Affiche les 4 faces de sortie possibles sous forme de boutons (Nord / Sud / Est / Ouest ou relatif au bloc)
-- Chaque bouton peut être activé (vert) ou désactivé (gris) par clic
-- Les sorties non disponibles pour le tier actuel sont grisées et non cliquables
+- Affiche les 5 faces de sortie possibles sous forme de boutons
+- Les sorties disponibles pour le tier actuel sont cliquables (actif = vert, inactif = gris)
+- Les sorties non débloquées par le tier sont grisées et verrouillées
 - Affichage en temps réel : débit entrant → débit par sortie active
-- Exemple Tier 2, 2 sorties actives sur 3 : `40 PH/t entrant → 18.4 PH/t × 2 sorties (8% perdus)`
-
-**Exemple Tier 1 :** beam entrant 40 PH/tick → 2 sorties actives à 17 PH/tick chacune (15% perdus)  
-**Exemple Tier 3 :** beam entrant 100 PH/tick, 3 sorties actives → 32.25 PH/tick chacune (3% perdus)  
-**Exemple Tier 4 :** beam entrant 100 PH/tick, 4 sorties actives → 25 PH/tick chacune (0% perdus)
 
 **Recette Tier 1 :**
 ```
@@ -620,6 +617,8 @@ Existe en **4 tiers** selon le nombre de sorties et la perte par division :
 [Fer]   [Quartz] [Fer]    → 1 Basic Beam Splitter
 [Air]   [Verre]  [Air]
 ```
+
+**Upgrade :** Chaque tier s'obtient en upgrageant le tier précédent dans une station dédiée (pas de recette from scratch).
 
 ---
 
