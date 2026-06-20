@@ -215,26 +215,72 @@ Le `Prism Stand` détecte la lumière ambiente et attribue une longueur d'onde a
 
 ### Propagation du faisceau
 
-- Le faisceau est calculé **instantanément** par raycasting (pas de délai de propagation)
-- Il voyage en **ligne droite** dans la direction de la face de l'émetteur
-- **Portée maximale** : 32 blocs par défaut (extensible avec upgrades)
-- **Bloqué par** : tout bloc solide opaque
-- **Traverse** : verre transparent (sans teinte), air, eau (avec perte de 5 PH/bloc)
+Deux modes de propagation coexistent :
 
-### Interactions avec les blocs
+**Mode raycasting** (défaut, en ligne droite) :
+- Calculé instantanément
+- Voyage en ligne droite depuis la face de l'émetteur
+- Portée maximale : 32 blocs
+- Bloqué par tout bloc solide opaque
+- Accumule du bruit dans l'air (voir ci-dessous)
 
-| Bloc rencontré | Comportement |
-|---|---|
-| Bloc solide | Arrêt du beam, impact visuel (étincelles) |
-| Verre transparent | Traverse sans modification |
-| Verre teinté | Traverse et décale la longueur d'onde (±30 nm vers la couleur du verre) |
-| Prism Stand (avec gemme) | Remplace la longueur d'onde du beam par celle de la gemme. Perte : 15% du débit |
-| Prism Stand (sans gemme) | Bloque le beam |
-| Light Battery | Absorbe le beam, stocke les PH |
-| Machine réceptrice | Consomme le beam pour fonctionner |
-| Eau / pluie | Atténue le débit (-5 PH/bloc), légère dispersion |
-| Miroir (futur) | Réfléchit le beam à 90° |
-| Beam Splitter (futur) | Divise le beam en 2 (50% chacun) |
+**Mode fibre optique** (via Fiber Optic Cable) :
+- Le beam suit le câble bloc par bloc, quelle que soit la direction
+- Bruit : **0** sur tout le trajet câblé
+- Pas de limite de portée tant que le câble est continu
+- Permet de contourner les obstacles sans miroir
+- Fonctionne comme un câble AE2 : le beam entre dans la fibre et en ressort à l'autre extrémité
+
+### Accumulation du bruit dans l'air
+
+Chaque bloc d'**air** traversé en mode raycasting ajoute du bruit au beam :
+
+```
+bruit += 0.005 par bloc d'air traversé
+bruit plafonné à 0.5 (max 50% de pénalité, quelle que soit la distance)
+```
+
+| Distance (tout air) | Bruit accumulé | Pénalité d'efficacité |
+|---|---|---|
+| 5 blocs | 0.025 | −2.5% |
+| 10 blocs | 0.05 | −5% |
+| 20 blocs | 0.10 | −10% |
+| 32 blocs | 0.16 | −16% |
+| 100 blocs (cap) | 0.50 | −50% (plafonné) |
+
+Le verre transparent et le verre teinté vanilla **n'accumulent pas** de bruit (le beam les traverse proprement).  
+L'eau accumule le même bruit que l'air (en plus de la perte de débit).
+
+### Réduction du bruit : Dampening Glass
+
+Un bloc spécialisé — le **Dampening Glass** (verre antiparasitage) — peut être posé dans le trajet du beam à la place de l'air. Il :
+- Laisse passer le beam **sans modifier λ, qualité, ni débit**
+- N'accumule **aucun bruit** pour le bloc qu'il occupe
+- Ne nécessite pas d'être posé sur tout le trajet — chaque bloc couvert supprime sa contribution
+
+```
+Exemple : trajet de 20 blocs, 10 blocs avec Dampening Glass
+→ bruit = 10 × 0.005 = 0.05 au lieu de 0.10
+→ pénalité réduite de 10% à 5%
+```
+
+> Le Dampening Glass ne peut pas réduire le bruit à 0 — même avec couverture totale du trajet, des micro-vibrations résiduelles persistent (bruit = 0.001 × blocs si couverture totale). Pour atteindre 0, il faut la fibre optique.
+
+### Interactions avec les blocs (résumé)
+
+| Bloc rencontré | Bruit | Autres effets |
+|---|---|---|
+| Air | +0.005/bloc | — |
+| Verre transparent | 0 | Traverse sans modification |
+| Verre teinté (vanilla) | 0 | Décale λ de ±30 nm |
+| **Dampening Glass** | **0** | **Traverse sans modification de λ** |
+| **Fiber Optic Cable** | **0** (tout le trajet) | **Routage libre, pas de line-of-sight** |
+| Eau | +0.005/bloc | −5 PH/bloc |
+| Prism Stand (avec gemme) | 0 | Remplace λ, −15% débit |
+| Prism Stand (sans gemme) | — | Bloque le beam |
+| Light Battery | — | Absorbe, stocke PH |
+| Machine réceptrice | — | Consomme pour fonctionner |
+| Bloc solide | — | Arrêt du beam |
 
 ### Chaînage des Prism Stands
 
@@ -262,9 +308,10 @@ Chaque machine a une **longueur d'onde optimale exacte**. La machine n'est à **
 
 ### Les deux paramètres d'un beam
 
-Chaque faisceau porte deux valeurs indépendantes :
+Chaque faisceau porte trois valeurs indépendantes :
 - **Longueur d'onde** `λ` (nm) — détermine quelle machine peut l'utiliser
-- **Qualité** `q` (0.0 → 1.0) — mesure la cohérence/pureté du beam
+- **Qualité** `q` (0.0 → 1.0) — mesure la cohérence/pureté du beam (fixée à la source)
+- **Bruit** `n` (0.0 → 1.0) — interférence accumulée pendant la transmission (commence à 0)
 
 ### Formule d'efficacité
 
@@ -280,10 +327,10 @@ correspondance_λ =
   delta ≤ 80 nm   → 0.10
   delta > 80 nm   → 0.00 (machine inactive)
 
-efficacité_finale = correspondance_λ × qualité
+efficacité_finale = correspondance_λ × qualité × (1 - bruit)
 ```
 
-**Exemple :** beam à 533 nm (delta 3 nm sur optimum 530) avec qualité 0.85 → `0.75 × 0.85 = 63.75%`
+**Exemple :** beam à 533 nm (delta 3 nm sur optimum 530), qualité 0.85, bruit 0.10 → `0.75 × 0.85 × 0.90 = 57.4%`
 
 L'efficacité affecte :
 - La **vitesse** de traitement (Crystal Furnace, Photosynthesis Accelerator…)
@@ -787,7 +834,7 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 - **Sans signal redstone :** laisse passer le beam sans modification (transparent)
 - **Avec signal redstone :** bloque le beam complètement
 - Mode inversable (sneak + clic droit) : par défaut bloqué, s'ouvre avec redstone
-- La longueur d'onde, la qualité et le débit sont préservés quand ouvert
+- La longueur d'onde, la qualité, le débit et le bruit sont préservés quand ouvert
 
 **Usages :**
 - Allumer/éteindre des machines à distance
@@ -805,6 +852,67 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 ---
 
+### Dampening Glass
+
+**Description** : Bloc posé dans le trajet d'un faisceau pour supprimer l'accumulation de bruit sur ce bloc. Transparent et sans effet sur λ, qualité ni débit.
+
+**Comportement :**
+- Posé à la place de l'air dans le chemin du beam
+- Le beam le traverse normalement (pas de blocage, pas de modification)
+- Le bloc sur lequel il est posé n'accumule **aucun bruit**
+- N'a pas besoin de couvrir tout le trajet — chaque bloc couvert soustrait sa contribution au bruit total
+- Couverture totale du trajet → bruit résiduel très faible (≈ 0.001 × blocs), mais jamais exactement 0
+
+**Usage :**
+- Réduction partielle ou totale du bruit sur des faisceaux en ligne droite
+- Plus économique que la fibre optique pour de courtes distances
+
+**Recette craft :**
+```
+[Air]         [Verre]          [Air]
+[Verre]       [Cristal Quartz] [Verre]    → 4 Dampening Glass
+[Air]         [Verre]          [Air]
+```
+
+---
+
+### Fiber Optic Cable
+
+**Description** : Câble qui transporte un faisceau lumineux le long de son trajet, sans perte de bruit et sans contrainte de ligne droite. Fonctionne comme un câble AE2 — le beam entre à une extrémité et ressort à l'autre, en suivant le câble bloc par bloc.
+
+**Comportement :**
+- Se pose bloc par bloc pour former un chemin continu
+- Le beam entre dans la fibre depuis un Light Emitter ou un autre bloc émetteur
+- Il suit le câble quelle que soit la direction (horizontal, vertical, courbes, coins)
+- **Bruit : 0** sur l'intégralité du trajet câblé
+- Pas de limite de portée tant que le câble est continu et non interrompu
+- Un bloc non-fibre dans le câble interrompt le beam (bruit reprend depuis zéro après la coupure)
+- À la sortie du câble : le beam reprend en mode raycasting normal (bruit repart de 0 à ce point)
+
+**Pas besoin de miroir** : la fibre permet tous les angles, remplaçant le miroir pour le routage.
+
+**Comparaison avec les autres solutions :**
+
+| Solution | Bruit | Flexibilité trajet | Coût |
+|---|---|---|---|
+| Air seul | +0.005/bloc | Ligne droite | Gratuit |
+| Dampening Glass | 0 par bloc couvert | Ligne droite | Bas |
+| **Fiber Optic Cable** | **0 total** | **Libre (tout angle)** | **Élevé** |
+
+**Recette craft (4 câbles) :**
+```
+[Verre]        [Quartz]         [Verre]
+[Gemme (≥T1)] [Cristal Nether] [Gemme (≥T1)]    → 4 Fiber Optic Cable
+[Verre]        [Quartz]         [Verre]
+```
+
+**Rendu visuel :**
+- Câble fin (modèle type pipe) avec une teinte colorée selon la λ du beam qu'il transporte
+- Si pas de beam actif : câble gris neutre
+- Légère lueur de la couleur du beam quand actif
+
+---
+
 ### Wavelength Sensor
 
 **Description** : Détecte un faisceau passant devant lui et émet un signal redstone proportionnel à la longueur d'onde ou à la qualité.
@@ -814,6 +922,7 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 - Mode configurable (sneak + clic droit) :
   - **Mode λ :** signal redstone = `(λ - 380) / 400 × 15` (arrondi à l'entier 0–15)
   - **Mode qualité :** signal redstone = `qualité × 15` (arrondi à l'entier 0–15)
+  - **Mode bruit :** signal redstone = `bruit × 15` (arrondi à l'entier 0–15) — utile pour déclencher une alarme si le bruit dépasse un seuil
 - Si aucun beam détecté : signal = 0
 
 **Exemples mode λ :**
