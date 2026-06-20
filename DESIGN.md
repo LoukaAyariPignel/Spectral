@@ -459,28 +459,67 @@ Le débit (PH/tick) d'un beam dépend de la source qui alimente le Light Emitter
 
 ### Concentrating Lens
 
-**Description** : Bloc placé **directement au-dessus** d'un Solar Collector pour concentrer la lumière solaire et amplifier sa production. Plusieurs Lens peuvent être empilées verticalement.
+**Description** : Bloc placé sur la **face supérieure** de n'importe quelle machine pour concentrer et amplifier son fonctionnement. Existe en **4 tiers**, chaque tier concentrant davantage.
 
-**Comportement :**
-- Doit être posée sur la face supérieure du Solar Collector (ou d'une autre Lens)
-- Doit avoir le ciel dégagé au-dessus (aucun bloc opaque)
-- Chaque Lens multiplie la production du collector par **×1.5**
-- Maximum **4 Lens** empilées sur un même collector
+**Principe général :**
+- Une Concentrating Lens se pose sur le dessus d'une machine
+- Elle amplifie l'énergie que la machine traite (PH produits ou PH reçus)
+- **Une seule lens active par machine** — seule la lens la plus haute est prise en compte si plusieurs sont empilées (sauf Solar Collector, voir ci-dessous)
+- Le tier de la lens détermine le multiplicateur
 
-**Production avec Lens (plein soleil) :**
+### Tiers
 
-| Lens empilées | Multiplicateur | PH/tick |
+| Tier | Nom | Multiplicateur | Craft |
+|---|---|---|---|
+| 1 | Basic Concentrating Lens | ×1.5 | Verre + Quartz |
+| 2 | Concentrating Lens | ×2.5 | Verre + Quartz + Améthyste |
+| 3 | Advanced Concentrating Lens | ×4.0 | Verre teinté + Diamant + Cristal |
+| 4 | Perfect Concentrating Lens | ×6.0 | Verre parfait + Netherite + Gemme raffinée |
+
+**Chaque tier est une upgrade du précédent** (station d'upgrade, pas de recette from scratch).
+
+---
+
+### Comportement selon la machine
+
+**Sur un Solar Collector (cas spécial — empilement) :**
+
+Le Solar Collector accepte plusieurs Concentrating Lens **empilées verticalement**. Toutes les lens de la pile contribuent, en multipliant leurs effets.
+
+- La pile entière doit avoir le **ciel dégagé** au-dessus
+- Les lens n'ont pas besoin d'être du même tier
+- Les multiplicateurs se **multiplient entre eux**
+
+| Exemple de pile | Calcul | PH/tick (plein soleil) |
 |---|---|---|
-| 0 | ×1.0 | 10 |
-| 1 | ×1.5 | 15 |
-| 2 | ×2.25 | 22 |
-| 3 | ×3.37 | 33 |
-| 4 | ×5.06 | 50 (max) |
+| 1× Tier 1 | 10 × 1.5 | 15 |
+| 2× Tier 1 | 10 × 1.5 × 1.5 | 22 |
+| 1× Tier 2 | 10 × 2.5 | 25 |
+| 4× Tier 1 | 10 × 1.5⁴ | 50 |
+| 2× Tier 2 | 10 × 2.5² | 62 |
+| 1× Tier 3 + 1× Tier 2 | 10 × 4.0 × 2.5 | 100 |
+| 4× Tier 4 | 10 × 6.0⁴ | 1296 (late game) |
 
-**Recette craft :**
+**Sur toute autre machine (Crystal Furnace, Photosynthesis Accelerator, Spectral Refiner…) :**
+
+La lens amplifie le **débit effectif reçu** par la machine — comme si la machine recevait plus de PH/tick que le beam n'en transporte réellement. Le beam n'est pas modifié, seul le calcul interne de la machine change.
+
+- Une seule lens active (la plus haute posée sur la machine)
+- Si une lens Tier 3 est posée sur une Crystal Furnace qui reçoit 20 PH/tick → la machine se comporte comme si elle recevait `20 × 4.0 = 80 PH/tick`
+- La longueur d'onde et la qualité du beam ne sont **pas** affectées
+
+**Exemple (Crystal Furnace à 700 nm, optimum 700 nm, q=1.0) :**
+
+| Lens | Débit réel | Débit effectif | Vitesse cuisson |
+|---|---|---|---|
+| Aucune | 16 PH/tick | 16 PH/tick | ×2 vanilla |
+| Tier 1 | 16 PH/tick | 24 PH/tick | ×2.4 vanilla |
+| Tier 3 | 16 PH/tick | 64 PH/tick | ×3 vanilla (cap) |
+
+**Recette Tier 1 :**
 ```
 [Air]     [Verre]   [Air]
-[Verre]   [Quartz]  [Verre]    → 1 Concentrating Lens
+[Verre]   [Quartz]  [Verre]    → 1 Basic Concentrating Lens
 [Air]     [Verre]   [Air]
 ```
 
