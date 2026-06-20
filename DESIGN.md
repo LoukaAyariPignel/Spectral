@@ -958,7 +958,7 @@ END GAME
 
 ### Forge ou NeoForge ?
 
-**NeoForge**, sans hésitation pour un nouveau mod en 2025.
+**NeoForge**, sans hésitation pour un nouveau mod en 2026.
 
 En juillet 2023, la quasi-totalité de l'équipe de développement de Forge a forké le projet pour créer NeoForge suite à des conflits internes. Depuis :
 
@@ -967,22 +967,35 @@ En juillet 2023, la quasi-totalité de l'équipe de développement de Forge a fo
 
 ---
 
+### Versioning NeoForge (schéma)
+
+NeoForge utilise un versioning adapté de semver qui reflète directement la version Minecraft :
+
+```
+NeoForge X.Y.Z  →  Minecraft 1.X.Y  (build Z)
+NeoForge 26.1.2.76  →  Minecraft 26.1  (versioning calendaire MC, build 76)
+```
+
+En 2026, Mojang a basculé vers un **versioning calendaire** (26.1, 26.2, …). NeoForge a suivi avec un format 4-composants : `26.1.2.x`.
+
+---
+
 ### Version cible
 
-**Minecraft 1.21.1 — NeoForge 21.1.x**
+**Minecraft 1.21.1 — NeoForge 21.1.233**
 
-| Version | Loader | Écosystème mods | Data Components | Choix |
+| Version MC | NeoForge stable | Écosystème mods | Data Components | Statut |
 |---|---|---|---|---|
-| 1.20.1 | Forge | ★★★★★ (record historique) | ✗ (NBT uniquement) | ✗ Incompatible avec notre système |
-| **1.21.1** | **NeoForge** | **★★★★☆ Très large** | **✓ Mature** | **✓ Recommandé** |
-| 1.21.4 | NeoForge | ★★★☆☆ En croissance | ✓ Mature | Alternative future |
-| 1.21.5 | NeoForge | ★★☆☆☆ Limité | ✓ Mature | Trop récent |
+| 1.20.1 | Forge (legacy) | ★★★★★ (record historique) | ✗ (NBT uniquement) | ✗ Incompatible |
+| **1.21.1** | **21.1.233** | **★★★★☆ Très large** | **✓ Mature** | **✓ Recommandé** |
+| 26.1 | 26.1.2.76 | ★★★☆☆ En croissance | ✓ Mature | Alternative (nouvelle ère MC) |
+| 26.2 | 26.2.0.6-beta | ★★☆☆☆ Limité | ✓ Mature | Trop récent (beta) |
 
 > **Pourquoi pas 1.20.1 malgré son énorme écosystème ?**  
-> Les Data Components n'existent pas avant 1.20.5. Le stockage de la longueur d'onde de la gemme repose entièrement dessus — en 1.20.1 il faudrait utiliser NBT, moins propre et moins stable. Ce serait réécrire le système principal du mod.
+> Les Data Components n'existent pas avant 1.20.5. Le stockage de la longueur d'onde de la gemme repose entièrement dessus — en 1.20.1 il faudrait utiliser NBT, moins propre et moins stable.
 
-> **Pourquoi 1.21.1 plutôt que 1.21.4 ?**  
-> 1.21.1 a le plus grand écosystème NeoForge actuellement, la meilleure documentation, et NeoForge 21.1.x est très stable. Migration vers 1.21.4 simple une fois le core stable.
+> **Pourquoi 1.21.1 plutôt que MC 26.1 ?**  
+> 1.21.1 (NeoForge 21.1.233) a le plus grand écosystème NeoForge, la meilleure documentation, et est entièrement stable. MC 26.1 est la nouvelle ère calendaire mais l'écosystème de mods est encore en construction. Migration vers 26.1 possible une fois le core stable et l'écosystème mûr.
 
 ---
 
@@ -1001,7 +1014,7 @@ plugins {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:21.1.x"
+    implementation "net.neoforged:neoforge:21.1.233"
 }
 ```
 
@@ -1012,7 +1025,7 @@ fabric_version=...
 yarn_mappings=...
 
 # Ajouter
-neo_version=21.1.x           # version NeoForge exacte
+neo_version=21.1.233         # dernière stable MC 1.21.1 (juin 2026)
 minecraft_version=1.21.1
 ```
 
@@ -1039,7 +1052,7 @@ license = "CC0-1.0"
 [[dependencies.gemmology]]
     modId = "neoforge"
     type = "required"
-    versionRange = "[21.1,)"
+    versionRange = "[21.1.233,)"
     ordering = "NONE"
     side = "BOTH"
 
