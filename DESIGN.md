@@ -1307,16 +1307,144 @@ public static void onRegisterItemColors(RegisterColorHandlersEvent.Item event) {
 
 ## Effets visuels
 
-> **Reportés à plus tard.** La version initiale se concentre sur le fonctionnement mécanique du mod. Les effets visuels (rendu du faisceau, particules, animations des machines, rendu des gemmes UV/IR) seront ajoutés une fois que la logique de base est validée en jeu.
+> Le rendu du faisceau est **inclus dès la Phase 1** — sans le voir, impossible de tester que le système fonctionne. Les autres effets (particules machines, halos gemmes UV/IR, overlay Goggles) restent reportés en Phase 3.
 
-Ce qui sera fait plus tard :
-- Rendu cylindrique du faisceau lumineux (couleur selon λ)
+Reportés à plus tard :
 - Faisceaux UV/IR invisibles (particules à la place)
 - Animations machines actives/inactives
 - Overlay des Spectral Goggles
 - Halo lumineux des gemmes hors-visible
 
 ---
+
+## Rendu du faisceau lumineux
+
+### Approche technique : Block Entity Renderer
+
+Le rendu est effectué par un **`BlockEntityRenderer<LightEmitterBlockEntity>`**. Le `LightEmitterBlockEntity` connaît en permanence le segment de beam qu'il émet (start, end, λ, débit). C'est lui qui pilote le rendu côté client.
+
+**Enregistrement du BER (client uniquement) :**
+```java
+@EventBusSubscriber(modid = Gemmology.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
+public class GemmologyClient {
+    @SubscribeEvent
+    public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.LIGHT_EMITTER.get(),
+            LightEmitterRenderer::new);
+    }
+}
+```
+
+### Géométrie du beam
+
+Le beam est rendu comme un **quad billboard** (deux quads croisés en X) ou un **quad face-caméra**, centré sur l'axe du beam, de la face du Light Emitter jusqu'au point d'impact.
+
+```java
+public class LightEmitterRenderer implements BlockEntityRenderer<LightEmitterBlockEntity> {
+
+    @Override
+    public void render(LightEmitterBlockEntity be, float partialTick,
+                       PoseStack pose, MultiBufferSource buffers,
+                       int packedLight, int packedOverlay) {
+
+        LightBeam beam = be.getCurrentBeam();
+        if (beam == null) return;
+
+        int color = WavelengthUtil.toRGB(beam.wavelength()); // λ → ARGB
+        float r = ((color >> 16) & 0xFF) / 255f;
+        float g = ((color >> 8)  & 0xFF) / 255f;
+        float b = ( color        & 0xFF) / 255f;
+        float alpha = 0.6f + 0.4f * (beam.debit() / 50f); // plus lumineux = plus opaque
+
+        Vec3 start = Vec3.atCenterOf(be.getBlockPos());
+        Vec3 end   = beam.endPos(); // calculé par LightBeamManager
+
+        VertexConsumer vc = buffers.getBuffer(RenderType.translucent());
+        renderBeamQuad(pose, vc, start, end, 0.05f, r, g, b, alpha);
+    }
+}
+```
+
+### `renderBeamQuad`
+
+Dessine deux quads perpendiculaires centrés sur l'axe du beam (forme de croix) pour donner l'illusion d'un volume sans géométrie 3D coûteuse.
+
+```java
+private void renderBeamQuad(PoseStack pose, VertexConsumer vc,
+                              Vec3 start, Vec3 end, float radius,
+                              float r, float g, float b, float a) {
+    Vec3 dir    = end.subtract(start).normalize();
+    Vec3 perpH  = dir.cross(new Vec3(0, 1, 0)).normalize().scale(radius);
+    Vec3 perpV  = dir.cross(perpH).normalize().scale(radius);
+
+    // Quad horizontal
+    addQuad(pose, vc, start, end, perpH, r, g, b, a);
+    // Quad vertical
+    addQuad(pose, vc, start, end, perpV, r, g, b, a);
+}
+```
+
+### Émission de lumière (`setLightBlock`)
+
+Le beam ne projette pas de lumière dynamique nativement en Minecraft. Deux options :
+
+| Option | Description | Complexité |
+|---|---|---|
+| **Aucune** | Le beam est visible mais n'éclaire pas | Simple (Phase 1) |
+| **Light level sur les blocs touchés** | `level.setBlock(pos, lightBlock, ...)` sur chaque bloc traversé | Moyen |
+| **Mod Embeddium / Iris shaders** | Lumière dynamique via shader | Hors scope |
+
+> **Phase 1 : option "Aucune"** — le beam est visible mais n'éclaire pas les blocs. La lumière dynamique est ajoutée plus tard.
+
+### `WavelengthUtil.toRGB`
+
+Méthode statique qui convertit une longueur d'onde (nm) en couleur ARGB packed. C'est l'algorithme déjà présent dans `GemmologyClient.java` (converti en utilitaire partagé) :
+
+```java
+public class WavelengthUtil {
+
+    public static final float MIN_WAVELENGTH = 380f;
+    public static final float MAX_WAVELENGTH = 780f;
+
+    public static int toRGB(float wavelength) {
+        // Algorithme spectre visible → RGB
+        // (repris de GemmologyClient.getColorFromWavelength)
+        ...
+        return (0xFF << 24) | ((int) red << 16) | ((int) green << 8) | (int) blue;
+    }
+}
+```
+
+### Synchronisation serveur → client
+
+Le `LightEmitterBlockEntity` doit envoyer les données du beam au client pour le rendu :
+
+```java
+// Dans LightEmitterBlockEntity
+@Override
+public ClientboundBlockEntityDataPacket getUpdatePacket() {
+    return ClientboundBlockEntityDataPacket.create(this);
+}
+
+@Override
+public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+    CompoundTag tag = new CompoundTag();
+    if (currentBeam != null) {
+        tag.putFloat("wavelength", currentBeam.wavelength());
+        tag.putFloat("quality",    currentBeam.quality());
+        tag.putFloat("debit",      currentBeam.debit());
+        tag.putDouble("endX", currentBeam.endPos().x);
+        tag.putDouble("endY", currentBeam.endPos().y);
+        tag.putDouble("endZ", currentBeam.endPos().z);
+    }
+    return tag;
+}
+```
+
+Chaque fois que le beam change (nouveau bloc bloquant, changement de λ, débit fluctue), le serveur appelle `level.sendBlockUpdated(pos, ...)` pour re-synchroniser.
+
+---
+
 
 ## Ordre d'implémentation
 
@@ -1331,6 +1459,7 @@ Ce qui sera fait plus tard :
 6b. **`ConcentratingLensBlock`** (amplificateur empilable au-dessus d'un Solar Collector)
 6c. **`ThermalGeneratorBlock`** (combustible → PH/tick constant, indépendant du soleil)
 7. **`LightEmitterBlock`** (convertit PH → beam, émission directionelle)
+7b. **`LightEmitterRenderer`** (BER — rendu quad billboard coloré selon λ, synchronisation NBT serveur→client)
 8. **`PrismStandBlock`** (attunement Raw Crystal + filtrage beam)
 9. **`CrystalFurnaceBlock`** (premier consommateur — four accéléré)
 10. **`LightBatteryBlock`** (stockage PH)
@@ -1350,9 +1479,10 @@ Ce qui sera fait plus tard :
 21. **Spectral Forge** (gemmes Tier 4–5)
 22. **Machines end game** (Transmitter/Receiver, X-Ray Scanner)
 
-### Phase 3 — Effets visuels (en parallèle ou après Phase 2)
+### Phase 3 — Effets visuels (après Phase 2)
 
-23. **Rendu faisceau** (cylindre lumineux coloré)
-24. **Overlay Spectral Goggles**
-25. **Particules et animations machines**
+23. **Overlay Spectral Goggles**
+24. **Particules et animations machines**
+25. **Faisceaux UV/IR** (invisibles + particules à la place)
 26. **Rendu gemmes UV/IR** (halos, particules)
+27. **Lumière dynamique** sur les blocs traversés par le beam
