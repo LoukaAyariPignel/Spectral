@@ -260,15 +260,15 @@ Un bloc spécialisé — le **Dampening Glass** (verre antiparasitage) — peut 
 
 ```
 Exemple : trajet de 20 blocs, 10 blocs avec Dampening Glass
-→ bruit = (10 × 0.005) + (10 × 0.0005) = 0.05 + 0.005 = 0.055 au lieu de 0.10
-→ pénalité réduite de 10% à 5.5%
+→ bruit = (10 × 0.005) + (10 × 0.0015) = 0.05 + 0.015 = 0.065 au lieu de 0.10
+→ pénalité réduite de 10% à 6.5%
 
 Exemple : trajet de 20 blocs, couverture totale en Dampening Glass
-→ bruit = 20 × 0.0005 = 0.01  (10% du bruit sans glass qui aurait été 0.10)
-→ pénalité : 1% au lieu de 10%
+→ bruit = 20 × 0.0015 = 0.03  (30% du bruit sans glass qui aurait été 0.10)
+→ pénalité : 3% au lieu de 10%
 ```
 
-> Le Dampening Glass réduit le bruit du bloc couvert à **10% de sa valeur normale** (pas à 0). Un bloc d'air sans glass = +0.005, le même bloc avec Dampening Glass = +0.0005. Couverture totale → 10% du bruit normal. Pour atteindre exactement 0, il faut la fibre optique.
+> Le Dampening Glass réduit le bruit du bloc couvert de **70%** (pas à 0). Un bloc d'air sans glass = +0.005, le même bloc avec Dampening Glass = +0.0015. Couverture totale → 30% du bruit normal. Pour atteindre exactement 0, il faut la fibre optique.
 
 ### Interactions avec les blocs (résumé)
 
@@ -863,9 +863,9 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 **Comportement :**
 - Posé à la place de l'air dans le chemin du beam
 - Le beam le traverse normalement (pas de blocage, pas de modification)
-- Réduit le bruit du bloc couvert à **10% de sa valeur normale** : `+0.005 → +0.0005` par bloc
+- Réduit le bruit du bloc couvert de **70%** : `+0.005 → +0.0015` par bloc
 - N'a pas besoin de couvrir tout le trajet — chaque bloc couvert réduit sa contribution individuelle
-- Couverture totale du trajet → **10% du bruit qu'il y aurait eu sans glass**
+- Couverture totale du trajet → **30% du bruit qu'il y aurait eu sans glass**
 
 **Usage :**
 - Réduction partielle ou totale du bruit sur des faisceaux en ligne droite
