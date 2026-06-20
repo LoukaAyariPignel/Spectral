@@ -1,157 +1,591 @@
-# Gemmology — Design Document
+# Gemmology — Design Document (Détaillé)
 
 ## Vision générale
 
-Un mod Fabric (Minecraft 1.21.1) basé sur la lumière comme source d'énergie. La lumière est collectée, transportée via des faisceaux, filtrée par des gemmes, et consommée par des machines. Chaque gemme possède une longueur d'onde unique qui détermine sa couleur et ses propriétés énergétiques.
+Un mod Fabric (Minecraft 1.21.1, Java 21) qui transforme la lumière en source d'énergie.  
+La lumière est collectée, convertie en **Photons (PH)**, transportée via des **faisceaux**, filtrée par des **gemmes**, et consommée par des **machines**.  
+Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa couleur et les effets qu'elle peut produire sur un faisceau.
+
+---
+
+## Unité d'énergie : les Photons (PH)
+
+- Unité interne : **Photon (PH)**
+- Toutes les machines produisent et consomment des PH/tick (1 tick = 1/20e de seconde)
+- Les Photons ne peuvent pas voyager seuls dans des câbles classiques : ils voyagent uniquement via des **faisceaux lumineux** ou sont stockés dans des **Light Battery**
+- Un faisceau transporte un **débit** (PH/tick) et une **longueur d'onde** (nm)
 
 ---
 
 ## Les Gemmes
 
-### Propriétés
-- Chaque gemme possède une **longueur d'onde** (Float, en nm) stockée via un DataComponent
-- La longueur d'onde détermine la **couleur visible** de la gemme (algorithme spectre visible)
-- Deux gemmes ne sont jamais exactement identiques
+### Propriétés d'une gemme
+- Stocke une **longueur d'onde** `float` (en nm) via le DataComponent `gemmology:wave_length`
+- La longueur d'onde détermine :
+  - La **couleur affichée** (via l'algorithme de conversion spectre → RGB)
+  - Les **effets produits** lorsqu'elle filtre un faisceau
+  - La **compatibilité** avec les machines réceptrices
+- Deux gemmes ne sont jamais exactement identiques (valeurs flottantes)
+- Le tooltip affiche la longueur d'onde avec 1 décimale : `"542.3 nm"`
 
-### Spectre et progression
+### Spectre complet et progression
 
-| Tier | Spectre | Longueur d'onde | Obtention | Effets / Usages |
-|---|---|---|---|---|
-| 1 | Visible | 380–780 nm | Prism Stand + lumière naturelle | Machines de base, faisceaux colorés |
-| 2 | Proche UV | 300–380 nm | Machines avancées + crafts coûteux | Révèle minerais cachés, croissance accélérée |
-| 3 | Proche IR | 780–1400 nm | Machines avancées + crafts coûteux | Chaleur, fusion rapide, vision thermique |
-| 4 | UV profond | 100–300 nm | Crafts très difficiles | Désintégration, purification, dégâts mobs |
-| 5 | IR lointain | 1400+ nm | Crafts très difficiles | Transmission d'énergie sans fil longue distance |
-| 6 | X-ray / Gamma | < 10 nm | Crafts extrêmes, très rares | Vision à travers les murs, énergie maximale |
+| Tier | Nom | Plage (nm) | Couleur visible | Obtention | Effets principaux |
+|---|---|---|---|---|---|
+| 1 | Visible | 380–780 | Toutes couleurs | Prism Stand + lumière | Faisceaux colorés, machines de base |
+| 2 | Proche UV | 300–380 | Noir + halo violet | Chromatic Compressor | Révèle minerais, désinfection, buff plantes |
+| 3 | Proche IR | 780–1400 | Noir + halo rouge | Thermal Expander | Chaleur, forge rapide, vision thermique |
+| 4 | UV profond | 100–300 | Noir + halo blanc-violet | Spectral Forge | Désintégration, purification, dégâts mobs |
+| 5 | IR lointain | 1400–10 000 | Noir + halo orange intense | Spectral Forge | Transmission énergie sans fil, chaleur extrême |
+| 6 | X-ray | 0.01–10 | Blanc éblouissant + glow | Ultime (end-game) | Vision à travers les murs, énergie maximale |
+| 7 | Gamma | < 0.01 | Arc-en-ciel pulsant | Ultime (end-game) | Effets combinés, dégâts massifs, téléportation |
 
-**Règle importante** : les gemmes hors spectre visible (Tier 2+) ne peuvent **jamais** être obtenues par exposition à la lumière naturelle. Elles sont réservées aux machines et crafts avancés. La valeur de longueur d'onde est strictement clampée entre 380 et 780 nm lors de toute exposition naturelle.
+**Règle stricte** : les Tiers 2–7 ne peuvent **jamais** être produits par exposition à la lumière naturelle.  
+La plage d'exposition naturelle est clampée à `[380, 780]` dans le code.
 
-### Rendu visuel des gemmes hors-visible
-- **UV** → gemme noire avec halo violet (particules)
-- **IR** → gemme noire avec halo rouge/orange brillant
-- **X-ray / Gamma** → gemme blanche éblouissante avec effet glow
+### Rendu visuel par tier
+
+| Tier | Texture gemme | Effet visuel |
+|---|---|---|
+| Visible | Translucide colorée dynamiquement | Légère émission de lumière de la même couleur |
+| Proche UV | Noire avec veines violettes | Halo violet pulsant (particules `WITCH`) |
+| Proche IR | Noire avec veines rouges | Halo rouge/orange chaud (particules `FLAME`) |
+| UV profond | Noire très sombre | Halo blanc-violet intense, distorsion visuelle |
+| IR lointain | Noire avec reflets orange | Chaleur ondulante (effet heat-haze) |
+| X-ray | Blanche opaque éblouissante | Glow constant, éclaire les blocs proches |
+| Gamma | Iridescente arc-en-ciel | Pulsation rapide de toutes les couleurs, aura |
 
 ---
 
-## Obtention des Gemmes (Visible — Tier 1)
+## Obtention des Gemmes
 
-### Étape 1 — Miner le Raw Crystal Ore
-- Nouveau minerai généré dans les grottes/underground
-- En le minant : obtention d'un `Raw Crystal` (cristal brut, sans couleur ni longueur d'onde)
+### Étape 0 — Raw Crystal Ore
 
-### Étape 2 — Exposition à la lumière (Prism Stand)
-- Placer le `Raw Crystal` dans un bloc **Prism Stand**
-- La longueur d'onde se fixe selon la source de lumière et l'environnement :
+**Génération dans le monde :**
+- Biomes : tous les biomes (légèrement plus fréquent dans les biomes froids et sombres)
+- Niveaux Y : -20 à -80 (deep underground, similaire à l'améthyste)
+- Taille de veine : 1 à 4 blocs
+- Fréquence : plus rare que le fer, légèrement plus commun que le diamant
+- Nécessite un pickaxe en fer ou mieux pour être miné
+- Drops : 1 à 3 `Raw Crystal` (Fortune augmente le drop)
 
-| Source de lumière | Longueur d'onde approximative |
-|---|---|
-| Soleil à midi | ~550 nm (vert/jaune) |
-| Lever / coucher de soleil | ~620 nm (orange/rouge) |
-| Nuit / lune | ~430 nm (violet/bleu) |
-| Torche / lave | ~680 nm (rouge chaud) |
-| Beacon (avec verre coloré) | Longueur d'onde précise selon couleur |
+**Aspect visuel du bloc :**
+- Base de pierre profonde (`deepslate`) avec des inclusions translucides blanc-gris scintillantes
+- Légère lueur (light level 2) pour être repérable dans l'obscurité
 
-→ La gemme obtenue a une longueur d'onde **aléatoire dans la plage correspondante** (pas exactement fixe, mais guidée par l'environnement)
+### Étape 1 — Raw Crystal (item)
+
+- Cristal brut, incolore, sans longueur d'onde
+- Ne peut pas être utilisé comme gemme directement
+- Peut être posé dans un Prism Stand pour l'attunement
+- Stack de 64
+
+### Étape 2 — Attunement via Prism Stand
+
+Le `Prism Stand` détecte la lumière ambiente et attribue une longueur d'onde au Raw Crystal.
+
+**Algorithme de détermination de la longueur d'onde :**
+
+1. **Source principale** (détermine la plage de base) :
+
+| Condition | Plage de base | Longueur d'onde cible |
+|---|---|---|
+| Lumière du soleil (sky light ≥ 12) + midi (ticks 9000–15000) | 520–570 nm | Vert/jaune |
+| Lumière du soleil + matin/après-midi (ticks 6000–9000 / 15000–18000) | 570–640 nm | Jaune/orange |
+| Lever/coucher de soleil (ticks 4000–6000 / 18000–20000) | 600–680 nm | Orange/rouge |
+| Nuit + lune visible (ticks 13000–23000, sky light ≥ 4) | 410–460 nm | Violet/bleu |
+| Nuit sans lune / orage (sky light = 0) | 380–420 nm | Violet profond |
+| Torche / lanterne dans rayon de 3 blocs | 650–700 nm | Rouge chaud |
+| Lave dans rayon de 3 blocs | 680–740 nm | Rouge profond |
+| Feu dans rayon de 3 blocs | 620–670 nm | Orange-rouge |
+| Glowstone dans rayon de 3 blocs | 560–600 nm | Jaune |
+| Beacon (avec verre coloré) | Fixe selon couleur | Précise |
+
+2. **Modificateur de biome** (±15 nm) :
+   - Biomes désertiques/chauds : +10 nm (vers le rouge)
+   - Biomes enneigés/froids : -10 nm (vers le bleu)
+   - Biomes océaniques : -5 nm
+
+3. **Modificateur météo** :
+   - Pluie : -20 nm
+   - Orage : -40 nm
+
+4. **Variation aléatoire finale** : ±8 nm (gaussian)
+
+5. **Clamp final** : `[380, 780]` nm (jamais hors visible)
+
+**Durée d'attunement :**
+- Plein soleil à midi : 3 minutes (3600 ticks)
+- Conditions partielles : 5 à 8 minutes
+- Torche/lave uniquement : 6 minutes
+- Nuit (lune) : 10 minutes
+- Un indicateur de progression (barre) s'affiche dans le GUI du Prism Stand
+
+**Cas spéciaux avec le Beacon :**
+- Couleur du verre → longueur d'onde précise mappée
+- Rouge → 700 nm, Orange → 630 nm, Jaune → 575 nm, Vert → 530 nm, Cyan → 495 nm, Bleu → 465 nm, Violet → 415 nm
+- Durée d'attunement réduite à 1 minute (source de lumière pure)
 
 ### Étape 3 — Raffinement (Spectral Refiner — Mid game)
-- Machine dédiée permettant de **faire passer un faisceau coloré** à travers la gemme
-- Déplace la longueur d'onde vers une valeur précise ciblée par le joueur
-- Permet d'obtenir exactement la gemme nécessaire pour une machine spécifique
+
+- Insère une gemme existante + définit une longueur d'onde cible
+- La cible peut être définie :
+  - En insérant une **gemme de référence** dans un second slot
+  - Manuellement via un curseur dans le GUI (précision ±5 nm)
+- Vitesse de raffinement : **1 nm par seconde** (20 ticks) en conditions normales
+- Consomme 20 PH/tick pendant l'opération
+- Limite du Spectral Refiner de base : ne peut pas dépasser les bornes du visible `[380, 780]`
+- Les gemmes hors-visible nécessitent les machines Tier 2+
+
+### Étape 4 — Gemmes hors-visible (Late/End game)
+
+#### Chromatic Compressor (UV — Tier 2)
+- Prend une gemme visible à ≤400 nm
+- La compresse sous les 380 nm → Proche UV
+- Recette coûteuse : gemme + amethyste + cristal de nether + echo shard
+- Temps de traitement : 5 minutes + consommation de 100 PH/tick
+
+#### Thermal Expander (IR — Tier 3)
+- Prend une gemme visible à ≥720 nm
+- L'expand au-delà des 780 nm → Proche IR
+- Recette : gemme + blaze rod + magma block + netherite ingot
+
+#### Spectral Forge (Tiers 4–5)
+- Machine end-game nécessitant un beacon actif à proximité (rayon 10 blocs)
+- Produit les gemmes UV profond et IR lointain
+- Consomme des nether stars dans le craft
+- 500 PH/tick pendant 10 minutes
+
+#### Ultime / Gamma (Tiers 6–7)
+- Nécessite un portail de l'end actif à proximité (8 blocs)
+- Ingredients : dragon egg, nether star × 4, gemmes de tous les tiers précédents
+- Extrêmement coûteux et rare, 1 seul par partie (non renouvelable sauf dragon respawn)
 
 ---
 
 ## Système de Faisceau Lumineux
 
-### Principe
+### Principe physique
+
 ```
-[Émetteur] ──────► [Prism Stand + Gemme] ──────► [Machine / Récepteur]
- (beam blanc)        (filtre la longueur d'onde)   (reçoit un beam coloré)
+[Solar Collector]
+       │ (Photons)
+       ▼
+[Light Emitter] ──────────────────────────────────────────► [Machine Réceptrice]
+  (beam blanc,           [Prism Stand]                        reçoit beam coloré
+   débit X PH/tick)    (Gemme 530nm)                         à 530nm → effet vert
+                              │
+                        filtre le beam :
+                        longueur d'onde = gem
+                        débit × 0.85 (perte 15%)
 ```
 
-### Composants du système
+### Propagation du faisceau
 
-**Émetteur**
-- Génère un faisceau de lumière brute dans une direction
-- Comparable à un beacon mais horizontal et directionnel
+- Le faisceau est calculé **instantanément** par raycasting (pas de délai de propagation)
+- Il voyage en **ligne droite** dans la direction de la face de l'émetteur
+- **Portée maximale** : 32 blocs par défaut (extensible avec upgrades)
+- **Bloqué par** : tout bloc solide opaque
+- **Traverse** : verre transparent (sans teinte), air, eau (avec perte de 5 PH/bloc)
 
-**Prism Stand / Support de gemme**
-- Bloc dans lequel on insère une gemme
-- Le faisceau entrant est filtré selon la longueur d'onde de la gemme
-- Peut être chaîné : plusieurs gemmes en série pour combiner/mélanger les couleurs
-- Sert aussi à exposer les `Raw Crystal` à la lumière naturelle (voir Obtention)
+### Interactions avec les blocs
 
-**Machines réceptrices**
-- Reçoivent un faisceau d'une certaine longueur d'onde et produisent un effet
-- Chaque machine est sensible à une **plage de longueur d'onde** :
-
-| Longueur d'onde | Machine / Effet |
+| Bloc rencontré | Comportement |
 |---|---|
-| ~400 nm (violet) | Transmutation / alchimie |
-| ~470 nm (bleu) | Purification de l'eau, potions |
-| ~530 nm (vert) | Croissance accélérée des plantes |
-| ~580 nm (jaune) | Énergie générale, stockage |
-| ~650 nm (orange) | Forge / fusion accélérée |
-| ~700 nm (rouge) | Chaleur intense, four avancé |
-| UV (< 380 nm) | Effets spéciaux, machines end-game |
-| IR (> 780 nm) | Chaleur extrême, énergie sans fil |
+| Bloc solide | Arrêt du beam, impact visuel (étincelles) |
+| Verre transparent | Traverse sans modification |
+| Verre teinté | Traverse et décale la longueur d'onde (±30 nm vers la couleur du verre) |
+| Prism Stand (avec gemme) | Remplace la longueur d'onde du beam par celle de la gemme. Perte : 15% du débit |
+| Prism Stand (sans gemme) | Bloque le beam |
+| Light Battery | Absorbe le beam, stocke les PH |
+| Machine réceptrice | Consomme le beam pour fonctionner |
+| Eau / pluie | Atténue le débit (-5 PH/bloc), légère dispersion |
+| Miroir (futur) | Réfléchit le beam à 90° |
+| Beam Splitter (futur) | Divise le beam en 2 (50% chacun) |
 
-**Spectral Refiner**
-- Machine mid-game permettant d'affiner la longueur d'onde d'une gemme existante
-- Utilise elle-même un faisceau pour fonctionner
+### Chaînage des Prism Stands
+
+Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
+- Chaque Prism Stand **remplace** la longueur d'onde par celle de sa gemme
+- Exemple : beam blanc → Prism Stand (700nm rouge) → Prism Stand (530nm vert) → beam vert à 530nm
+- Utile pour créer des effets complexes ou rediriger la longueur d'onde progressivement
+
+### Rendu visuel du faisceau
+
+- Rendu sous forme d'un cylindre lumineux fin (rayon ~0.1 bloc)
+- Couleur du cylindre = couleur RGB correspondant à la longueur d'onde du beam
+- Gemmes UV/IR : le beam est **invisible** mais des particules le trahissent
+  - UV : particules violettes flottant autour du trajet
+  - IR : légère distorsion thermique (heat-haze) le long du trajet
+- Intensité visuelle proportionnelle au débit (PH/tick)
+- Effets de scintillement si le débit fluctue (ex: Solar Collector en fin de journée)
+- Particules d'impact là où le beam touche un bloc solide
+
+---
+
+## Blocs et Machines
+
+### Solar Collector
+
+**Description** : Collecte l'énergie solaire et la convertit en Photons. Ne produit pas de faisceau directement.
+
+**Production :**
+- Plein soleil (sky light 15, midi) : **10 PH/tick**
+- Soleil partiel (sky light 10–14) : proportionnel (~6–9 PH/tick)
+- Nuit / couvert : **0 PH/tick**
+- Sous la pluie : **2 PH/tick** (diffusion)
+
+**Stockage interne** : 5 000 PH (buffer pour les fluctuations)  
+**Output** : se connecte à un Light Emitter ou Light Battery adjacent (face du bas ou des côtés)
+
+**GUI** : Barre de production actuelle + total stocké en buffer
+
+**Recette craft :**
+```
+[Verre]   [Verre]   [Verre]
+[Quartz]  [Gemme]   [Quartz]    → 1 Solar Collector
+[Fer]     [Fer]     [Fer]
+```
+(Gemme de n'importe quelle longueur d'onde — elle sert de capteur)
+
+---
+
+### Light Emitter
+
+**Description** : Convertit des Photons (depuis un Solar Collector ou une Light Battery adjacente) en faisceau lumineux.
+
+**Comportement :**
+- S'active automatiquement quand il reçoit des PH (ou via signal redstone pour l'éteindre)
+- Direction du faisceau : la **face avant** du bloc (configurable par rotation)
+- Débit du faisceau = débit reçu en PH/tick (1 PH/tick reçu = 1 PH/tick émis)
+- Longueur d'onde initiale du faisceau : **600 nm** (lumière blanche/neutre)
+- Portée par défaut : 32 blocs
+
+**GUI** : Indicateur de débit entrant/sortant, longueur d'onde actuelle du beam émis
+
+**Recette craft :**
+```
+[Fer]       [Quartz]    [Fer]
+[Redstone]  [Gemme]     [Redstone]    → 1 Light Emitter
+[Fer]       [Quartz]    [Fer]
+```
+
+---
+
+### Prism Stand
+
+**Description** : Bloc à double fonction — attunement des Raw Crystals ET filtrage des faisceaux.
+
+**Mode Attunement** (pas de beam entrant) :
+- Slot : 1 Raw Crystal en entrée
+- Détecte la lumière ambiente (algorithme détaillé plus haut)
+- Après la durée d'attunement, produit 1 Gem en sortie
+- GUI : slot input, slot output, barre de progression, affichage de la longueur d'onde en cours d'attribution
+
+**Mode Filtre** (beam entrant détecté) :
+- Slot : 1 Gemme insérée
+- Le faisceau entrant est remplacé par la longueur d'onde de la gemme
+- Perte de 15% du débit (absorption partielle)
+- Le beam de sortie sort par la face opposée à l'entrée
+- GUI : slot gemme, affichage longueur d'onde entrante / sortante, débit
+
+**Recette craft :**
+```
+[Verre]   [Verre]   [Verre]
+[Quartz]  [Air]     [Quartz]    → 1 Prism Stand
+[Quartz]  [Fer]     [Quartz]
+```
+
+---
+
+### Light Battery (Condensateur Lumineux)
+
+**Description** : Stocke les Photons reçus par un faisceau ou un Solar Collector adjacent.
+
+**Capacité :** 50 000 PH (Tier 1) — augmentable avec upgrades  
+**Charge :** Absorbe tout faisceau entrant, convertit en PH stockés  
+**Décharge :** Alimente un Light Emitter adjacent avec un débit configurable  
+**GUI :** Barre de charge, débit de charge/décharge, toggle charge/décharge
+
+**Recette craft :**
+```
+[Fer]       [Quartz]    [Fer]
+[Verre]     [Gemme]     [Verre]    → 1 Light Battery
+[Fer]       [Redstone]  [Fer]
+```
+
+---
+
+### Crystal Furnace
+
+**Description** : Four alimenté par faisceau lumineux. Plus rapide que le four vanilla.
+
+**Longueur d'onde requise :** 620–780 nm (orange à rouge)  
+**Débit minimum :** 8 PH/tick pour fonctionner  
+**Vitesse de cuisson :**
+- 8 PH/tick → 1.5× la vitesse vanilla
+- 16 PH/tick → 2× la vitesse vanilla
+- 32+ PH/tick → 3× la vitesse vanilla
+
+**Bonus avec gemme rouge (700 nm)** : chance 10% de doubler l'output (ore doubling)  
+**GUI :** Slot input, slot output, indicateur longueur d'onde reçue, barre de progression, vitesse actuelle
+
+**Recette craft :**
+```
+[Pierre]  [Pierre]  [Pierre]
+[Pierre]  [Air]     [Pierre]    → 1 Crystal Furnace
+[Pierre]  [Quartz]  [Pierre]
+```
+
+---
+
+### Photosynthesis Accelerator
+
+**Description** : Accélère la croissance des plantes dans une zone grâce à la lumière verte.
+
+**Longueur d'onde requise :** 500–570 nm (cyan à vert-jaune)  
+**Débit minimum :** 12 PH/tick  
+**Rayon d'effet :** 5 blocs (cubique)  
+**Effets :**
+- Crops (blé, carotte, pomme de terre…) : croissance 3× plus rapide
+- Arbres (saplings) : poussent en 30 secondes (au lieu d'aléatoire)
+- Herbe / fougères : apparaissent sur la terre exposée
+- Bonus : à 530 nm exactement, effet "bonemeal aura" 1×/minute sur toutes les plantes du rayon
+
+**GUI :** Longueur d'onde reçue, rayon d'effet, liste des plantes affectées
+
+**Recette craft :**
+```
+[Verre]     [Feuilles]  [Verre]
+[Fer]       [Gemme]     [Fer]       → 1 Photosynthesis Accelerator
+[Fer]       [Terre]     [Fer]
+```
+(Gemme verte ~530 nm recommandée dans la recette mais pas obligatoire)
+
+---
+
+### Spectral Refiner
+
+**Description** : Affine la longueur d'onde d'une gemme vers une valeur cible précise.
+
+**Longueur d'onde requise (pour fonctionner) :** Toute longueur d'onde visible  
+**Débit minimum :** 20 PH/tick  
+**Fonctionnement :**
+- Slot A : Gemme à raffiner
+- Slot B : Gemme de référence (optionnel) **ou** curseur de cible dans le GUI
+- Chaque seconde (20 ticks) de fonctionnement : la longueur d'onde de la gemme se rapproche de 1 nm de la cible
+- Limite : reste dans la plage visible `[380, 780]` nm
+- Si la longueur d'onde actuelle est à moins de 1 nm de la cible : la gemme est finalisée
+
+**Exemple :** Gemme à 650 nm, cible 530 nm → 120 secondes de traitement (2 minutes)
+
+**GUI :** Slot gemme (A), slot référence (B), curseur cible, barre de progression, longueur d'onde actuelle → cible
+
+**Recette craft :**
+```
+[Or]      [Quartz]  [Or]
+[Quartz]  [Diamant] [Quartz]    → 1 Spectral Refiner
+[Fer]     [Redstone][Fer]
+```
+
+---
+
+### UV Sterilizer (Late game — Tier 2)
+
+**Description** : Émet un rayonnement UV dans une zone, tuant/repoussant les mobs hostiles.
+
+**Longueur d'onde requise :** 300–380 nm (UV proche)  
+**Débit minimum :** 50 PH/tick  
+**Effets :**
+- Mobs hostiles dans un rayon de 5 blocs : 2 dégâts/seconde + effet "Brûlure UV"
+- Mobs hostiles dans un rayon de 10 blocs : ralentissement + aveuglement
+- Joueurs dans le rayon : effet "Nausée" si exposés plus de 30 secondes sans protection
+- Les plantes et cultures dans le rayon poussent 2× plus vite (UV stimule la chlorophylle)
+- Stérilise l'eau (dans des cauldrons) → eau purifiée (futur usage potions)
+
+**Recette craft :** Nécessite une gemme UV proche (via Chromatic Compressor)
+
+---
+
+### Thermal Forge (Late game — Tier 3)
+
+**Description** : Four extrême alimenté par faisceau IR, permet le craft d'alliages spéciaux.
+
+**Longueur d'onde requise :** 780–1400 nm (IR proche)  
+**Débit minimum :** 80 PH/tick  
+**Fonctions :**
+- Smelt 5× plus vite que le four vanilla
+- Ore doubling (25% chance)
+- Permet de créer des **Photon Alloys** (alliages spéciaux) nécessaires pour les machines end-game
+- Les recettes de la Thermal Forge ne peuvent pas être craftées autrement
+
+---
+
+### Spectral Transmitter + Receiver (End game — Tier 5)
+
+**Description** : Transmet de l'énergie (Photons) sans fil entre deux points.
+
+**Longueur d'onde requise :** > 1400 nm (IR lointain)  
+**Débit maximum :** 200 PH/tick  
+**Portée :** 64 blocs (ligne de vue non requise)  
+**Fonctionnement :**
+- Le Transmitter reçoit un faisceau IR
+- Le Receiver reconstruit le faisceau de l'autre côté (même longueur d'onde, même débit - 10%)
+- Un seul Transmitter peut être couplé à un Receiver via un item de couplage (Spectral Link Crystal)
+- Traversent les murs et le terrain
+
+---
+
+### X-Ray Scanner (End game — Tier 6)
+
+**Description** : Révèle tous les minerais dans un rayon autour du bloc.
+
+**Longueur d'onde requise :** < 10 nm (X-ray)  
+**Débit minimum :** 200 PH/tick  
+**Effets :**
+- Tous les blocs de minerai dans un rayon de 16 blocs s'affichent avec un contour lumineux (effect Glowing)
+- Effet actif en continu tant que la machine est alimentée
+- Affecte uniquement le joueur qui a activé la machine (et ceux dans un rayon de 8 blocs)
 
 ---
 
 ## Progression du joueur
 
 ```
-EARLY GAME
-├── Trouve du Raw Crystal Ore en minant
-├── Pose sur Prism Stand, expose à la lumière naturelle
-└── Obtient des gemmes visibles (~aléatoires selon l'environnement)
-         ↓
-MID GAME
-├── Construit le Spectral Refiner
-├── Affine les gemmes vers des longueurs d'onde précises
-├── Construit des faisceaux pour alimenter des machines
-└── Débloqueattente des effets ciblés (croissance, forge, etc.)
-         ↓
-LATE GAME
-├── Machines avancées + crafts coûteux
-├── Gemmes Proche UV et Proche IR
-└── Effets puissants, énergie dense
-         ↓
+EARLY GAME (Jours 1–7)
+├── Trouver et miner du Raw Crystal Ore (Y: -20 à -80)
+├── Crafter un Prism Stand
+├── Exposer les Raw Crystals à la lumière (soleil, torche) → gemmes visibles aléatoires
+├── Crafter un Solar Collector + Light Emitter
+└── Premier faisceau lumineux → Crystal Furnace → four amélioré
+
+MID GAME (Jours 7–30)
+├── Crafter un Spectral Refiner
+├── Affiner les gemmes vers des longueurs d'onde précises
+├── Construire des réseaux de faisceaux (Solar → Emitter → Prism Stand → Machine)
+├── Photosynthesis Accelerator → ferme automatisée
+└── Light Battery → stockage d'énergie pour la nuit
+
+LATE GAME (Jours 30–100)
+├── Chromatic Compressor → premières gemmes UV (Tier 2)
+├── Thermal Expander → premières gemmes IR (Tier 3)
+├── UV Sterilizer → défense passive de la base
+├── Thermal Forge → alliages spéciaux, meilleures recettes
+└── Spectral Forge → gemmes Tier 4–5
+
 END GAME
-├── Crafts extrêmes, matériaux très rares
-├── UV profond, IR lointain, X-ray, Gamma
-└── Capacités exceptionnelles : vision à travers les murs, énergie sans fil, etc.
+├── Spectral Transmitter/Receiver → énergie sans fil sur toute la carte
+├── X-Ray Scanner → trouver facilement tous les minerais rares
+├── Gemmes X-ray et Gamma → effets combinés, puissance maximale
+└── Machines ultimes (à définir en cours de développement)
 ```
 
 ---
 
-## Améliorations du code existant (à faire en premier)
+## Balance et chiffres
 
-Avant d'ajouter les nouvelles fonctionnalités, corriger les problèmes identifiés :
+| Machine | PH/tick consommés | Longueur d'onde | Effet |
+|---|---|---|---|
+| Solar Collector | +10 (production) | — | Source principale |
+| Crystal Furnace | -8 à -32 | 620–780 nm | Cuisson 1.5× à 3× |
+| Photosynthesis Acc. | -12 | 500–570 nm | Croissance 3× |
+| Spectral Refiner | -20 | Tout visible | 1 nm/seconde |
+| Light Battery | ±50 000 (stockage) | Tout | Buffer |
+| UV Sterilizer | -50 | 300–380 nm | 2 dégâts/s (rayon 5) |
+| Thermal Forge | -80 | 780–1400 nm | Cuisson 5× |
+| Spectral Transmitter | -200 | 1400+ nm | Énergie sans fil |
+| X-Ray Scanner | -200 | < 10 nm | Reveal minerais |
 
-1. Supprimer `java.awt.Color` des imports — remplacer par calcul entier direct
-2. Corriger la valeur de retour par défaut du color provider : `0` → `-1`
-3. Extraire les constantes `MIN_WAVELENGTH = 380f` et `MAX_WAVELENGTH = 780f`
-4. Corriger la typo `waveLenght` → `wavelength`
-5. Remplacer `new Random()` par `ThreadLocalRandom.current()`
-6. Corriger les conventions de nommage Java (`Gamma` → `gamma`, `IntensityMax` → `intensityMax`)
-7. Simplifier le bloc de vérification dans le color provider (double négation, 3 appels → 1)
-8. Corriger le message de log dans `ModComponents.java`
-9. Supprimer le code placeholder dans les tag providers
-10. Supprimer le mixin vide `ExampleMixin.java`
-11. Ajouter un `.gitignore`
+**Perte par Prism Stand :** 15% du débit  
+**Perte dans l'eau :** 5 PH/bloc  
+**Buffer interne Solar Collector :** 5 000 PH  
+**Capacité Light Battery Tier 1 :** 50 000 PH
+
+---
+
+## Architecture technique
+
+### Packages prévus
+
+```
+fr.skylined.gemmology/
+├── Gemmology.java                    (existant — main init)
+├── GemmologyClient.java              (existant — color provider)
+├── GemmologyDataGenerator.java       (existant — datagen)
+├── component/
+│   └── ModComponents.java            (existant — WAVE_LENGTH component)
+├── item/
+│   ├── ModItems.java                 (existant + Raw Crystal)
+│   └── custom/
+│       ├── GemItem.java              (existant)
+│       └── RawCrystalItem.java       (nouveau)
+├── block/
+│   ├── ModBlocks.java                (nouveau — registre blocs)
+│   └── custom/
+│       ├── PrismStandBlock.java
+│       ├── LightEmitterBlock.java
+│       ├── SolarCollectorBlock.java
+│       ├── CrystalFurnaceBlock.java
+│       ├── PhotosynthesisAcceleratorBlock.java
+│       ├── SpectralRefinerBlock.java
+│       └── LightBatteryBlock.java
+├── blockentity/
+│   ├── ModBlockEntities.java
+│   ├── PrismStandBlockEntity.java
+│   ├── LightEmitterBlockEntity.java
+│   └── (un BlockEntity par machine avec GUI)
+├── beam/
+│   ├── LightBeam.java                (données d'un faisceau : direction, longueur d'onde, débit)
+│   └── LightBeamManager.java         (calcul/propagation des faisceaux par tick)
+├── energy/
+│   └── PhotonStorage.java            (interface de stockage PH, implémentée par Solar/Battery)
+├── screen/
+│   ├── ModScreenHandlers.java
+│   └── (un ScreenHandler + Screen par machine avec GUI)
+├── datagen/
+│   └── (providers existants + nouveaux pour blocs/tags/loot)
+├── util/
+│   └── WavelengthUtil.java           (constantes MIN/MAX, conversion couleur, clamping)
+└── mixin/                            (vide pour l'instant — ExampleMixin à supprimer)
+```
+
+### Points techniques clés
+
+**Faisceaux :**
+- Raycasting via `world.raycast()` à chaque tick sur les BlockEntity actifs (LightEmitter)
+- Résultat stocké dans le BlockEntity (liste de blocs touchés + longueur d'onde courante)
+- Re-calcul seulement si un bloc dans la trajectoire change (via `neighborUpdate`)
+- Rendu client : `WorldRenderEvents.AFTER_TRANSLUCENT_BLOCKS` pour le cylindre lumineux
+
+**Énergie (Photons) :**
+- Pas de câbles : l'énergie circule uniquement via les faisceaux
+- Interface `PhotonStorage` : `int receivePhotons(int amount)` / `int extractPhotons(int amount)` / `int getStoredPhotons()`
+- Découverte des adjacents via `BlockApiLookup` (Fabric Transfer API ou API custom)
+
+**Light Detection (Prism Stand) :**
+- `world.getLightLevel(LightType.SKY, pos.up())` pour la lumière du ciel
+- `world.getTimeOfDay() % 24000L` pour l'heure du jour
+- `world.getBiome(pos)` pour le biome
+- `world.isRaining()` / `world.isThundering()` pour la météo
+- Scan des blocs voisins (rayon 3) pour torches/lave/feu
+
+**Rendu des gemmes :**
+- `ColorProviderRegistry.ITEM.register()` — déjà en place
+- Extension pour les gemmes UV/IR : couleur noire (`0x111111`) + shader ou particules côté client
 
 ---
 
 ## Ordre d'implémentation recommandé
 
-1. **Nettoyage du code existant** (corrections listées ci-dessus)
-2. **Raw Crystal Ore + Raw Crystal** (item + génération monde)
-3. **Prism Stand** (bloc + logique d'exposition à la lumière)
-4. **Émetteur de faisceau** (bloc + rendu beam)
-5. **Récepteur / machines de base** (four accéléré, croissance)
-6. **Spectral Refiner** (affinement longueur d'onde)
-7. **Gemmes hors-visible** (UV, IR, X-ray) + machines end-game
+1. **Nettoyage du code existant** (typos, constantes, imports, mixin vide)
+2. **`WavelengthUtil.java`** (constantes partagées, méthodes utilitaires)
+3. **`RawCrystalItem` + `RawCrystalOre`** (item + bloc + génération monde)
+4. **`PrismStandBlock` + `PrismStandBlockEntity`** (attunement + GUI)
+5. **`SolarCollectorBlock` + `LightEmitterBlock`** (production + émission faisceau)
+6. **`LightBeam` + `LightBeamManager`** (propagation + rendu faisceau)
+7. **`CrystalFurnaceBlock`** (premier consommateur de faisceau)
+8. **`LightBatteryBlock`** (stockage énergie)
+9. **`PhotosynthesisAcceleratorBlock`** (second consommateur)
+10. **`SpectralRefinerBlock`** (raffinement longueur d'onde)
+11. **Machines late game** (Chromatic Compressor, Thermal Expander, Thermal Forge)
+12. **Machines end game** (Spectral Forge, Transmitter/Receiver, X-Ray Scanner)
