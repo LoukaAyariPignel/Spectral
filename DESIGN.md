@@ -888,11 +888,13 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 - Réduction partielle ou totale du bruit sur des faisceaux en ligne droite
 - Plus économique que la fibre optique pour de courtes distances
 
+**Progression :** late early game — nécessite une gemme (donc un Prism Stand fonctionnel) et de l'améthyste (biome géode, underground).
+
 **Recette craft :**
 ```
-[Air]         [Verre]          [Air]
-[Verre]       [Cristal Quartz] [Verre]    → 4 Dampening Glass
-[Air]         [Verre]          [Air]
+[Air]        [Améthyste]  [Air]
+[Verre]      [Gemme]      [Verre]    → 4 Dampening Glass
+[Air]        [Améthyste]  [Air]
 ```
 
 ---
