@@ -598,17 +598,18 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 
 **Comportement :**
 - Le beam entre par la face arrière (fixée à la pose)
-- Chaque sortie **active** reçoit une copie identique du beam entrant : même λ, même qualité, même PH/tick
-- Les sorties désactivées ne reçoivent rien
+- Le débit (PH/tick) est divisé **équitablement entre les sorties actives**
+- La longueur d'onde et la qualité sont identiques sur toutes les sorties actives
+- Les sorties désactivées ne reçoivent rien — leur part est redistribuée aux sorties actives
 
-**Exemple Tier 2, 2 sorties actives sur 3 :** beam 60 PH/tick → 60 PH/tick sur chaque sortie active  
-**Exemple Tier 4, 4 sorties actives :** beam 40 PH/tick → 40 PH/tick sur chacune des 4 sorties
+**Exemple Tier 2, 2 sorties actives sur 3 :** beam 60 PH/tick → 30 PH/tick sur chaque sortie active  
+**Exemple Tier 4, 4 sorties actives :** beam 100 PH/tick → 25 PH/tick sur chacune des 4 sorties
 
 **GUI (clic droit sur le bloc) :**
 - Affiche les 5 faces de sortie possibles sous forme de boutons
 - Les sorties disponibles pour le tier actuel sont cliquables (actif = vert, inactif = gris)
 - Les sorties non débloquées par le tier sont grisées et verrouillées
-- Affichage : débit entrant + nombre de sorties actives
+- Affichage : débit entrant → débit par sortie active
 
 **Recette Tier 1 :**
 ```
