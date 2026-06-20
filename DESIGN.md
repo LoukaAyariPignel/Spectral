@@ -1626,8 +1626,157 @@ Chaque fois que le beam change (nouveau bloc bloquant, changement de λ, débit 
 
 ---
 
+## Système de recettes machines
 
-## Ordre d'implémentation
+### Principe général
+
+NeoForge étend le système de recettes vanilla (JSON-driven) avec des **types de recettes custom**. Chaque machine du mod qui transforme des items enregistre son propre `RecipeType<T>`. Les recettes sont des fichiers JSON dans `data/gemmology/recipe/`, modifiables par datapack.
+
+Les machines se divisent en deux catégories :
+
+| Catégorie | Description | Exemples |
+|---|---|---|
+| **Recette fixe** | Input → Output défini en JSON, comme un four vanilla | Crystal Furnace, Chromatic Compressor, Thermal Expander |
+| **Processus continu** | Pas d'input/output fixe — la machine modifie un état progressivement | Spectral Refiner (ajuste λ), Prism Stand (attunement), Photosynthesis Accelerator (effet zone) |
+
+---
+
+### Machines à recette fixe
+
+#### Enregistrement
+
+```java
+// ModRecipeTypes.java
+public class ModRecipeTypes {
+    public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES =
+        DeferredRegister.create(Registries.RECIPE_TYPE, Gemmology.MOD_ID);
+
+    public static final DeferredHolder<RecipeType<?>, RecipeType<CrystalFurnaceRecipe>> CRYSTAL_FURNACE =
+        RECIPE_TYPES.register("crystal_furnace",
+            () -> RecipeType.simple(ResourceLocation.fromNamespaceAndPath(Gemmology.MOD_ID, "crystal_furnace")));
+
+    public static final DeferredHolder<RecipeType<?>, RecipeType<ChromaticCompressorRecipe>> CHROMATIC_COMPRESSOR =
+        RECIPE_TYPES.register("chromatic_compressor", () -> ...);
+}
+```
+
+#### Comment la machine cherche sa recette
+
+```java
+// Dans CrystalFurnaceBlockEntity.serverTick()
+Optional<CrystalFurnaceRecipe> recipe = level.getRecipeManager()
+    .getAllRecipesFor(ModRecipeTypes.CRYSTAL_FURNACE.get())
+    .stream()
+    .map(RecipeHolder::value)
+    .filter(r -> r.matches(inputStack, currentWavelength))
+    .findFirst();
+
+if (recipe.isPresent()) {
+    // avancer le craft
+} else {
+    // aucune recette applicable, stopper
+}
+```
+
+#### Format JSON — Crystal Furnace
+
+```json
+// data/gemmology/recipe/crystal_furnace/iron_ingot.json
+{
+  "type": "gemmology:crystal_furnace",
+  "ingredient": { "item": "minecraft:raw_iron" },
+  "result":     { "item": "minecraft:iron_ingot", "count": 1 },
+  "min_wavelength": 620.0,
+  "max_wavelength": 780.0,
+  "min_debit": 8,
+  "cook_time": 200
+}
+```
+
+Champs disponibles :
+- `ingredient` — item en entrée (ou tag `#tag`)
+- `result` — item produit
+- `min_wavelength` / `max_wavelength` — plage λ acceptée (la machine vérifie à chaque tick)
+- `min_debit` — PH/tick minimum pour que la recette soit active
+- `cook_time` — durée en ticks à efficacité 100% (se divise par l'efficacité réelle)
+
+#### Format JSON — Chromatic Compressor (gemme → gemme UV)
+
+```json
+{
+  "type": "gemmology:chromatic_compressor",
+  "input_max_wavelength": 400.0,
+  "output_wavelength_min": 300.0,
+  "output_wavelength_max": 380.0,
+  "required_items": [
+    { "item": "minecraft:amethyst_shard", "count": 4 },
+    { "item": "minecraft:echo_shard",     "count": 1 }
+  ],
+  "process_time": 6000,
+  "ph_per_tick": 100
+}
+```
+
+---
+
+### Machines à processus continu
+
+Ces machines n'ont pas de `RecipeType`. Leur logique est entièrement dans le `BlockEntity` :
+
+**Spectral Refiner** — pas de recette JSON. La gemme en slot A est modifiée tick par tick : `λ += step` ou `λ -= step` selon que la cible est plus haute ou plus basse. Aucune lookup dans le RecipeManager.
+
+**Prism Stand (attunement)** — lit la lumière du monde (`getLightLevel`, `getDayTime`, biome…) et calcule λ progressivement. Aucune recette.
+
+**Photosynthesis Accelerator** — scanne les blocs dans un rayon, applique `BonemealableBlock.performBonemeal()` ou accélère les `RandomTick` des plantes. Aucune recette.
+
+---
+
+### Système d'upgrade (Spectral Refiner, Beam Splitter, Concentrating Lens)
+
+Les blocs upgradables ne se craftent pas from scratch au delà du Tier 1. Ils s'upgradent dans un **Photon Upgrade Station** (bloc dédié, mid-game) :
+
+- Slot A : bloc Tier N à upgrader
+- Slot B : matériaux d'upgrade (variable selon le tier cible)
+- Output : bloc Tier N+1
+
+Le Photon Upgrade Station utilise son propre `RecipeType<UpgradeRecipe>` :
+
+```json
+// data/gemmology/recipe/upgrade/spectral_refiner_t2.json
+{
+  "type": "gemmology:upgrade",
+  "base": { "item": "gemmology:spectral_refiner" },
+  "additions": [
+    { "item": "minecraft:diamond",         "count": 2 },
+    { "item": "minecraft:gold_ingot",      "count": 4 },
+    { "item": "gemmology:dampening_glass", "count": 2 }
+  ],
+  "result": { "item": "gemmology:spectral_refiner_t2" }
+}
+```
+
+---
+
+### Intégration JEI
+
+[Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) est le mod standard pour afficher les recettes en jeu. L'intégration est **optionnelle** (dépendance `compileOnly` dans build.gradle) — le mod fonctionne sans JEI, mais sans affichage des recettes machines.
+
+```groovy
+// build.gradle
+dependencies {
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    runtimeOnly  "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"   // en dev seulement
+}
+```
+
+Pour chaque `RecipeType` custom, on crée un `IRecipeCategory<T>` JEI qui affiche :
+- Les items en entrée / sortie
+- La plage λ requise (avec un petit gradient de couleur du spectre)
+- Le débit minimum et le temps de traitement
+
+---
+
+
 
 ### Phase 1 — Version basique (vérifier le fonctionnement)
 
