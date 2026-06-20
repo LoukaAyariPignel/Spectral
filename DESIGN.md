@@ -1759,7 +1759,7 @@ Le Photon Upgrade Station utilise son propre `RecipeType<UpgradeRecipe>` :
 
 ### Intégration JEI
 
-[Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) est le mod standard pour afficher les recettes en jeu. L'intégration est **optionnelle** (dépendance `compileOnly` dans build.gradle) — le mod fonctionne sans JEI, mais sans affichage des recettes machines.
+[Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) est le mod standard pour afficher les recettes en jeu. L'intégration est **optionnelle** (`compileOnly` dans build.gradle) — le mod fonctionne sans JEI, mais sans affichage des recettes machines.
 
 ```groovy
 // build.gradle
@@ -1769,10 +1769,97 @@ dependencies {
 }
 ```
 
-Pour chaque `RecipeType` custom, on crée un `IRecipeCategory<T>` JEI qui affiche :
-- Les items en entrée / sortie
-- La plage λ requise (avec un petit gradient de couleur du spectre)
-- Le débit minimum et le temps de traitement
+#### Une category JEI par machine
+
+```java
+@JeiPlugin
+public class GemmologyJeiPlugin implements IModPlugin {
+
+    @Override
+    public ResourceLocation getPluginUid() {
+        return ResourceLocation.fromNamespaceAndPath(Gemmology.MOD_ID, "jei_plugin");
+    }
+
+    @Override
+    public void registerCategories(IRecipeCategoryRegistration reg) {
+        reg.addRecipeCategories(
+            new CrystalFurnaceCategory(reg.getJeiHelpers()),
+            new ChromaticCompressorCategory(reg.getJeiHelpers()),
+            new SpectralRefinerCategory(reg.getJeiHelpers()),
+            new UpgradeStationCategory(reg.getJeiHelpers())
+        );
+    }
+
+    @Override
+    public void registerRecipes(IRecipeRegistration reg) {
+        List<CrystalFurnaceRecipe> furnaceRecipes = level.getRecipeManager()
+            .getAllRecipesFor(ModRecipeTypes.CRYSTAL_FURNACE.get())
+            .stream().map(RecipeHolder::value).toList();
+        reg.addRecipes(CrystalFurnaceCategory.TYPE, furnaceRecipes);
+        // ... idem pour les autres machines
+    }
+
+    @Override
+    public void registerRecipeCatalysts(IRecipeCatalystRegistration reg) {
+        reg.addRecipeCatalyst(new ItemStack(ModBlocks.CRYSTAL_FURNACE.get()),
+            CrystalFurnaceCategory.TYPE);
+        // ... idem
+    }
+}
+```
+
+#### Mise en page de la Crystal Furnace dans JEI
+
+```
+┌─────────────────────────────────────────────────┐
+│  Crystal Furnace                                  │
+│                                                   │
+│  [Raw Iron]  →→→→→→→→→→→→→→→  [Iron Ingot ×1]  │
+│                                                   │
+│  Longueur d'onde requise :                        │
+│  ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░  [nm] │
+│  620 nm ───────────────────────────── 780 nm      │
+│  (gradient rouge-orange du spectre visible)       │
+│                                                   │
+│  Débit minimum : 8 PH/tick                        │
+│  Durée à 100% : 10 s                              │
+└─────────────────────────────────────────────────┘
+```
+
+Le **gradient spectral** est rendu avec `IGuiHelper.createDrawable()` en dessinant des pixels colorés via `WavelengthUtil.toRGB(λ)` sur la plage `[min_wavelength, max_wavelength]`. La zone grisée indique les longueurs d'onde hors plage.
+
+#### Mise en page du Spectral Refiner dans JEI
+
+Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique** sous forme d'entrée informative :
+
+```
+┌─────────────────────────────────────────────────┐
+│  Spectral Refiner (Tier 1 — pas 5.0 nm)          │
+│                                                   │
+│  [Gemme quelconque]  →→→  [Gemme affinée]        │
+│                                                   │
+│  Ajuste λ vers la valeur cible par pas de 5.0 nm │
+│  Vitesse : 1 pas / 2 s  │  Consomme : 10 PH/tick │
+│                                                   │
+│  Qualité transmise : 0.75                         │
+│  ⚠ Ne peut pas atteindre λ = 0 bruit sans fibre  │
+└─────────────────────────────────────────────────┘
+```
+
+#### Mise en page de l'Upgrade Station dans JEI
+
+```
+┌─────────────────────────────────────────────────┐
+│  Photon Upgrade Station                           │
+│                                                   │
+│  [Spectral Refiner T1]                            │
+│  [Diamond ×2]          →→→  [Spectral Refiner T2]│
+│  [Gold Ingot ×4]                                  │
+│  [Dampening Glass ×2]                             │
+│                                                   │
+│  Upgrade : Tier 1 → Tier 2  (pas : 5.0 → 1.0 nm)│
+└─────────────────────────────────────────────────┘
+```
 
 ---
 
