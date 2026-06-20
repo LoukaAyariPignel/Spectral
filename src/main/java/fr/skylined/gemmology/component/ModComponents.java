@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
 
 public class ModComponents {
     public static void initialize(){
-        Gemmology.LOGGER.info("Registering {} components", Gemmology.MOD_ID);
+        Gemmology.LOGGER.info("Registering Mod Components for {}", Gemmology.MOD_ID);
     }
 
     public static final ComponentType<Float> WAVE_LENGTH = Registry.register(
