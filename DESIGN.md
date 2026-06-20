@@ -418,6 +418,18 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 
 ## Blocs et Machines
 
+### Sources de débit — Vue d'ensemble
+
+Le débit (PH/tick) d'un beam dépend de la source qui alimente le Light Emitter. Trois mécaniques permettent de monter en débit :
+
+| Méthode | Débit max | Dépendance soleil | Progression |
+|---|---|---|---|
+| Solar Collectors empilés | Illimité (linéaire) | Oui | Early game |
+| Concentrating Lens | ×5 par collector | Oui | Mid game |
+| Thermal Generator | 40 PH/tick | Non | Mid game |
+
+---
+
 ### Solar Collector
 
 **Description** : Collecte l'énergie solaire et la convertit en Photons. Ne produit pas de faisceau directement.
@@ -428,10 +440,12 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 - Nuit / couvert : **0 PH/tick**
 - Sous la pluie : **2 PH/tick** (diffusion)
 
-**Stockage interne** : 5 000 PH (buffer pour les fluctuations)  
+**Cumul :** Plusieurs Solar Collectors peuvent être connectés au même Light Emitter. Leur production s'additionne. 3 collectors → 30 PH/tick en plein soleil.
+
+**Stockage interne** : 5 000 PH (buffer pour les fluctuations nocturnes)  
 **Output** : se connecte à un Light Emitter ou Light Battery adjacent (face du bas ou des côtés)
 
-**GUI** : Barre de production actuelle + total stocké en buffer
+**GUI** : Production actuelle (PH/tick) + total stocké en buffer
 
 **Recette craft :**
 ```
@@ -440,6 +454,69 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 [Fer]     [Fer]     [Fer]
 ```
 (Gemme de n'importe quelle longueur d'onde — elle sert de capteur)
+
+---
+
+### Concentrating Lens
+
+**Description** : Bloc placé **directement au-dessus** d'un Solar Collector pour concentrer la lumière solaire et amplifier sa production. Plusieurs Lens peuvent être empilées verticalement.
+
+**Comportement :**
+- Doit être posée sur la face supérieure du Solar Collector (ou d'une autre Lens)
+- Doit avoir le ciel dégagé au-dessus (aucun bloc opaque)
+- Chaque Lens multiplie la production du collector par **×1.5**
+- Maximum **4 Lens** empilées sur un même collector
+
+**Production avec Lens (plein soleil) :**
+
+| Lens empilées | Multiplicateur | PH/tick |
+|---|---|---|
+| 0 | ×1.0 | 10 |
+| 1 | ×1.5 | 15 |
+| 2 | ×2.25 | 22 |
+| 3 | ×3.37 | 33 |
+| 4 | ×5.06 | 50 (max) |
+
+**Recette craft :**
+```
+[Air]     [Verre]   [Air]
+[Verre]   [Quartz]  [Verre]    → 1 Concentrating Lens
+[Air]     [Verre]   [Air]
+```
+
+---
+
+### Thermal Generator
+
+**Description** : Brûle du combustible pour produire des Photons en permanence, indépendamment du soleil. Idéal pour la nuit ou les bases souterraines.
+
+**Production selon le combustible :**
+
+| Combustible | PH/tick | Durée | PH totaux |
+|---|---|---|---|
+| Charbon / Charbon de bois | 15 PH/tick | 80 s (1600 ticks) | 24 000 |
+| Bois en bûche | 8 PH/tick | 30 s (600 ticks) | 4 800 |
+| Blaze Rod | 25 PH/tick | 120 s (2400 ticks) | 60 000 |
+| Lava Bucket | 30 PH/tick | 200 s (4000 ticks) | 120 000 |
+| Charbon en bloc | 20 PH/tick | 800 s (16000 ticks) | 320 000 |
+
+**Caractéristiques :**
+- Fonctionne 24h/24, par tous les temps
+- Pas de dépendance à la lumière du ciel
+- **Contrainte** : nécessite un approvisionnement en combustible continu
+- Peut être automatisé avec des hoppers vanilla
+- **Stockage interne** : 10 000 PH (buffer)
+
+**Output** : se connecte à un Light Emitter ou Light Battery adjacent
+
+**GUI** : Slot combustible, barre de combustion restante, production actuelle (PH/tick)
+
+**Recette craft :**
+```
+[Pierre]  [Fer]     [Pierre]
+[Fer]     [Quartz]  [Fer]      → 1 Thermal Generator
+[Pierre]  [Redstone][Pierre]
+```
 
 ---
 
@@ -793,21 +870,31 @@ END GAME
 
 ## Balance et chiffres
 
-| Machine | PH/tick consommés | Longueur d'onde | Effet |
+**Sources de débit :**
+
+| Source | PH/tick max | Condition |
+|---|---|---|
+| Solar Collector (×1) | 10 | Plein soleil |
+| Solar Collector + 4 Lens | 50 | Plein soleil, ciel dégagé |
+| N Solar Collectors | N × 10 | Plein soleil |
+| Thermal Generator (lava) | 30 | Aucune |
+
+**Consommation des machines :**
+
+| Machine | PH/tick min | Longueur d'onde | Effet |
 |---|---|---|---|
-| Solar Collector | +10 (production) | — | Source principale |
-| Crystal Furnace | -8 à -32 | 620–780 nm | Cuisson 1.5× à 3× |
-| Photosynthesis Acc. | -12 | 500–570 nm | Croissance 3× |
-| Spectral Refiner | -20 | Tout visible | 1 nm/seconde |
-| Light Battery | ±50 000 (stockage) | Tout | Buffer |
-| UV Sterilizer | -50 | 300–380 nm | 2 dégâts/s (rayon 5) |
-| Thermal Forge | -80 | 780–1400 nm | Cuisson 5× |
-| Spectral Transmitter | -200 | 1400+ nm | Énergie sans fil |
-| X-Ray Scanner | -200 | < 10 nm | Reveal minerais |
+| Crystal Furnace | 8–32 | 620–780 nm | Cuisson 1.5× à 3× |
+| Photosynthesis Acc. | 12 | 500–570 nm | Croissance 3× |
+| Spectral Refiner T1 | 10 | Tout visible | 1 pas/2 s |
+| Spectral Refiner T4 | 60 | Tout visible | 5 pas/s |
+| Light Battery | — (stockage) | Tout | Buffer 50 000 PH |
+| UV Sterilizer | 50 | 300–380 nm | 2 dégâts/s (rayon 5) |
+| Thermal Forge | 80 | 780–1400 nm | Cuisson 5× |
+| Spectral Transmitter | 200 | 1400+ nm | Énergie sans fil |
+| X-Ray Scanner | 200 | < 10 nm | Reveal minerais |
 
 **Perte par Prism Stand :** 15% du débit  
 **Perte dans l'eau :** 5 PH/bloc  
-**Buffer interne Solar Collector :** 5 000 PH  
 **Capacité Light Battery Tier 1 :** 50 000 PH
 
 ---
@@ -833,6 +920,8 @@ fr.skylined.gemmology/
 │   ├── ModBlocks.java                (nouveau — registre blocs)
 │   └── custom/
 │       ├── SolarCollectorBlock.java
+│       ├── ConcentratingLensBlock.java
+│       ├── ThermalGeneratorBlock.java
 │       ├── LightEmitterBlock.java
 │       ├── PrismStandBlock.java
 │       ├── CrystalFurnaceBlock.java
@@ -911,6 +1000,8 @@ Ce qui sera fait plus tard :
 4. **`LightBeam.java`** (structure de données : λ, qualité, débit, direction)
 5. **`LightBeamManager.java`** (propagation par raycasting, détection intersections)
 6. **`SolarCollectorBlock`** (production PH/tick selon lumière du ciel)
+6b. **`ConcentratingLensBlock`** (amplificateur empilable au-dessus d'un Solar Collector)
+6c. **`ThermalGeneratorBlock`** (combustible → PH/tick constant, indépendant du soleil)
 7. **`LightEmitterBlock`** (convertit PH → beam, émission directionelle)
 8. **`PrismStandBlock`** (attunement Raw Crystal + filtrage beam)
 9. **`CrystalFurnaceBlock`** (premier consommateur — four accéléré)
