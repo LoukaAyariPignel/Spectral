@@ -2,30 +2,26 @@ package fr.skylined.gemmology;
 
 import fr.skylined.gemmology.component.ModComponents;
 import fr.skylined.gemmology.item.ModItems;
+import fr.skylined.gemmology.item.custom.GemItem;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
-
-import java.awt.*;
 
 public class GemmologyClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ColorProviderRegistry.ITEM.register((stack, layer) -> {
-            if(stack.contains(ModComponents.WAVE_LENGTH)) {
-                if (!(stack.get(ModComponents.WAVE_LENGTH) < 380 || stack.get(ModComponents.WAVE_LENGTH) > 780)){
-                    if (layer == 0){
-                        return getColorFromWavelength(stack.getOrDefault(ModComponents.WAVE_LENGTH, 380).floatValue())/*(int) stack.getOrDefault(ModComponents.WAVE_LENGTH, 380).floatValue()*/;
-                    }
-                }
+            if (!stack.contains(ModComponents.WAVE_LENGTH)) return -1;
+            float wavelength = stack.get(ModComponents.WAVE_LENGTH);
+            if (wavelength >= GemItem.MIN_WAVELENGTH && wavelength <= GemItem.MAX_WAVELENGTH && layer == 0) {
+                return getColorFromWavelength(wavelength);
             }
-            return 0;
-
+            return -1;
         }, ModItems.GEM);
     }
 
     private int getColorFromWavelength(float wavelength) {
-        final float Gamma = 0.80f;
-        final int IntensityMax = 255;
+        final float gamma = 0.80f;
+        final int intensityMax = 255;
         float red = 0, green = 0, blue = 0;
         float factor;
 
@@ -66,17 +62,16 @@ public class GemmologyClient implements ClientModInitializer {
         }
 
         if (red != 0) {
-            red = Math.round(IntensityMax * Math.pow(red * factor, Gamma));
+            red = Math.round(intensityMax * Math.pow(red * factor, gamma));
         }
         if (green != 0) {
-            green = Math.round(IntensityMax * Math.pow(green * factor, Gamma));
+            green = Math.round(intensityMax * Math.pow(green * factor, gamma));
         }
         if (blue != 0) {
-            blue = Math.round(IntensityMax * Math.pow(blue * factor, Gamma));
+            blue = Math.round(intensityMax * Math.pow(blue * factor, gamma));
         }
 
-        // Retourner la couleur en format RGB (int)
-        return new Color((int) red, (int) green, (int) blue).getRGB();
+        return (0xFF << 24) | ((int) red << 16) | ((int) green << 8) | (int) blue;
     }
 
 }
