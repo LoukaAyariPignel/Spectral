@@ -585,31 +585,30 @@ Gemme = 700.0 nm → Crystal Furnace à 100% !
 
 ### Beam Splitter
 
-**Description** : Reçoit un faisceau et le divise en plusieurs faisceaux de sortie. **Aucun tier n'a de perte** — la progression porte uniquement sur le nombre de sorties disponibles. C'est un bloc mid game, le dernier tier étant accessible en début de late game.
+**Description** : Reçoit un faisceau et le **duplique** sur plusieurs sorties. Chaque sortie active reçoit le beam **complet** (même λ, même qualité, même débit). C'est un bloc mid game, le dernier tier étant accessible en début de late game.
 
-| Tier | Nom | Sorties max | Perte | Progression |
-|---|---|---|---|---|
-| 1 | Basic Beam Splitter | 2 sorties | 0% | Début mid game |
-| 2 | Beam Splitter | 3 sorties | 0% | Mid game |
-| 3 | Advanced Beam Splitter | 4 sorties | 0% | Fin mid game |
-| 4 | Perfect Beam Splitter | 5 sorties | 0% | Début late game |
+| Tier | Nom | Sorties max | Progression |
+|---|---|---|---|
+| 1 | Basic Beam Splitter | 2 sorties | Début mid game |
+| 2 | Beam Splitter | 3 sorties | Mid game |
+| 3 | Advanced Beam Splitter | 4 sorties | Fin mid game |
+| 4 | Perfect Beam Splitter | 5 sorties | Début late game |
 
 > Un bloc a 6 faces. Le beam entre par 1 face → 5 faces de sortie possibles au maximum (Tier 4).
 
 **Comportement :**
 - Le beam entre par la face arrière (fixée à la pose)
-- Le débit (PH/tick) est divisé **uniquement entre les sorties actives** — les sorties désactivées ne reçoivent rien
-- La longueur d'onde et la qualité sont identiques sur toutes les sorties actives
-- Si une seule sortie est active : elle reçoit 100% du débit
+- Chaque sortie **active** reçoit une copie identique du beam entrant : même λ, même qualité, même PH/tick
+- Les sorties désactivées ne reçoivent rien
 
-**Exemple Tier 2, 2 sorties actives sur 3 :** beam 60 PH/tick → 30 PH/tick sur chaque sortie active  
-**Exemple Tier 4, 3 sorties actives sur 5 :** beam 90 PH/tick → 30 PH/tick sur chaque sortie active
+**Exemple Tier 2, 2 sorties actives sur 3 :** beam 60 PH/tick → 60 PH/tick sur chaque sortie active  
+**Exemple Tier 4, 4 sorties actives :** beam 40 PH/tick → 40 PH/tick sur chacune des 4 sorties
 
 **GUI (clic droit sur le bloc) :**
 - Affiche les 5 faces de sortie possibles sous forme de boutons
 - Les sorties disponibles pour le tier actuel sont cliquables (actif = vert, inactif = gris)
 - Les sorties non débloquées par le tier sont grisées et verrouillées
-- Affichage en temps réel : débit entrant → débit par sortie active
+- Affichage : débit entrant + nombre de sorties actives
 
 **Recette Tier 1 :**
 ```
