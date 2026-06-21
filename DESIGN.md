@@ -1029,6 +1029,220 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 ---
 
+### Beam Mirror
+
+**Description** : Réfléchit un faisceau dans une nouvelle direction. Se place comme un **panneau** — la direction de la surface réfléchissante est déterminée par l'endroit où regarde le joueur au moment de la pose.
+
+**Placement :**
+- Posé sur une face de bloc (mur, sol, plafond)
+- La surface réfléchissante fait face à la direction du regard du joueur à la pose
+- La combinaison input → output est automatiquement déduite de l'orientation de la surface
+- Après la pose : **sneak + clic droit** pour cycler entre les paires input/output valides de ce miroir
+
+**Directions supportées :**
+
+Un miroir peut rediriger un beam dans n'importe quelle combinaison de faces de bloc, tant que la géométrie est cohérente avec l'orientation de la surface :
+
+| Exemples de redirection | Description |
+|---|---|
+| Est → Nord | Virage horizontal 90° |
+| Nord → Haut | Virage vertical 90° |
+| Est → Haut | Virage vertical-horizontal |
+| Nord → Sud | Demi-tour (miroir face au beam) |
+
+Le mod calcule le vecteur réfléchi : `R = D - 2(D·N)N` où `N` est la normale de la surface.
+
+**Perte :** −5% du débit par réflexion. λ et qualité préservés.
+
+**Usage :**
+- Contourner des obstacles sans fiber optic
+- Router un beam à la verticale (du sol vers une machine en hauteur)
+- Complément naturel entre le raycasting et la fibre optique
+
+**Progression :** early-mid game — avant la fiber optic.
+
+**Recette craft :**
+```
+[Fer]    [Verre Poli]  [Fer]
+[Fer]    [Raw Crystal] [Fer]    → 1 Beam Mirror
+[Fer]    [Fer]         [Fer]
+```
+("Verre Poli" = Glass Pane ou Polished item — à confirmer selon disponibilité MC 26.1)
+
+---
+
+### Photon Relay
+
+**Description** : Reçoit un beam, remet son bruit à 0, et le réémet dans la même direction. Agit comme un répéteur optique pour les longues distances.
+
+**Comportement :**
+- Posé dans le trajet du beam
+- Absorbe le beam entrant (bruit accumulé quelconque)
+- Réémet un beam identique en λ, qualité et débit, mais **bruit = 0**
+- Consomme de l'énergie pour régénérer le signal : **5 PH/tick** en fonctionnement
+
+**Usage :**
+- Long trajet en air sans fiber optic sur tout le parcours
+- Associé au Dampening Glass : relay tous les 20 blocs + glass entre les relays → bruit quasi nul sans le coût de la fibre
+
+**Progression :** mid game.
+
+**Recette craft :**
+```
+[Dampening Glass] [Quartz Nether]   [Dampening Glass]
+[Raw Crystal]     [Fiber Optic ×1] [Raw Crystal]       → 1 Photon Relay
+[Dampening Glass] [Redstone]        [Dampening Glass]
+```
+
+---
+
+### Purification Chamber
+
+**Description** : Améliore progressivement la **qualité** d'une gemme sans modifier sa longueur d'onde. La vitesse de purification dépend de la proximité entre la longueur d'onde du beam entrant et celle de la gemme à purifier.
+
+**Principe :**
+- Slot : 1 gemme à purifier
+- Reçoit un beam en entrée
+- La machine compare `λ_beam` et `λ_gem` à chaque tick
+- Plus le beam est proche de la longueur d'onde de la gemme, plus la purification est rapide
+
+**Formule de vitesse :**
+```
+proximité = max(0.0,  1.0 - |λ_beam - λ_gem| / 100)
+
+qualité   += 0.0001 × proximité par tick
+
+Exemples :
+  |λ_beam - λ_gem| =  0 nm  → proximité 1.00 → +0.0001/tick  (qualité 0.50→1.00 en ~83 min)
+  |λ_beam - λ_gem| = 10 nm  → proximité 0.90 → +0.00009/tick
+  |λ_beam - λ_gem| = 50 nm  → proximité 0.50 → +0.00005/tick
+  |λ_beam - λ_gem| = 100 nm → proximité 0.00 → aucun effet
+```
+
+**Design intent :** pour purifier une gemme à 700.0 nm rapidement, il faut un beam à 700.0 nm — donc une autre gemme déjà accordée ou le résultat d'un Spectral Refiner. La Purification Chamber crée une dépendance circulaire intéressante : améliorer la qualité d'une gemme demande déjà d'avoir une bonne gemme de référence.
+
+**Le bruit du beam affecte aussi la vitesse :**
+```
+vitesse_finale = proximité × (1 - bruit)
+```
+Envoyer un beam bruité dans une Purification Chamber est contre-productif — il faut un beam propre (fiber optic ou relay).
+
+**GUI :** slot gemme, λ gemme affichée, λ beam reçu, delta, barre de progression, qualité actuelle → qualité cible
+
+**Progression :** mid game.
+
+**Recette craft :**
+```
+[Or]              [Améthyste]      [Or]
+[Dampening Glass] [Raw Crystal]    [Dampening Glass]    → 1 Purification Chamber
+[Or]              [Redstone]       [Or]
+```
+
+---
+
+### Light Condenser
+
+**Description** : Fusionne plusieurs beams en un seul avec un débit additionné et une qualité **préservée** (contrairement à la fusion naturelle qui dégrade la cohérence). La machine stabilise les longueurs d'onde avant de les fusionner.
+
+**Comportement :**
+- Jusqu'à 4 faces d'entrée, 1 face de sortie
+- Fusionne tous les beams actifs entrants
+- λ résultat = moyenne pondérée par débit
+- Qualité résultat = moyenne des qualités pondérée par débit × facteur de cohérence amélioré
+
+**Comparaison fusion naturelle vs Light Condenser :**
+
+| | Fusion naturelle | Light Condenser |
+|---|---|---|
+| λ résultat | moyenne | moyenne pondérée |
+| Cohérence | `max(0, 1 - Δλ/400)` | `max(0, 1 - Δλ/200)` (2× moins pénalisante) |
+| Débit | additionné | additionné |
+| Consommation | 0 | 15 PH/tick |
+
+**Usage :** fusionner le output de plusieurs Solar Collectors en un seul beam de haut débit, en perdant moins de qualité que la fusion naturelle.
+
+**Progression :** mid game.
+
+**Recette craft :**
+```
+[Verre]           [Raw Crystal]    [Verre]
+[Fiber Optic ×1]  [Diamant]        [Fiber Optic ×1]    → 1 Light Condenser
+[Verre]           [Redstone]       [Verre]
+```
+
+---
+
+### Spectral Analyzer
+
+**Description** : Bloc posé sur le côté d'un beam (ne l'interrompt pas). Affiche en GUI toutes les métriques du beam en temps réel, et calcule l'efficacité théorique pour les machines adjacentes.
+
+**Affichage GUI :**
+```
+┌──────────────────────────────────────┐
+│  Spectral Analyzer                   │
+│                                      │
+│  λ        : 533.3 nm                 │
+│  Qualité  : 0.85                     │
+│  Bruit    : 0.08  (+4.0 nm effectif) │
+│  Débit    : 24 PH/tick               │
+│  δ effectif : 7.65 nm                │
+│                                      │
+│  Machines adjacentes :               │
+│  ✓ Crystal Furnace    → 50%          │
+│  ✗ Photosynthesis Acc → 0% (hors λ) │
+└──────────────────────────────────────┘
+```
+
+**Fonctionnement :**
+- Détecte automatiquement les machines dans un rayon de 3 blocs
+- Calcule `efficacité = correspondance_λ(delta_effectif) × qualité` pour chacune
+- Met à jour en temps réel (1×/seconde)
+- Signal redstone optionnel : émet un signal proportionnel à l'efficacité de la machine la plus proche (0–15)
+
+**Progression :** mid game — essentiel pour optimiser un setup.
+
+**Recette craft :**
+```
+[Or]              [Dampening Glass] [Or]
+[Quartz Nether]   [Améthyste]      [Quartz Nether]    → 1 Spectral Analyzer
+[Or]              [Redstone]        [Or]
+```
+
+---
+
+### Beam Amplifier
+
+**Description** : Augmente le débit d'un beam en injectant de l'énergie FE. Permet de booster un beam existant sans ajouter de Solar Collectors.
+
+**Comportement :**
+- Reçoit un beam en entrée, émet un beam amplifié en sortie
+- Accepte du FE en entrée (compatible Energy Converter ou tout mod NeoForge)
+- Taux de conversion configurable : `X FE/tick → +Y PH/tick` sur le beam
+
+**Taux de conversion :**
+```
+10 FE/tick entrant  → débit beam +1 PH/tick
+100 FE/tick         → +10 PH/tick
+1000 FE/tick (max)  → +100 PH/tick
+```
+
+**Contrainte :** n'améliore pas λ ni qualité — sert uniquement à augmenter le débit pour atteindre les seuils de vitesse des machines (Crystal Furnace ×3, Thermal Forge actif, etc.)
+
+**GUI :** débit entrant (PH/tick), FE/tick consommé, débit sortant (PH/tick), curseur de puissance
+
+**Progression :** mid game — bon puits d'énergie FE pour les mods tech adjacents.
+
+**Recette craft :**
+```
+[Or]      [Fiber Optic ×1] [Or]
+[Diamant] [Raw Crystal]    [Diamant]    → 1 Beam Amplifier
+[Or]      [Redstone]       [Or]
+```
+
+---
+
+
+
 ### Spectral Transmitter + Receiver (End game — Tier 5)
 
 **Description** : Transmet de l'énergie (Photons) sans fil entre deux points.
