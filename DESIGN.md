@@ -1110,12 +1110,13 @@ Le mod calcule le vecteur réfléchi : `R = D - 2(D·N)N` où `N` est la normale
 ```
 proximité = max(0.0,  1.0 - |λ_beam - λ_gem| / 100)
 
-qualité   += 0.001 × proximité par tick
+qualité   += 0.001 × proximité⁴ par tick
 
 Exemples :
-  |λ_beam - λ_gem| =  0 nm  → proximité 1.00 → +0.001/tick  (qualité 0.50→1.00 en ~25 s)
-  |λ_beam - λ_gem| = 10 nm  → proximité 0.90 → +0.0009/tick (~28 s)
-  |λ_beam - λ_gem| = 50 nm  → proximité 0.50 → +0.0005/tick (~50 s)
+  |λ_beam - λ_gem| =  0 nm  → proximité 1.00 → ×1.000 → ~25 s
+  |λ_beam - λ_gem| = 10 nm  → proximité 0.90 → ×0.656 → ~40 s
+  |λ_beam - λ_gem| = 30 nm  → proximité 0.70 → ×0.240 → ~1 min 45 s
+  |λ_beam - λ_gem| = 50 nm  → proximité 0.50 → ×0.063 → ~7 min
   |λ_beam - λ_gem| = 100 nm → proximité 0.00 → aucun effet
 ```
 
