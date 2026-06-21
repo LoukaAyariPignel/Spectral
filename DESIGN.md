@@ -1,4 +1,4 @@
-# Gemmology — Design Document (Détaillé)
+# Spectral — Design Document (Détaillé)
 
 ## Vision générale
 
@@ -20,7 +20,7 @@ Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa coule
 ## Les Gemmes
 
 ### Propriétés d'une gemme
-- Stocke une **longueur d'onde** `float` (en nm) via le DataComponent `gemmology:wave_length`
+- Stocke une **longueur d'onde** `float` (en nm) via le DataComponent `spectral:wave_length`
 - La longueur d'onde détermine :
   - La **couleur affichée** (via l'algorithme de conversion spectre → RGB)
   - Les **effets produits** lorsqu'elle filtre un faisceau
@@ -680,7 +680,7 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 ### Energy Converter (RF/FE → Photons)
 
-**Description** : Convertit l'énergie d'autres mods tech en Photons. Permet d'utiliser l'infrastructure énergétique existante d'autres mods pour alimenter les machines Gemmology.
+**Description** : Convertit l'énergie d'autres mods tech en Photons. Permet d'utiliser l'infrastructure énergétique existante d'autres mods pour alimenter les machines Spectral.
 
 > **Note technique — Fabric vs Forge :**  
 > RF et FE sont des standards **Forge/NeoForge** uniquement. Sur Fabric, l'équivalent standard est **Team Reborn Energy (TR Energy)**, utilisé par Tech Reborn, Industrial Revolution, et la majorité des mods tech Fabric. L'Energy Converter cible donc **TR Energy** en priorité.  
@@ -1276,7 +1276,7 @@ Envoyer un beam bruité dans une Purification Chamber est contre-productif — i
 
 ```
 EARLY GAME (Jours 1–7)
-├── Trouver et miner du Raw Crystal Ore (Y: -20 à -80)
+├── Trouver et miner du Raw Crystal Ore (Y: -20 à -64)
 ├── Crafter un Prism Stand
 ├── Exposer les Raw Crystals à la lumière (soleil, torche) → gemmes visibles aléatoires
 ├── Crafter un Solar Collector + Light Emitter
@@ -1431,7 +1431,7 @@ minecraft_version=26.1
 
 **Supprimer :**
 - `src/main/resources/fabric.mod.json`
-- `src/main/resources/gemmology.mixins.json` (le mixin était vide de toute façon)
+- `src/main/resources/spectral.mixins.json` (le mixin était vide de toute façon)
 
 **Créer `src/main/resources/META-INF/neoforge.mods.toml` :**
 ```toml
@@ -1440,19 +1440,19 @@ loaderVersion = "[4,)"
 license = "CC0-1.0"
 
 [[mods]]
-    modId = "gemmology"
+    modId = "spectral"
     version = "1.0.0"
-    displayName = "Gemmology"
+    displayName = "Spectral"
     description = "Light-based energy mod."
 
-[[dependencies.gemmology]]
+[[dependencies.spectral]]
     modId = "neoforge"
     type = "required"
     versionRange = "[26.1.2.76,)"
     ordering = "NONE"
     side = "BOTH"
 
-[[dependencies.gemmology]]
+[[dependencies.spectral]]
     modId = "minecraft"
     type = "required"
     versionRange = "[26.1,27)"
@@ -1464,7 +1464,7 @@ license = "CC0-1.0"
 ```json
 {
   "pack": {
-    "description": "Gemmology resources",
+    "description": "Spectral resources",
     "pack_format": 34
   }
 }
@@ -1472,11 +1472,11 @@ license = "CC0-1.0"
 
 ---
 
-#### 3. Classe principale (`Gemmology.java`)
+#### 3. Classe principale (`Spectral.java`)
 
 **Fabric :**
 ```java
-public class Gemmology implements ModInitializer {
+public class Spectral implements ModInitializer {
     @Override
     public void onInitialize() {
         ModItems.registerModItems();
@@ -1487,12 +1487,12 @@ public class Gemmology implements ModInitializer {
 
 **NeoForge :**
 ```java
-@Mod(Gemmology.MOD_ID)
-public class Gemmology {
-    public static final String MOD_ID = "gemmology";
+@Mod(Spectral.MOD_ID)
+public class Spectral {
+    public static final String MOD_ID = "spectral";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    public Gemmology(IEventBus modEventBus) {
+    public Spectral(IEventBus modEventBus) {
         ModItems.ITEMS.register(modEventBus);
         ModComponents.COMPONENTS.register(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
@@ -1501,7 +1501,7 @@ public class Gemmology {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        LOGGER.info("Gemmology initialized.");
+        LOGGER.info("Spectral initialized.");
     }
 }
 ```
@@ -1522,7 +1522,7 @@ public static final Item GEM = Registry.register(
 **NeoForge :**
 ```java
 public static final DeferredRegister<Item> ITEMS =
-    DeferredRegister.create(Registries.ITEM, Gemmology.MOD_ID);
+    DeferredRegister.create(Registries.ITEM, Spectral.MOD_ID);
 
 public static final DeferredHolder<Item, GemItem> GEM =
     ITEMS.register("gem", () -> new GemItem(new Item.Properties()));
@@ -1555,7 +1555,7 @@ public static final ComponentType<Float> WAVE_LENGTH = Registry.register(
 **NeoForge :**
 ```java
 public static final DeferredRegister<DataComponentType<?>> COMPONENTS =
-    DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Gemmology.MOD_ID);
+    DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Spectral.MOD_ID);
 
 public static final DeferredHolder<DataComponentType<?>, DataComponentType<Float>> WAVE_LENGTH =
     COMPONENTS.register("wave_length",
@@ -1579,11 +1579,11 @@ Changements mineurs :
 
 ---
 
-#### 7. Client — couleur des gemmes (`GemmologyClient.java`)
+#### 7. Client — couleur des gemmes (`SpectralClient.java`)
 
 **Fabric :**
 ```java
-public class GemmologyClient implements ClientModInitializer {
+public class SpectralClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ColorProviderRegistry.ITEM.register((stack, layer) -> { ... }, ModItems.GEM);
@@ -1593,8 +1593,8 @@ public class GemmologyClient implements ClientModInitializer {
 
 **NeoForge :**
 ```java
-@EventBusSubscriber(modid = Gemmology.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
-public class GemmologyClient {
+@EventBusSubscriber(modid = Spectral.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
+public class SpectralClient {
     @SubscribeEvent
     public static void onRegisterItemColors(RegisterColorHandlersEvent.Item event) {
         event.register((stack, layer) -> { ... }, ModItems.GEM.get());
@@ -1615,10 +1615,10 @@ public class GemmologyClient {
 ### Packages prévus
 
 ```
-fr.skylined.gemmology/
-├── Gemmology.java                    (point d'entrée @Mod)
-├── GemmologyClient.java              (setup client — FMLClientSetupEvent)
-├── GemmologyDataGenerator.java       (datagen entry)
+fr.skylined.spectral/
+├── Spectral.java                    (point d'entrée @Mod)
+├── SpectralClient.java              (setup client — FMLClientSetupEvent)
+├── SpectralDataGenerator.java       (datagen entry)
 ├── component/
 │   └── ModComponents.java            (DataComponentType WAVE_LENGTH — DeferredRegister)
 ├── item/
@@ -1669,7 +1669,7 @@ fr.skylined.gemmology/
 **Registres (NeoForge) :**
 ```java
 public static final DeferredRegister<Item> ITEMS =
-    DeferredRegister.create(Registries.ITEM, Gemmology.MOD_ID);
+    DeferredRegister.create(Registries.ITEM, Spectral.MOD_ID);
 
 public static final DeferredHolder<Item, GemItem> GEM =
     ITEMS.register("gem", () -> new GemItem(new Item.Properties()));
@@ -1721,8 +1721,8 @@ Le rendu est effectué par un **`BlockEntityRenderer<LightEmitterBlockEntity>`**
 
 **Enregistrement du BER (client uniquement) :**
 ```java
-@EventBusSubscriber(modid = Gemmology.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
-public class GemmologyClient {
+@EventBusSubscriber(modid = Spectral.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
+public class SpectralClient {
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.LIGHT_EMITTER.get(),
@@ -1794,7 +1794,7 @@ Le beam ne projette pas de lumière dynamique nativement en Minecraft. Deux opti
 
 ### `WavelengthUtil.toRGB`
 
-Méthode statique qui convertit une longueur d'onde (nm) en couleur ARGB packed. C'est l'algorithme déjà présent dans `GemmologyClient.java` (converti en utilitaire partagé) :
+Méthode statique qui convertit une longueur d'onde (nm) en couleur ARGB packed. C'est l'algorithme déjà présent dans `SpectralClient.java` (converti en utilitaire partagé) :
 
 ```java
 public class WavelengthUtil {
@@ -1804,7 +1804,7 @@ public class WavelengthUtil {
 
     public static int toRGB(float wavelength) {
         // Algorithme spectre visible → RGB
-        // (repris de GemmologyClient.getColorFromWavelength)
+        // (repris de SpectralClient.getColorFromWavelength)
         ...
         return (0xFF << 24) | ((int) red << 16) | ((int) green << 8) | (int) blue;
     }
@@ -1845,7 +1845,7 @@ Chaque fois que le beam change (nouveau bloc bloquant, changement de λ, débit 
 
 ### Principe général
 
-NeoForge étend le système de recettes vanilla (JSON-driven) avec des **types de recettes custom**. Chaque machine du mod qui transforme des items enregistre son propre `RecipeType<T>`. Les recettes sont des fichiers JSON dans `data/gemmology/recipe/`, modifiables par datapack.
+NeoForge étend le système de recettes vanilla (JSON-driven) avec des **types de recettes custom**. Chaque machine du mod qui transforme des items enregistre son propre `RecipeType<T>`. Les recettes sont des fichiers JSON dans `data/spectral/recipe/`, modifiables par datapack.
 
 Les machines se divisent en deux catégories :
 
@@ -1864,11 +1864,11 @@ Les machines se divisent en deux catégories :
 // ModRecipeTypes.java
 public class ModRecipeTypes {
     public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES =
-        DeferredRegister.create(Registries.RECIPE_TYPE, Gemmology.MOD_ID);
+        DeferredRegister.create(Registries.RECIPE_TYPE, Spectral.MOD_ID);
 
     public static final DeferredHolder<RecipeType<?>, RecipeType<CrystalFurnaceRecipe>> CRYSTAL_FURNACE =
         RECIPE_TYPES.register("crystal_furnace",
-            () -> RecipeType.simple(ResourceLocation.fromNamespaceAndPath(Gemmology.MOD_ID, "crystal_furnace")));
+            () -> RecipeType.simple(ResourceLocation.fromNamespaceAndPath(Spectral.MOD_ID, "crystal_furnace")));
 
     public static final DeferredHolder<RecipeType<?>, RecipeType<ChromaticCompressorRecipe>> CHROMATIC_COMPRESSOR =
         RECIPE_TYPES.register("chromatic_compressor", () -> ...);
@@ -1896,9 +1896,9 @@ if (recipe.isPresent()) {
 #### Format JSON — Crystal Furnace
 
 ```json
-// data/gemmology/recipe/crystal_furnace/iron_ingot.json
+// data/spectral/recipe/crystal_furnace/iron_ingot.json
 {
-  "type": "gemmology:crystal_furnace",
+  "type": "spectral:crystal_furnace",
   "ingredient": { "item": "minecraft:raw_iron" },
   "result":     { "item": "minecraft:iron_ingot", "count": 1 },
   "min_wavelength": 620.0,
@@ -1919,7 +1919,7 @@ Champs disponibles :
 
 ```json
 {
-  "type": "gemmology:chromatic_compressor",
+  "type": "spectral:chromatic_compressor",
   "input_max_wavelength": 400.0,
   "output_wavelength_min": 300.0,
   "output_wavelength_max": 380.0,
@@ -1957,16 +1957,16 @@ Les blocs upgradables ne se craftent pas from scratch au delà du Tier 1. Ils s'
 Le Photon Upgrade Station utilise son propre `RecipeType<UpgradeRecipe>` :
 
 ```json
-// data/gemmology/recipe/upgrade/spectral_refiner_t2.json
+// data/spectral/recipe/upgrade/spectral_refiner_t2.json
 {
-  "type": "gemmology:upgrade",
-  "base": { "item": "gemmology:spectral_refiner" },
+  "type": "spectral:upgrade",
+  "base": { "item": "spectral:spectral_refiner" },
   "additions": [
     { "item": "minecraft:diamond",         "count": 2 },
     { "item": "minecraft:gold_ingot",      "count": 4 },
-    { "item": "gemmology:dampening_glass", "count": 2 }
+    { "item": "spectral:dampening_glass", "count": 2 }
   ],
-  "result": { "item": "gemmology:spectral_refiner_t2" }
+  "result": { "item": "spectral:spectral_refiner_t2" }
 }
 ```
 
@@ -1988,11 +1988,11 @@ dependencies {
 
 ```java
 @JeiPlugin
-public class GemmologyJeiPlugin implements IModPlugin {
+public class SpectralJeiPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(Gemmology.MOD_ID, "jei_plugin");
+        return ResourceLocation.fromNamespaceAndPath(Spectral.MOD_ID, "jei_plugin");
     }
 
     @Override

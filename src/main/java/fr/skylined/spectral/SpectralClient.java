@@ -1,25 +1,29 @@
-package fr.skylined.gemmology;
+package fr.skylined.spectral;
 
-import fr.skylined.gemmology.component.ModComponents;
-import fr.skylined.gemmology.item.ModItems;
-import fr.skylined.gemmology.item.custom.GemItem;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
+import fr.skylined.spectral.component.ModComponents;
+import fr.skylined.spectral.item.ModItems;
+import fr.skylined.spectral.item.custom.GemItem;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 
-public class GemmologyClient implements ClientModInitializer {
-    @Override
-    public void onInitializeClient() {
-        ColorProviderRegistry.ITEM.register((stack, layer) -> {
-            if (!stack.contains(ModComponents.WAVE_LENGTH)) return -1;
-            float wavelength = stack.get(ModComponents.WAVE_LENGTH);
+@EventBusSubscriber(modid = Spectral.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public class SpectralClient {
+
+    @SubscribeEvent
+    public static void onRegisterItemColors(RegisterColorHandlersEvent.Item event) {
+        event.register((stack, layer) -> {
+            if (!stack.has(ModComponents.WAVE_LENGTH.get())) return -1;
+            float wavelength = stack.get(ModComponents.WAVE_LENGTH.get());
             if (wavelength >= GemItem.MIN_WAVELENGTH && wavelength <= GemItem.MAX_WAVELENGTH && layer == 0) {
                 return getColorFromWavelength(wavelength);
             }
             return -1;
-        }, ModItems.GEM);
+        }, ModItems.GEM.get());
     }
 
-    private int getColorFromWavelength(float wavelength) {
+    private static int getColorFromWavelength(float wavelength) {
         final float gamma = 0.80f;
         final int intensityMax = 255;
         float red = 0, green = 0, blue = 0;
@@ -61,17 +65,10 @@ public class GemmologyClient implements ClientModInitializer {
             factor = 0.0f;
         }
 
-        if (red != 0) {
-            red = Math.round(intensityMax * Math.pow(red * factor, gamma));
-        }
-        if (green != 0) {
-            green = Math.round(intensityMax * Math.pow(green * factor, gamma));
-        }
-        if (blue != 0) {
-            blue = Math.round(intensityMax * Math.pow(blue * factor, gamma));
-        }
+        if (red != 0) red = Math.round(intensityMax * Math.pow(red * factor, gamma));
+        if (green != 0) green = Math.round(intensityMax * Math.pow(green * factor, gamma));
+        if (blue != 0) blue = Math.round(intensityMax * Math.pow(blue * factor, gamma));
 
         return (0xFF << 24) | ((int) red << 16) | ((int) green << 8) | (int) blue;
     }
-
 }
