@@ -24,17 +24,6 @@ runs {
 
     client {}
     server {}
-
-    data {
-        programArguments.addAll '--mod', 'spectral',
-                '--all',
-                '--output', file('src/generated/resources/').absolutePath,
-                '--existing', file('src/main/resources/').absolutePath
-    }
-}
-
-sourceSets.main.resources {
-    srcDirs 'src/generated/resources'
 }
 
 dependencies {
