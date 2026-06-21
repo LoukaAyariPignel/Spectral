@@ -1,5 +1,5 @@
 plugins {
-    id 'net.neoforged.gradle.userdev' version '7.0.172'
+    id 'net.neoforged.moddev' version '2.0.82'
 }
 
 group = 'fr.skylined.spectral'
@@ -15,17 +15,21 @@ java {
     }
 }
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
     }
 
-    client {}
-    server {}
-}
-
-dependencies {
-    implementation "net.neoforged:neoforge:${project.neo_version}"
+    mods {
+        spectral {
+            sourceSet(sourceSets.main)
+        }
+    }
 }
