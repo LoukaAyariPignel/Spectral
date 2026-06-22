@@ -13,6 +13,6 @@ public class ModBlockEntities {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PrismStandBlockEntity>> PRISM_STAND =
             BLOCK_ENTITIES.register("prism_stand", () ->
-                    BlockEntityType.Builder.of(PrismStandBlockEntity::new, ModBlocks.PRISM_STAND.get()).build(null)
+                    new BlockEntityType<>(PrismStandBlockEntity::new, ModBlocks.PRISM_STAND.get())
             );
 }

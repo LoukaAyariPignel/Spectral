@@ -2,7 +2,9 @@ package fr.skylined.spectral;
 
 import fr.skylined.spectral.block.entity.ModBlockEntities;
 import fr.skylined.spectral.client.color.WavelengthTintSource;
+import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderState;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,6 +22,7 @@ public class SpectralClient {
 
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(ModBlockEntities.PRISM_STAND.get(), PrismStandBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.PRISM_STAND.get(),
+                (BlockEntityRendererProvider<PrismStandBlockEntity, PrismStandBlockEntityRenderState>) PrismStandBlockEntityRenderer::new);
     }
 }

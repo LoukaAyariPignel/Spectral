@@ -9,6 +9,8 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class PrismStandBlockEntity extends BlockEntity {
 
@@ -32,26 +34,22 @@ public class PrismStandBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
         if (!storedItem.isEmpty()) {
-            tag.put("item", storedItem.save(registries));
+            output.store("item", ItemStack.CODEC, storedItem);
         }
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        if (tag.contains("item")) {
-            storedItem = ItemStack.parse(registries, tag.getCompound("item")).orElse(ItemStack.EMPTY);
-        }
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        storedItem = input.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
     }
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        saveAdditional(tag, registries);
-        return tag;
+        return saveWithoutMetadata(registries);
     }
 
     @Override
