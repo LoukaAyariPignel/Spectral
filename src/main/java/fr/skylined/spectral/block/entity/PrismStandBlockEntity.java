@@ -1,6 +1,5 @@
 package fr.skylined.spectral.block.entity;
 
-import fr.skylined.spectral.Spectral;
 import fr.skylined.spectral.recipe.ModRecipes;
 import fr.skylined.spectral.recipe.PrismStandRecipe;
 import net.minecraft.core.BlockPos;
@@ -26,8 +25,6 @@ public class PrismStandBlockEntity extends BlockEntity {
 
     private ItemStack storedItem = ItemStack.EMPTY;
     private int progress = 0;
-    // DEBUG - à retirer avant la release
-    private int debugThrottle = 0;
 
     public PrismStandBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.PRISM_STAND.get(), pos, state);
@@ -39,12 +36,10 @@ public class PrismStandBlockEntity extends BlockEntity {
             return;
         }
 
-        // Calcul du niveau de lumière combiné au-dessus du stand
         int skyLight = level.getBrightness(LightLayer.SKY, pos.above());
         int blockLight = level.getBrightness(LightLayer.BLOCK, pos.above());
         int totalLight = Math.max(skyLight, blockLight);
 
-        // Recherche d'une recette applicable (recipeAccess() n'est dispo que sur ServerLevel)
         if (!(level instanceof ServerLevel serverLevel)) return;
         Optional<PrismStandRecipe> recipe = serverLevel.recipeAccess()
                 .recipeMap()
@@ -55,59 +50,33 @@ public class PrismStandBlockEntity extends BlockEntity {
                 .findFirst();
 
         if (recipe.isEmpty()) {
-            // DEBUG - à retirer avant la release
-            be.debugThrottle++;
-            if (be.debugThrottle >= 40) {
-                be.debugThrottle = 0;
-                long dayTime = level.getOverworldClockTime() % 24000L;
-                Spectral.LOGGER.info("[PrismStand DEBUG] {} - aucune recette (item: {}, lumière: {}, heure: {})",
-                        pos, be.storedItem.getItem(), totalLight, dayTime);
-            }
             be.resetProgress();
             return;
         }
 
         PrismStandRecipe r = recipe.get();
 
-        // Pour les recettes sky_light, vérifier aussi qu'il fait jour
         if (r.useSkyLight()) {
             long dayTime = level.getOverworldClockTime() % 24000L;
             // MC 26.1 : nuit entre 12600 et 23401 (Timelines.java)
             if (dayTime >= 12600 && dayTime <= 23401) {
-                // DEBUG - à retirer avant la release
-                be.debugThrottle++;
-                if (be.debugThrottle >= 40) {
-                    be.debugThrottle = 0;
-                    Spectral.LOGGER.info("[PrismStand DEBUG] {} - suspendu (nuit, heure: {})", pos, dayTime);
-                }
                 be.resetProgress();
                 return;
             }
         }
 
-        be.debugThrottle = 0;
         be.progress++;
 
-        // DEBUG - à retirer avant la release
-        if (be.progress == 1) {
-            Spectral.LOGGER.info("[PrismStand DEBUG] {} -> attunement démarré (item: {}, lumière: {})",
-                    pos, be.storedItem.getItem(), totalLight);
-        }
         if (be.progress % 10 == 0) {
             serverLevel.sendParticles(ParticleTypes.END_ROD,
                     pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5,
                     2, 0.15, 0.05, 0.15, 0.02);
-            Spectral.LOGGER.debug("[PrismStand] {} -> {}/{} ticks",
-                    pos, be.progress, r.processingTime());
         }
 
         if (be.progress >= r.processingTime()) {
-            // DEBUG - à retirer avant la release
             serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
                     pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
                     20, 0.3, 0.3, 0.3, 0.05);
-            Spectral.LOGGER.info("[PrismStand DEBUG] {} -> attunement terminé !", pos);
-
             ItemStack result = r.assemble(level);
             if (!result.isEmpty()) {
                 be.storedItem = result;
@@ -130,7 +99,6 @@ public class PrismStandBlockEntity extends BlockEntity {
     public void setStoredItem(ItemStack stack) {
         this.storedItem = stack;
         this.progress = 0;
-        this.debugThrottle = 0;
         setChanged();
     }
 
