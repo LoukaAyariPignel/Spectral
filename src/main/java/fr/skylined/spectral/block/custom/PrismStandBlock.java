@@ -26,11 +26,11 @@ public class PrismStandBlock extends BaseEntityBlock {
     public static final MapCodec<PrismStandBlock> CODEC = simpleCodec(PrismStandBlock::new);
 
     private static final VoxelShape SHAPE = Shapes.or(
-        Block.box(1,  0,  1,  15, 2,  15),   // grande base
-        Block.box(3,  2,  3,  13, 4,  13),   // petite base
-        Block.box(6,  4,  6,  10, 10, 10),   // pilier
-        Block.box(4,  10, 4,  12, 12, 12),   // plateau
-        Block.box(4,  12, 4,  12, 16, 12)    // crochets (bounding box)
+        box(1,  0,  1,  15, 2,  15),   // grande base
+        box(3,  2,  3,  13, 4,  13),   // petite base
+        box(6,  4,  6,  10, 10, 10),   // pilier
+        box(4,  10, 4,  12, 12, 12),   // plateau
+        box(4,  12, 4,  12, 16, 12)    // crochets (bounding box)
     );
 
     public PrismStandBlock(BlockBehaviour.Properties props) {
