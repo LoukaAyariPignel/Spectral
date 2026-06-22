@@ -11,6 +11,9 @@ import java.util.function.Consumer;
 
 public class GemItem extends Item {
 
+    public static final float MIN_WAVELENGTH = 380f;
+    public static final float MAX_WAVELENGTH = 780f;
+
     public GemItem(Properties properties) {
         super(properties);
     }
@@ -19,7 +22,7 @@ public class GemItem extends Item {
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, display, tooltip, flag);
         if (stack.has(ModComponents.WAVE_LENGTH.get())) {
-            float wavelength = stack.getOrDefault(ModComponents.WAVE_LENGTH.get(), 380f);
+            float wavelength = stack.getOrDefault(ModComponents.WAVE_LENGTH.get(), MIN_WAVELENGTH);
             tooltip.accept(Component.literal(String.format("%.1f nm", wavelength))
                     .withStyle(style -> style.withColor(0x646464)));
         }
