@@ -54,7 +54,7 @@ public class PrismStandBlockEntityRenderer implements BlockEntityRenderer<PrismS
         float bob = (float) Math.sin((state.gameTime + state.partialTick) * 0.1f) * 0.05f;
 
         poseStack.pushPose();
-        poseStack.translate(0.5, 0.92 + bob, 0.5);
+        poseStack.translate(0.5, 1.2 + bob, 0.5);
         poseStack.mulPose(Axis.YP.rotationDegrees(angle));
         poseStack.scale(0.5f, 0.5f, 0.5f);
 
