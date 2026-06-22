@@ -56,7 +56,7 @@ public class PrismStandBlockEntityRenderer implements BlockEntityRenderer<PrismS
         poseStack.pushPose();
         poseStack.translate(0.5, 1.2 + bob, 0.5);
         poseStack.mulPose(Axis.YP.rotationDegrees(angle));
-        poseStack.scale(0.75f, 0.75f, 0.75f);
+        poseStack.scale(0.9f, 0.9f, 0.9f);
 
         state.itemRenderState.submit(poseStack, submitNodeCollector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
 
