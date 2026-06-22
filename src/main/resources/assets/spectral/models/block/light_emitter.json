@@ -1,0 +1,33 @@
+{
+    "parent": "minecraft:block/block",
+    "textures": {
+        "front":    "spectral:block/light_emitter_front",
+        "side":     "spectral:block/light_emitter_side",
+        "back":     "spectral:block/light_emitter_back",
+        "top":      "spectral:block/light_emitter_top",
+        "particle": "spectral:block/light_emitter_side"
+    },
+    "elements": [
+        {
+            "from": [2, 2, 2], "to": [14, 14, 16],
+            "faces": {
+                "north": { "texture": "#back" },
+                "south": { "texture": "#front" },
+                "west":  { "texture": "#side" },
+                "east":  { "texture": "#side" },
+                "up":    { "texture": "#top" },
+                "down":  { "texture": "#top" }
+            }
+        },
+        {
+            "from": [5, 5, 14], "to": [11, 11, 18],
+            "faces": {
+                "south": { "texture": "#front" },
+                "west":  { "texture": "#side" },
+                "east":  { "texture": "#side" },
+                "up":    { "texture": "#top" },
+                "down":  { "texture": "#top" }
+            }
+        }
+    ]
+}

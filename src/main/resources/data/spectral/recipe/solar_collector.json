@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "GGG",
+        "CRC",
+        "IBI"
+    ],
+    "key": {
+        "G": "minecraft:glass",
+        "C": "minecraft:copper_ingot",
+        "R": "spectral:raw_crystal",
+        "I": "minecraft:iron_ingot",
+        "B": "minecraft:redstone"
+    },
+    "result": { "id": "spectral:solar_collector", "count": 1 }
+}

@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "spectral:block/light_emitter" },
+        "facing=south": { "model": "spectral:block/light_emitter", "y": 180 },
+        "facing=west":  { "model": "spectral:block/light_emitter", "y": 270 },
+        "facing=east":  { "model": "spectral:block/light_emitter", "y": 90 }
+    }
+}

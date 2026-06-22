@@ -1,7 +1,9 @@
 package fr.skylined.spectral.block;
 
 import fr.skylined.spectral.Spectral;
+import fr.skylined.spectral.block.custom.LightEmitterBlock;
 import fr.skylined.spectral.block.custom.PrismStandBlock;
+import fr.skylined.spectral.block.custom.SolarCollectorBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -24,5 +26,24 @@ public class ModBlocks {
                     .strength(1.5f, 6.0f)
                     .sound(SoundType.STONE)
                     .noOcclusion()
+    );
+
+    public static final DeferredBlock<Block> SOLAR_COLLECTOR = BLOCKS.registerBlock(
+            "solar_collector",
+            SolarCollectorBlock::new,
+            () -> BlockBehaviour.Properties.of()
+                    .strength(2.0f, 6.0f)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops()
+    );
+
+    public static final DeferredBlock<Block> LIGHT_EMITTER = BLOCKS.registerBlock(
+            "light_emitter",
+            LightEmitterBlock::new,
+            () -> BlockBehaviour.Properties.of()
+                    .strength(2.5f, 8.0f)
+                    .sound(SoundType.METAL)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()
     );
 }

@@ -23,6 +23,8 @@ public class ModCreativeTabs {
                                 output.accept(ModItems.RAW_CRYSTAL.get());
                                 output.accept(ModItems.GEM.get());
                                 output.accept(ModItems.PRISM_STAND.get());
+                                output.accept(ModItems.SOLAR_COLLECTOR.get());
+                                output.accept(ModItems.LIGHT_EMITTER.get());
                             })
                             .build()
             );

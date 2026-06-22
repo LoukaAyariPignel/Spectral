@@ -15,4 +15,14 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("prism_stand", () ->
                     new BlockEntityType<>(PrismStandBlockEntity::new, ModBlocks.PRISM_STAND.get())
             );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SolarCollectorBlockEntity>> SOLAR_COLLECTOR =
+            BLOCK_ENTITIES.register("solar_collector", () ->
+                    new BlockEntityType<>(SolarCollectorBlockEntity::new, ModBlocks.SOLAR_COLLECTOR.get())
+            );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LightEmitterBlockEntity>> LIGHT_EMITTER =
+            BLOCK_ENTITIES.register("light_emitter", () ->
+                    new BlockEntityType<>(LightEmitterBlockEntity::new, ModBlocks.LIGHT_EMITTER.get())
+            );
 }
