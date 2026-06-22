@@ -3,8 +3,14 @@ package fr.skylined.spectral.block.custom;
 import com.mojang.serialization.MapCodec;
 import fr.skylined.spectral.block.entity.LightEmitterBlockEntity;
 import fr.skylined.spectral.block.entity.ModBlockEntities;
+import fr.skylined.spectral.screen.LightEmitterMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -19,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
@@ -65,6 +72,19 @@ public class LightEmitterBlock extends BaseEntityBlock {
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (!level.isClientSide() && player instanceof ServerPlayer sp) {
+            if (level.getBlockEntity(pos) instanceof LightEmitterBlockEntity be) {
+                sp.openMenu(new SimpleMenuProvider(
+                        (id, inv, p) -> new LightEmitterMenu(id, inv, be),
+                        Component.translatable("block.spectral.light_emitter")
+                ));
+            }
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override

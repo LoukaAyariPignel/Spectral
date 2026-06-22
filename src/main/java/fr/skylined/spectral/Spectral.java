@@ -6,6 +6,7 @@ import fr.skylined.spectral.component.ModComponents;
 import fr.skylined.spectral.creativetab.ModCreativeTabs;
 import fr.skylined.spectral.item.ModItems;
 import fr.skylined.spectral.recipe.ModRecipes;
+import fr.skylined.spectral.screen.ModMenuTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
@@ -24,5 +25,6 @@ public class Spectral {
         ModRecipes.RECIPE_TYPES.register(modEventBus);
         ModRecipes.RECIPE_SERIALIZERS.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
+        ModMenuTypes.MENU_TYPES.register(modEventBus);
     }
 }

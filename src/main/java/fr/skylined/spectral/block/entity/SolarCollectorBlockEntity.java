@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -41,25 +42,20 @@ public class SolarCollectorBlockEntity extends BlockEntity {
     private static int calculateProduction(Level level, BlockPos pos) {
         BlockPos above = pos.above();
         if (!level.canSeeSky(above)) return 0;
-
         int skyLight = level.getBrightness(LightLayer.SKY, above);
         if (skyLight <= 3) return 0;
-
         int base = Math.round(skyLight / 15f * BASE_PRODUCTION);
         return level.isRaining() ? Math.min(2, base) : base;
     }
 
     private static void pushToAdjacentEmitters(Level level, BlockPos pos, SolarCollectorBlockEntity be) {
         if (be.storedPhotons <= 0) return;
-
         for (Direction dir : Direction.values()) {
             if (dir == Direction.UP) continue;
             BlockPos neighbor = pos.relative(dir);
             if (!(level.getBlockEntity(neighbor) instanceof LightEmitterBlockEntity emitter)) continue;
-
             long space = LightEmitterBlockEntity.MAX_PHOTONS - emitter.getStoredPhotons();
             if (space <= 0) continue;
-
             long transfer = Math.min(be.storedPhotons, Math.min(space, 20L));
             be.storedPhotons -= transfer;
             emitter.addPhotons(transfer);
@@ -69,6 +65,22 @@ public class SolarCollectorBlockEntity extends BlockEntity {
 
     public long getStoredPhotons() { return storedPhotons; }
     public int getCurrentProduction() { return currentProduction; }
+
+    public ContainerData getContainerData() {
+        return new ContainerData() {
+            @Override
+            public int get(int index) {
+                return switch (index) {
+                    case 0 -> (int) storedPhotons;
+                    case 1 -> (int) MAX_PHOTONS;
+                    case 2 -> currentProduction;
+                    default -> 0;
+                };
+            }
+            @Override public void set(int index, int value) {}
+            @Override public int getCount() { return 3; }
+        };
+    }
 
     @Override
     protected void saveAdditional(ValueOutput output) {

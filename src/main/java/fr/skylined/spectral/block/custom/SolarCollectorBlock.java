@@ -3,7 +3,13 @@ package fr.skylined.spectral.block.custom;
 import com.mojang.serialization.MapCodec;
 import fr.skylined.spectral.block.entity.ModBlockEntities;
 import fr.skylined.spectral.block.entity.SolarCollectorBlockEntity;
+import fr.skylined.spectral.screen.SolarCollectorMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -12,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jspecify.annotations.Nullable;
 
 public class SolarCollectorBlock extends BaseEntityBlock {
@@ -35,6 +42,19 @@ public class SolarCollectorBlock extends BaseEntityBlock {
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (!level.isClientSide() && player instanceof ServerPlayer sp) {
+            if (level.getBlockEntity(pos) instanceof SolarCollectorBlockEntity be) {
+                sp.openMenu(new SimpleMenuProvider(
+                        (id, inv, p) -> new SolarCollectorMenu(id, inv, be),
+                        Component.translatable("block.spectral.solar_collector")
+                ));
+            }
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override

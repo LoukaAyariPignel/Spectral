@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -68,6 +69,32 @@ public class LightEmitterBlockEntity extends BlockEntity {
 
     public long getStoredPhotons() { return storedPhotons; }
     public boolean isEmitting() { return emitting; }
+
+    public ContainerData getContainerData() {
+        return new ContainerData() {
+            @Override
+            public int get(int index) {
+                return switch (index) {
+                    case 0 -> (int) storedPhotons;
+                    case 1 -> (int) MAX_PHOTONS;
+                    case 2 -> emitting ? 1 : 0;
+                    case 3 -> {
+                        Level lv = getLevel();
+                        if (lv != null) {
+                            BlockState bs = lv.getBlockState(getBlockPos());
+                            if (bs.hasProperty(LightEmitterBlock.FACING)) {
+                                yield bs.getValue(LightEmitterBlock.FACING).get2DDataValue();
+                            }
+                        }
+                        yield 2; // default NORTH
+                    }
+                    default -> 0;
+                };
+            }
+            @Override public void set(int index, int value) {}
+            @Override public int getCount() { return 4; }
+        };
+    }
 
     @Override
     public void setChanged() {
