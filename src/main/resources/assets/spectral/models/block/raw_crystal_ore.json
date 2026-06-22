@@ -1,0 +1,6 @@
+{
+    "parent": "minecraft:block/cube_all",
+    "textures": {
+        "all": "spectral:block/raw_crystal_ore"
+    }
+}

@@ -19,6 +19,7 @@ public class ModCreativeTabs {
                             .title(Component.translatable("itemGroup.spectral"))
                             .icon(() -> new ItemStack(ModItems.GEM.get()))
                             .displayItems((params, output) -> {
+                                output.accept(ModItems.RAW_CRYSTAL_ORE.get());
                                 output.accept(ModItems.RAW_CRYSTAL.get());
                                 output.accept(ModItems.GEM.get());
                             })
