@@ -9,6 +9,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -16,10 +17,21 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class PrismStandBlock extends BaseEntityBlock {
 
     public static final MapCodec<PrismStandBlock> CODEC = simpleCodec(PrismStandBlock::new);
+
+    private static final VoxelShape SHAPE = Shapes.or(
+        Block.box(1,  0,  1,  15, 2,  15),   // grande base
+        Block.box(3,  2,  3,  13, 4,  13),   // petite base
+        Block.box(6,  4,  6,  10, 10, 10),   // pilier
+        Block.box(4,  10, 4,  12, 12, 12),   // plateau
+        Block.box(4,  12, 4,  12, 16, 12)    // crochets (bounding box)
+    );
 
     public PrismStandBlock(BlockBehaviour.Properties props) {
         super(props);
@@ -38,6 +50,11 @@ public class PrismStandBlock extends BaseEntityBlock {
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
     }
 
     @Override
