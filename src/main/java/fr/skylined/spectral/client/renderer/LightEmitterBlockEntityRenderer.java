@@ -44,40 +44,45 @@ public class LightEmitterBlockEntityRenderer
             SubmitNodeCollector collector, CameraRenderState camera) {
         if (state.segments.isEmpty()) return;
 
-        float animTime = (state.gameTime + state.partialTick) * 0.005f;
+        // BeaconRenderer uses Math.floorMod(gameTime, 40) + partialTick for animation
+        float animTime = (float) Math.floorMod(state.gameTime, 40) + state.partialTick;
 
         poseStack.pushPose();
-        poseStack.translate(0.5, 0.5, 0.5);
+        // Rotate so that pose-Y+ points in the FACING direction.
+        // BeaconRenderer.submitBeaconBeam renders from beamStart to beamStart+height along pose-Y+.
+        // It also does an internal translate(0.5, 0, 0.5) which after this rotation
+        // centers the beam on the block face (0.5 East, 0.5 Up in world).
         applyFacingRotation(poseStack, state.facing);
-        poseStack.translate(0, 0.5, 0); // advance to emitter face
 
         for (BeamSegment seg : state.segments) {
-            float len = seg.end() - seg.start();
-            if (len <= 0f) continue;
+            int segStart  = (int) seg.start();
+            int segHeight = (int) seg.end() - segStart;
+            if (segHeight <= 0) continue;
 
-            int color = seg.wavelength() > 0f
+            // colorFromWavelength returns 0xFFrrggbb; wavelength=0 → white
+            int colorARGB = seg.wavelength() > 0f
                     ? WavelengthTintSource.colorFromWavelength(seg.wavelength())
                     : 0xFFFFFFFF;
-            int r = (color >> 16) & 0xFF;
-            int g = (color >> 8) & 0xFF;
-            int b = color & 0xFF;
 
-            poseStack.pushPose();
-            poseStack.translate(0, seg.start(), 0);
+            // Correct signature: (PoseStack, SubmitNodeCollector, Identifier,
+            //   float scale, float animTime, int beamStart, int height,
+            //   int colorARGB, float solidRadius, float glowRadius)
             BeaconRenderer.submitBeaconBeam(poseStack, collector, BeaconRenderer.BEAM_LOCATION,
-                    animTime, len, r, g, b, 0.08f, 0.12f);
-            poseStack.popPose();
+                    1.0f, animTime, segStart, segHeight, colorARGB, 0.15f, 0.20f);
         }
 
         poseStack.popPose();
     }
 
     private static void applyFacingRotation(PoseStack poseStack, Direction facing) {
+        // Right-hand rule around each axis:
+        // XP -90°: Y+ → -Z (North)   XP +90°: Y+ → +Z (South)
+        // ZP -90°: Y+ → +X (East)    ZP +90°: Y+ → -X (West)
         switch (facing) {
             case NORTH -> poseStack.mulPose(Axis.XP.rotationDegrees(-90));
             case SOUTH -> poseStack.mulPose(Axis.XP.rotationDegrees(90));
-            case EAST  -> poseStack.mulPose(Axis.ZP.rotationDegrees(90));
-            case WEST  -> poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
+            case EAST  -> poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
+            case WEST  -> poseStack.mulPose(Axis.ZP.rotationDegrees(90));
             default    -> {}
         }
     }

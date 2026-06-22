@@ -51,8 +51,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
         }
 
         Direction facing = state.getValue(LightEmitterBlock.FACING);
-
         List<BeamSegment> newSegments;
+
         if (be.emitting) {
             newSegments = computeBeam(serverLevel, pos, facing);
             spawnBeamParticle(serverLevel, pos, facing);
@@ -70,20 +70,17 @@ public class LightEmitterBlockEntity extends BlockEntity {
 
     private static List<BeamSegment> computeBeam(ServerLevel level, BlockPos origin, Direction facing) {
         List<BeamSegment> segments = new ArrayList<>();
-        float currentWavelength = 0f; // 0 = white / unfiltered
+        float currentWavelength = 0f;
         float segStart = 0f;
 
         for (int d = 1; d <= BEAM_MAX_RANGE; d++) {
             BlockPos checkPos = origin.relative(facing, d);
-
             if (!level.isLoaded(checkPos)) break;
 
             BlockState checkState = level.getBlockState(checkPos);
 
-            // Air → pass through
             if (checkState.isAir()) continue;
 
-            // Prism Stand → filter or stop
             if (level.getBlockEntity(checkPos) instanceof PrismStandBlockEntity psbe) {
                 segments.add(new BeamSegment(segStart, d, currentWavelength));
                 ItemStack stored = psbe.getStoredItem();
@@ -91,20 +88,17 @@ public class LightEmitterBlockEntity extends BlockEntity {
                     currentWavelength = stored.get(ModComponents.WAVE_LENGTH.get());
                     segStart = d;
                 } else {
-                    return segments; // gem missing or untuned → beam blocked
+                    return segments;
                 }
                 continue;
             }
 
-            // Transparent / non-occluding block (glass, slabs…) → pass through
             if (!checkState.canOcclude()) continue;
 
-            // Solid block → beam stops here
             segments.add(new BeamSegment(segStart, d, currentWavelength));
             return segments;
         }
 
-        // Reached max range or chunk boundary
         if (segStart < BEAM_MAX_RANGE) {
             segments.add(new BeamSegment(segStart, BEAM_MAX_RANGE, currentWavelength));
         }
@@ -124,8 +118,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
         setChanged();
     }
 
-    public long getStoredPhotons()        { return storedPhotons; }
-    public boolean isEmitting()           { return emitting; }
+    public long getStoredPhotons()              { return storedPhotons; }
+    public boolean isEmitting()                 { return emitting; }
     public List<BeamSegment> getCurrentSegments() { return currentSegments; }
 
     public ContainerData getContainerData() {
@@ -144,12 +138,12 @@ public class LightEmitterBlockEntity extends BlockEntity {
                                 yield bs.getValue(LightEmitterBlock.FACING).get2DDataValue();
                             }
                         }
-                        yield 2; // default NORTH
+                        yield 2;
                     }
                     default -> 0;
                 };
             }
-            @Override public void set(int index, int value) {}
+            @Override public void set(int i, int v) {}
             @Override public int getCount() { return 4; }
         };
     }
@@ -167,15 +161,19 @@ public class LightEmitterBlockEntity extends BlockEntity {
         super.saveAdditional(output);
         output.putLong("photons", storedPhotons);
         output.putBoolean("emitting", emitting);
-        output.store("segs", BeamSegment.LIST_CODEC, currentSegments);
+        // Use typed list API to serialize segments
+        var segList = output.list("segs", BeamSegment.CODEC);
+        for (BeamSegment seg : currentSegments) {
+            segList.add(seg);
+        }
     }
 
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        storedPhotons    = input.getLongOr("photons", 0L);
-        emitting         = input.getBooleanOr("emitting", false);
-        currentSegments  = input.read("segs", BeamSegment.LIST_CODEC).orElse(List.of());
+        storedPhotons   = input.getLongOr("photons", 0L);
+        emitting        = input.getBooleanOr("emitting", false);
+        currentSegments = input.listOrEmpty("segs", BeamSegment.CODEC).stream().toList();
     }
 
     @Override
