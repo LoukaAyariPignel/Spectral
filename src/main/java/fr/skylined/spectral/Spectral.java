@@ -1,6 +1,7 @@
 package fr.skylined.spectral;
 
 import fr.skylined.spectral.component.ModComponents;
+import fr.skylined.spectral.creativetab.ModCreativeTabs;
 import fr.skylined.spectral.item.ModItems;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -15,5 +16,6 @@ public class Spectral {
     public Spectral(IEventBus modEventBus) {
         ModComponents.COMPONENTS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+        ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
     }
 }

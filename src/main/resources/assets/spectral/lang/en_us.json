@@ -1,3 +1,5 @@
 {
-    "item.spectral.gem": "Gem"
+    "item.spectral.gem": "Gem",
+    "item.spectral.raw_crystal": "Raw Crystal",
+    "itemGroup.spectral": "Spectral"
 }
