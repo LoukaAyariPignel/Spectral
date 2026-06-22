@@ -17,11 +17,12 @@ public class ModBlocks {
             () -> BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE)
     );
 
-    public static final DeferredBlock<Block> PRISM_STAND = BLOCKS.register(
+    public static final DeferredBlock<Block> PRISM_STAND = BLOCKS.registerBlock(
             "prism_stand",
-            () -> new PrismStandBlock(BlockBehaviour.Properties.of()
+            PrismStandBlock::new,
+            () -> BlockBehaviour.Properties.of()
                     .strength(1.5f, 6.0f)
                     .sound(SoundType.STONE)
-                    .noOcclusion())
+                    .noOcclusion()
     );
 }
