@@ -1,5 +1,5 @@
 {
-    "ambientocclusion": true,
+    "parent": "minecraft:block/block",
     "textures": {
         "quartz":   "spectral:block/prism_stand_quartz",
         "gold":     "spectral:block/prism_stand_gold",
