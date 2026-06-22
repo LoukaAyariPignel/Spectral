@@ -1,9 +1,11 @@
 package fr.skylined.spectral.block.entity;
 
+import fr.skylined.spectral.Spectral;
 import fr.skylined.spectral.recipe.ModRecipes;
 import fr.skylined.spectral.recipe.PrismStandRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -69,7 +71,22 @@ public class PrismStandBlockEntity extends BlockEntity {
 
         be.progress++;
 
+        // DEBUG - à retirer avant la release
+        if (be.progress % 10 == 0) {
+            serverLevel.sendParticles(ParticleTypes.END_ROD,
+                    pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5,
+                    2, 0.15, 0.05, 0.15, 0.02);
+            Spectral.LOGGER.debug("[PrismStand] {} -> {}/{} ticks (item: {}, lumière: {})",
+                    pos, be.progress, r.processingTime(), be.storedItem.getItem(), totalLight);
+        }
+
         if (be.progress >= r.processingTime()) {
+            // DEBUG - à retirer avant la release
+            serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                    pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
+                    20, 0.3, 0.3, 0.3, 0.05);
+            Spectral.LOGGER.debug("[PrismStand] {} -> attunement terminé !", pos);
+
             ItemStack result = r.assemble(level);
             if (!result.isEmpty()) {
                 be.storedItem = result;
