@@ -1,6 +1,7 @@
 {
     "type": "spectral:prism_stand",
-    "ingredient": "spectral:raw_crystal",
+    "ingredient": "spectral:gem",
+    "require_no_wavelength": true,
     "processing_time": 200,
     "min_light_level": 12,
     "result": {

@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
 
 public record PrismStandRecipe(
         Item ingredient,
+        boolean requireNoWavelength,
         int processingTime,
         int minLightLevel,
         Result result
@@ -71,6 +72,7 @@ public record PrismStandRecipe(
 
     public static final MapCodec<PrismStandRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
             BuiltInRegistries.ITEM.byNameCodec().fieldOf("ingredient").forGetter(PrismStandRecipe::ingredient),
+            Codec.BOOL.optionalFieldOf("require_no_wavelength", false).forGetter(PrismStandRecipe::requireNoWavelength),
             Codec.INT.fieldOf("processing_time").forGetter(PrismStandRecipe::processingTime),
             Codec.INT.fieldOf("min_light_level").forGetter(PrismStandRecipe::minLightLevel),
             Result.CODEC.fieldOf("result").forGetter(PrismStandRecipe::result)
@@ -78,6 +80,7 @@ public record PrismStandRecipe(
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PrismStandRecipe> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.idMapper(BuiltInRegistries.ITEM), PrismStandRecipe::ingredient,
+            ByteBufCodecs.BOOL, PrismStandRecipe::requireNoWavelength,
             ByteBufCodecs.INT, PrismStandRecipe::processingTime,
             ByteBufCodecs.INT, PrismStandRecipe::minLightLevel,
             Result.STREAM_CODEC, PrismStandRecipe::result,
@@ -85,7 +88,9 @@ public record PrismStandRecipe(
     );
 
     public boolean matches(ItemStack stack, int lightLevel) {
-        return stack.getItem() == ingredient && lightLevel >= minLightLevel;
+        if (stack.getItem() != ingredient) return false;
+        if (requireNoWavelength && stack.has(ModComponents.WAVE_LENGTH.get())) return false;
+        return lightLevel >= minLightLevel;
     }
 
     // true = pas affiche dans le recipe book vanilla, evite le warning "will be ignored"
