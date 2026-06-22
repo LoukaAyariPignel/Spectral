@@ -1940,9 +1940,139 @@ Ces machines n'ont pas de `RecipeType`. Leur logique est entièrement dans le `B
 
 **Spectral Refiner** — pas de recette JSON. La gemme en slot A est modifiée tick par tick : `λ += step` ou `λ -= step` selon que la cible est plus haute ou plus basse. Aucune lookup dans le RecipeManager.
 
-**Prism Stand (attunement)** — lit la lumière du monde (`getLightLevel`, `getDayTime`, biome…) et calcule λ progressivement. Aucune recette.
+**Prism Stand (attunement)** — utilise son propre `RecipeType<PrismStandRecipe>` data-driven. Chaque recette définit : l'ingrédient, le seuil de lumière requis, la durée, et un **résultat polymorphe** (voir ci-dessous).
 
 **Photosynthesis Accelerator** — scanne les blocs dans un rayon, applique `BonemealableBlock.performBonemeal()` ou accélère les `RandomTick` des plantes. Aucune recette.
+
+---
+
+### Prism Stand — Système de recettes modulaire
+
+#### Format JSON de base
+
+```json
+// data/spectral/recipe/raw_crystal_attunement.json
+{
+    "type": "spectral:prism_stand",
+    "ingredient": "spectral:raw_crystal",
+    "processing_time": 200,
+    "min_light_level": 12,
+    "result": {
+        "type": "spectral:wavelength_gem",
+        "wavelength_min": 380.0,
+        "wavelength_max": 780.0,
+        "use_sky_light": true
+    }
+}
+```
+
+Champs :
+- `ingredient` — item en entrée (string ou objet `{"item": "..."}`)
+- `processing_time` — durée en ticks (200 = 10 s)
+- `min_light_level` — niveau de lumière minimum (0-15) pour démarrer la conversion
+- `result` — résultat **polymorphe** (type discriminant + données spécifiques)
+
+#### Résultats disponibles (types natifs)
+
+| Type | Effet | Champs supplémentaires |
+|---|---|---|
+| `spectral:wavelength_gem` | Produit une Gem avec λ calculée depuis la lumière | `wavelength_min`, `wavelength_max`, `use_sky_light` |
+| `spectral:item_output` | Produit un item fixe | `item`, `count` |
+
+D'autres mods peuvent enregistrer leurs propres types de résultat via le registre `spectral:prism_stand_result_type`.
+
+#### Calcul de la longueur d'onde (`use_sky_light: true`)
+
+La longueur d'onde finale est interpolée dans `[wavelength_min, wavelength_max]` selon l'heure du jour :
+
+| Heure du jour | Couleur | λ approximative |
+|---|---|---|
+| Aube (~0–1 000 ticks) | Violet-bleu | vers `wavelength_min` |
+| Matin (1 000–6 000) | Bleu-cyan | bas de la plage |
+| Midi (6 000) | Jaune-vert | milieu de la plage |
+| Après-midi (6 000–12 600) | Orange | haut de la plage |
+| Coucher (~12 600) | Rouge | vers `wavelength_max` |
+| Nuit (12 600–23 401) | — | conversion suspendue |
+
+> **Note MC 26.1** : Les tick values sont définies dans `Timelines.java`. Jour : 1 000–12 600, nuit : 12 600–23 401 (période 24 000). `getDayTime()` n'existe plus → utiliser `level.getOverworldClockTime() % 24000`. Pour accéder aux recettes : `((ServerLevel) level).recipeAccess().recipeMap().byType(type)`. Les recettes machine doivent implémenter `isSpecial() { return true; }` sinon elles génèrent un warning "will be ignored" (elles restent fonctionnelles mais le warning pollue les logs).
+
+#### Extensibilité — autres mods
+
+Un autre mod peut :
+1. Enregistrer un `PrismStandResultType` dans le registre Spectral
+2. Fournir un `Codec<MonResultat>` pour la désérialisation JSON
+3. Implémenter `apply(ItemStack input, Level level, BlockPos pos)` pour la logique
+
+Exemple d'un mod tiers qui charge un item :
+```json
+{
+    "type": "spectral:prism_stand",
+    "ingredient": "mymod:solar_battery",
+    "processing_time": 100,
+    "min_light_level": 10,
+    "result": {
+        "type": "mymod:charge_item",
+        "energy": 5000
+    }
+}
+```
+
+#### Intégration KubeJS
+
+**Niveau 1 — automatique (aucun code supplémentaire)**
+
+KubeJS supporte tout `RecipeType` standard via `event.custom({...})` :
+
+```js
+// kubejs/server_scripts/prism_stand.js
+ServerEvents.recipes(event => {
+    // Ajouter une recette
+    event.custom({
+        type: "spectral:prism_stand",
+        ingredient: "spectral:raw_crystal",
+        processing_time: 200,
+        min_light_level: 12,
+        result: {
+            type: "spectral:wavelength_gem",
+            wavelength_min: 380.0,
+            wavelength_max: 780.0,
+            use_sky_light: true
+        }
+    })
+
+    // Supprimer une recette existante
+    event.remove({ type: "spectral:prism_stand" })
+    
+    // Ajouter un résultat d'un autre mod (si mymod est installé)
+    event.custom({
+        type: "spectral:prism_stand",
+        ingredient: "mymod:crystal",
+        processing_time: 300,
+        min_light_level: 8,
+        result: { type: "mymod:charge_item", energy: 5000 }
+    })
+})
+```
+
+**Niveau 2 — API fluente (plugin KubeJS optionnel)**
+
+Un plugin KubeJS dédié (mod séparé ou intégré à Spectral plus tard) peut exposer une API plus ergonomique :
+
+```js
+ServerEvents.recipes(event => {
+    event.recipes.spectral.prismStand('spectral:raw_crystal')
+        .time(200)
+        .minLight(12)
+        .wavelengthFromSky(380, 780)
+
+    event.recipes.spectral.prismStand('mymod:battery')
+        .time(100)
+        .minLight(8)
+        .result({ type: 'mymod:charge_item', energy: 5000 })
+})
+```
+
+Ce plugin nécessite d'implémenter un `RecipeSchema` KubeJS (~100 lignes) — prévu comme dépendance optionnelle future.
 
 ---
 
