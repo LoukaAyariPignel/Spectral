@@ -21,6 +21,7 @@ public class ModCreativeTabs {
                             .displayItems((params, output) -> {
                                 output.accept(ModItems.RAW_CRYSTAL_ORE.get());
                                 output.accept(ModItems.RAW_CRYSTAL.get());
+                                output.accept(ModItems.PRISM_STAND.get());
                                 output.accept(ModItems.GEM.get());
                             })
                             .build()
