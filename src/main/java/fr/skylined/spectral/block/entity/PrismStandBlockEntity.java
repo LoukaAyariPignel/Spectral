@@ -29,6 +29,14 @@ public class PrismStandBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    @Override
+    public void setChanged() {
+        super.setChanged();
+        if (getLevel() != null) {
+            getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+        }
+    }
+
     public boolean isEmpty() {
         return storedItem.isEmpty();
     }

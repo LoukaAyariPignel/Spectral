@@ -52,7 +52,6 @@ public class PrismStandBlock extends BaseEntityBlock {
             if (!level.isClientSide()) {
                 be.setStoredItem(stack.copyWithCount(1));
                 if (!player.isCreative()) stack.shrink(1);
-                level.sendBlockUpdated(pos, state, state, 3);
             }
             return InteractionResult.SUCCESS;
         }
@@ -68,7 +67,6 @@ public class PrismStandBlock extends BaseEntityBlock {
             if (!level.isClientSide()) {
                 player.getInventory().placeItemBackInInventory(be.getStoredItem().copy());
                 be.setStoredItem(ItemStack.EMPTY);
-                level.sendBlockUpdated(pos, state, state, 3);
             }
             return InteractionResult.SUCCESS;
         }
