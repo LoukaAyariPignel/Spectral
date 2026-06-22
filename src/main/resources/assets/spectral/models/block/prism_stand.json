@@ -1,0 +1,147 @@
+{
+    "parent": "minecraft:block/block",
+    "textures": {
+        "quartz":   "spectral:block/prism_stand_quartz",
+        "gold":     "spectral:block/prism_stand_gold",
+        "particle": "spectral:block/prism_stand_quartz"
+    },
+    "elements": [
+        {
+            "comment": "Grande base 14x2x14",
+            "from": [1, 0, 1], "to": [15, 2, 15],
+            "faces": {
+                "down":  {"texture": "#quartz", "cullface": "down"},
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Petite base 10x2x10",
+            "from": [3, 2, 3], "to": [13, 4, 13],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Pilier 4x6x4",
+            "from": [6, 4, 6], "to": [10, 10, 10],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Plateau haut 8x2x8",
+            "from": [4, 10, 4], "to": [12, 12, 12],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Crochet gauche — barre",
+            "from": [4, 12, 7], "to": [6, 15, 9],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "north": {"texture": "#gold"},
+                "south": {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet gauche — pointe vers centre",
+            "from": [6, 14, 7], "to": [9, 16, 9],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "north": {"texture": "#gold"},
+                "south": {"texture": "#gold"},
+                "east":  {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet droit — barre",
+            "from": [10, 12, 7], "to": [12, 15, 9],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "north": {"texture": "#gold"},
+                "south": {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet droit — pointe vers centre",
+            "from": [7, 14, 7], "to": [10, 16, 9],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "north": {"texture": "#gold"},
+                "south": {"texture": "#gold"},
+                "west":  {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet avant — barre",
+            "from": [7, 12, 4], "to": [9, 15, 6],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "north": {"texture": "#gold"},
+                "south": {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet avant — pointe vers centre",
+            "from": [7, 14, 6], "to": [9, 16, 9],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"},
+                "south": {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet arrière — barre",
+            "from": [7, 12, 10], "to": [9, 15, 12],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "north": {"texture": "#gold"},
+                "south": {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"}
+            }
+        },
+        {
+            "comment": "Crochet arrière — pointe vers centre",
+            "from": [7, 14, 7], "to": [9, 16, 10],
+            "faces": {
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"},
+                "north": {"texture": "#gold"}
+            }
+        }
+    ]
+}

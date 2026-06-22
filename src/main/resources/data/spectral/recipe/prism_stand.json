@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "B B",
+        "B B",
+        "QQQ"
+    ],
+    "key": {
+        "B": "minecraft:blaze_rod",
+        "Q": "minecraft:quartz"
+    },
+    "result": {
+        "id": "spectral:prism_stand",
+        "count": 1
+    }
+}

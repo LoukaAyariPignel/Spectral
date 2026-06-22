@@ -1,0 +1,7 @@
+{
+    "parent": "minecraft:block/cube_column",
+    "textures": {
+        "end":  "spectral:block/raw_crystal_ore_top",
+        "side": "spectral:block/raw_crystal_ore_side"
+    }
+}
