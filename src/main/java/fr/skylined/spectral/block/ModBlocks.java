@@ -1,6 +1,7 @@
 package fr.skylined.spectral.block;
 
 import fr.skylined.spectral.Spectral;
+import fr.skylined.spectral.block.custom.PrismStandBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -16,11 +17,11 @@ public class ModBlocks {
             () -> BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE)
     );
 
-    public static final DeferredBlock<Block> PRISM_STAND = BLOCKS.registerSimpleBlock(
+    public static final DeferredBlock<Block> PRISM_STAND = BLOCKS.register(
             "prism_stand",
-            () -> BlockBehaviour.Properties.of()
+            () -> new PrismStandBlock(BlockBehaviour.Properties.of()
                     .strength(1.5f, 6.0f)
                     .sound(SoundType.STONE)
-                    .noOcclusion()
+                    .noOcclusion())
     );
 }

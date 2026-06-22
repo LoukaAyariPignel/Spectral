@@ -1,6 +1,7 @@
 package fr.skylined.spectral;
 
 import fr.skylined.spectral.block.ModBlocks;
+import fr.skylined.spectral.block.entity.ModBlockEntities;
 import fr.skylined.spectral.component.ModComponents;
 import fr.skylined.spectral.creativetab.ModCreativeTabs;
 import fr.skylined.spectral.item.ModItems;
@@ -18,6 +19,7 @@ public class Spectral {
         ModComponents.COMPONENTS.register(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+        ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
     }
 }
