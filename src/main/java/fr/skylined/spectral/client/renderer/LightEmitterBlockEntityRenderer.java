@@ -33,9 +33,9 @@ public class LightEmitterBlockEntityRenderer
     public void extractRenderState(LightEmitterBlockEntity be, LightEmitterBlockEntityRenderState state,
             float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         BlockEntityRenderState.extractBase(be, state, breakProgress);
-        state.segments   = be.getCurrentSegments();
-        state.facing     = be.getBlockState().getValue(LightEmitterBlock.FACING);
-        state.gameTime   = be.getLevel() != null ? be.getLevel().getGameTime() : 0L;
+        state.segments    = be.getCurrentSegments();
+        state.facing      = be.getBlockState().getValue(LightEmitterBlock.FACING);
+        state.gameTime    = be.getLevel() != null ? be.getLevel().getGameTime() : 0L;
         state.partialTick = partialTicks;
     }
 
@@ -44,14 +44,23 @@ public class LightEmitterBlockEntityRenderer
             SubmitNodeCollector collector, CameraRenderState camera) {
         if (state.segments.isEmpty()) return;
 
-        // BeaconRenderer uses Math.floorMod(gameTime, 40) + partialTick for animation
         float animTime = (float) Math.floorMod(state.gameTime, 40) + state.partialTick;
 
         poseStack.pushPose();
-        // Rotate so that pose-Y+ points in the FACING direction.
-        // BeaconRenderer.submitBeaconBeam renders from beamStart to beamStart+height along pose-Y+.
-        // It also does an internal translate(0.5, 0, 0.5) which after this rotation
-        // centers the beam on the block face (0.5 East, 0.5 Up in world).
+
+        // submitBeaconBeam does an internal translate(0.5, 0, 0.5) in the rotated
+        // pose space. After each rotation the (0.5,0,0.5) maps to different world
+        // offsets. We pre-translate to counter the error for SOUTH and EAST.
+        // NORTH: R×(0.5,0,0.5) = (0.5, 0.5, 0) → correct N-face center, no fix needed
+        // SOUTH: R×(0.5,0,0.5) = (0.5,-0.5, 0) → needs +1Y +1Z to reach S-face center
+        // EAST:  R×(0.5,0,0.5) = (0,  -0.5,0.5) → needs +1X +1Y to reach E-face center
+        // WEST:  R×(0.5,0,0.5) = (0,   0.5,0.5) → correct W-face center, no fix needed
+        switch (state.facing) {
+            case SOUTH -> poseStack.translate(0, 1, 1);
+            case EAST  -> poseStack.translate(1, 1, 0);
+            default    -> {}
+        }
+
         applyFacingRotation(poseStack, state.facing);
 
         for (BeamSegment seg : state.segments) {
@@ -59,14 +68,10 @@ public class LightEmitterBlockEntityRenderer
             int segHeight = (int) seg.end() - segStart;
             if (segHeight <= 0) continue;
 
-            // colorFromWavelength returns 0xFFrrggbb; wavelength=0 → white
             int colorARGB = seg.wavelength() > 0f
                     ? WavelengthTintSource.colorFromWavelength(seg.wavelength())
                     : 0xFFFFFFFF;
 
-            // Correct signature: (PoseStack, SubmitNodeCollector, Identifier,
-            //   float scale, float animTime, int beamStart, int height,
-            //   int colorARGB, float solidRadius, float glowRadius)
             BeaconRenderer.submitBeaconBeam(poseStack, collector, BeaconRenderer.BEAM_LOCATION,
                     1.0f, animTime, segStart, segHeight, colorARGB, 0.15f, 0.20f);
         }
@@ -75,9 +80,9 @@ public class LightEmitterBlockEntityRenderer
     }
 
     private static void applyFacingRotation(PoseStack poseStack, Direction facing) {
-        // Right-hand rule around each axis:
-        // XP -90°: Y+ → -Z (North)   XP +90°: Y+ → +Z (South)
-        // ZP -90°: Y+ → +X (East)    ZP +90°: Y+ → -X (West)
+        // Right-hand rule — makes pose-Y point in FACING direction:
+        // XP -90°: Y+ → -Z (North)    XP +90°: Y+ → +Z (South)
+        // ZP -90°: Y+ → +X (East)     ZP +90°: Y+ → -X (West)
         switch (facing) {
             case NORTH -> poseStack.mulPose(Axis.XP.rotationDegrees(-90));
             case SOUTH -> poseStack.mulPose(Axis.XP.rotationDegrees(90));
