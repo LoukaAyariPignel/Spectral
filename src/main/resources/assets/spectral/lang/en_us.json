@@ -1,5 +1,6 @@
 {
     "item.spectral.gem": "Gem",
+    "item.spectral.gem_fragment": "Gem Fragment",
     "item.spectral.raw_crystal": "Raw Crystal",
     "block.spectral.raw_crystal_ore": "Raw Crystal Ore",
     "block.spectral.prism_stand": "Prism Stand",

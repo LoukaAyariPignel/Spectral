@@ -1,0 +1,14 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "FF",
+        "FF"
+    ],
+    "key": {
+        "F": "spectral:gem_fragment"
+    },
+    "result": {
+        "id": "spectral:gem",
+        "count": 1
+    }
+}
