@@ -20,44 +20,52 @@ public class SolarCollectorScreen extends AbstractContainerScreen<SolarCollector
     @Override
     protected void init() {
         super.init();
-        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
-        this.titleLabelY = 6;
+        this.titleLabelX = (imageWidth - this.font.width(this.title)) / 2;
+        this.titleLabelY = 5;
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float pt) {
-        super.extractBackground(g, mouseX, mouseY, pt);
+    public void extractBackground(GuiGraphicsExtractor g, int mx, int my, float pt) {
+        super.extractBackground(g, mx, my, pt);
         int x = leftPos, y = topPos;
         g.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0f, 0f, imageWidth, imageHeight, 256, 256);
 
         int stored = menu.getStoredPhotons();
         int max    = Math.max(1, menu.getMaxPhotons());
         int prod   = menu.getProduction();
+        boolean active = prod > 0;
 
-        // Energy bar fill (inside inset at x+9, y+35 to x+W-10, y+45)
-        int barW = (imageWidth - 18) * stored / max;
-        if (barW > 0)
-            g.fill(x + 9, y + 35, x + 9 + barW, y + 45, 0xFFFF8C00);
+        // ── Energy bar fill (y 34..44) ──────────────────────────────
+        int barW = (imageWidth - 14) * stored / max;
+        if (barW > 0) {
+            g.fillGradient(x+7, y+34, x+7+barW, y+44, 0xFFFFDD44, 0xFFCC8800);
+        }
+        // Bar text
+        g.centeredText(this.font, stored + " / " + max + " PH", x+imageWidth/2, y+36, 0xFFFFFFFF);
 
-        // Bar label
-        g.centeredText(this.font, stored + " / " + max + " PH", x + imageWidth / 2, y + 37, 0xFF404040);
+        // ── Info strip (y 54..62) ────────────────────────────────────
+        g.text(this.font, "Production: " + prod + " PH/t", x+9, y+55,
+                active ? 0xFFFFCC44 : 0xFF887755);
+        String status = active ? "● Active" : "○ Inactive";
+        g.text(this.font, status, x+9, y+64, active ? 0xFF44EE88 : 0xFF885544);
 
-        // Efficiency bar (at y+H-15 to y+H-9)
-        int effW = (imageWidth - 18) * prod / 10;
-        if (effW > 0)
-            g.fill(x + 9, y + imageHeight - 15, x + 9 + effW, y + imageHeight - 9,
-                    prod > 0 ? 0xFF4CAF50 : 0xFF8B0000);
+        // ── Efficiency bar (y 70..75) ────────────────────────────────
+        int effW = (imageWidth-14) * prod / 10;
+        if (effW > 0) {
+            g.fillGradient(x+7, y+70, x+7+effW, y+75,
+                    active ? 0xFFFFCC44 : 0xFF444433,
+                    active ? 0xFFCC8800 : 0xFF222211);
+        }
+        g.text(this.font, "Solar yield", x+9, y+79, 0xFF997744);
+
+        // ── Status detail (y 83..92) ─────────────────────────────────
+        String sky = active ? "Sky: clear" : "Sky: no light";
+        g.text(this.font, sky, x+9, y+84, active ? 0xFFAACC88 : 0xFF665544);
+        g.text(this.font, "Max: 10 PH/t (clear noon)", x+9, y+95, 0xFF665544);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor g, int mx, int my) {
-        g.centeredText(this.font, this.title, this.imageWidth / 2, this.titleLabelY, 0x404040);
-
-        int prod = menu.getProduction();
-        boolean active = prod > 0;
-        g.text(this.font, "Production: " + prod + " PH/t", 8, 23, 0x404040);
-        g.text(this.font, "Status: " + (active ? "Active" : "Inactive"),
-                8, 32, active ? 0x228B22 : 0x8B0000);
-        g.text(this.font, "Solar efficiency", 8, imageHeight - 22, 0x555555);
+        g.centeredText(this.font, this.title, imageWidth/2, titleLabelY, 0xFFFFDD88);
     }
 }
