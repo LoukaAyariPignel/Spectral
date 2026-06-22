@@ -1,8 +1,11 @@
 package fr.skylined.spectral;
 
+import fr.skylined.spectral.block.entity.LightEmitterBlockEntity;
 import fr.skylined.spectral.block.entity.ModBlockEntities;
 import fr.skylined.spectral.block.entity.PrismStandBlockEntity;
 import fr.skylined.spectral.client.color.WavelengthTintSource;
+import fr.skylined.spectral.client.renderer.LightEmitterBlockEntityRenderState;
+import fr.skylined.spectral.client.renderer.LightEmitterBlockEntityRenderer;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderState;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderer;
 import fr.skylined.spectral.screen.LightEmitterScreen;
@@ -29,6 +32,8 @@ public class SpectralClient {
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.PRISM_STAND.get(),
                 (BlockEntityRendererProvider<PrismStandBlockEntity, PrismStandBlockEntityRenderState>) PrismStandBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.LIGHT_EMITTER.get(),
+                (BlockEntityRendererProvider<LightEmitterBlockEntity, LightEmitterBlockEntityRenderState>) LightEmitterBlockEntityRenderer::new);
     }
 
     @SubscribeEvent
