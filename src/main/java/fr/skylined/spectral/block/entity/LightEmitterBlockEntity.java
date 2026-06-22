@@ -56,6 +56,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
         if (be.emitting) {
             newSegments = computeBeam(serverLevel, pos, facing);
             spawnBeamParticle(serverLevel, pos, facing);
+            // Deliver beam energy to terminal machine
+            deliverBeamToTerminal(serverLevel, pos, facing, newSegments);
         } else {
             newSegments = List.of();
         }
@@ -105,6 +107,22 @@ public class LightEmitterBlockEntity extends BlockEntity {
         return segments;
     }
 
+    private static void deliverBeamToTerminal(ServerLevel level, BlockPos origin, Direction facing,
+            List<BeamSegment> segments) {
+        if (segments.isEmpty()) return;
+        BeamSegment last = segments.get(segments.size() - 1);
+        int endDist = (int) last.end();
+        if (endDist >= BEAM_MAX_RANGE) return; // beam went full range, no terminal block
+
+        BlockPos terminalPos = origin.relative(facing, endDist);
+        float wavelength = last.wavelength();
+
+        if (level.getBlockEntity(terminalPos) instanceof CrystalFurnaceBlockEntity furnace) {
+            furnace.receiveBeam(wavelength);
+        }
+        // Future machines can be added here
+    }
+
     private static void spawnBeamParticle(ServerLevel level, BlockPos pos, Direction facing) {
         double cx = pos.getX() + 0.5 + facing.getStepX() * 0.7;
         double cy = pos.getY() + 0.5 + facing.getStepY() * 0.7;
@@ -118,14 +136,13 @@ public class LightEmitterBlockEntity extends BlockEntity {
         setChanged();
     }
 
-    public long getStoredPhotons()              { return storedPhotons; }
-    public boolean isEmitting()                 { return emitting; }
+    public long getStoredPhotons()                { return storedPhotons; }
+    public boolean isEmitting()                   { return emitting; }
     public List<BeamSegment> getCurrentSegments() { return currentSegments; }
 
     public ContainerData getContainerData() {
         return new ContainerData() {
-            @Override
-            public int get(int index) {
+            @Override public int get(int index) {
                 return switch (index) {
                     case 0 -> (int) storedPhotons;
                     case 1 -> (int) MAX_PHOTONS;
@@ -134,9 +151,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
                         Level lv = getLevel();
                         if (lv != null) {
                             BlockState bs = lv.getBlockState(getBlockPos());
-                            if (bs.hasProperty(LightEmitterBlock.FACING)) {
+                            if (bs.hasProperty(LightEmitterBlock.FACING))
                                 yield bs.getValue(LightEmitterBlock.FACING).get2DDataValue();
-                            }
                         }
                         yield 2;
                     }
@@ -151,9 +167,7 @@ public class LightEmitterBlockEntity extends BlockEntity {
     @Override
     public void setChanged() {
         super.setChanged();
-        if (getLevel() != null) {
-            getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-        }
+        if (getLevel() != null) getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
     }
 
     @Override
@@ -161,11 +175,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
         super.saveAdditional(output);
         output.putLong("photons", storedPhotons);
         output.putBoolean("emitting", emitting);
-        // Use typed list API to serialize segments
         var segList = output.list("segs", BeamSegment.CODEC);
-        for (BeamSegment seg : currentSegments) {
-            segList.add(seg);
-        }
+        for (BeamSegment seg : currentSegments) segList.add(seg);
     }
 
     @Override
@@ -177,12 +188,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
     }
 
     @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        return saveWithoutMetadata(registries);
-    }
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
 
     @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
-    }
+    public Packet<ClientGamePacketListener> getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
 }

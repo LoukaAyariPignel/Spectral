@@ -8,6 +8,7 @@ import fr.skylined.spectral.client.renderer.LightEmitterBlockEntityRenderState;
 import fr.skylined.spectral.client.renderer.LightEmitterBlockEntityRenderer;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderState;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderer;
+import fr.skylined.spectral.screen.CrystalFurnaceScreen;
 import fr.skylined.spectral.screen.LightEmitterScreen;
 import fr.skylined.spectral.screen.ModMenuTypes;
 import fr.skylined.spectral.screen.SolarCollectorScreen;
@@ -40,5 +41,6 @@ public class SpectralClient {
     public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.SOLAR_COLLECTOR.get(), SolarCollectorScreen::new);
         event.register(ModMenuTypes.LIGHT_EMITTER.get(), LightEmitterScreen::new);
+        event.register(ModMenuTypes.CRYSTAL_FURNACE.get(), CrystalFurnaceScreen::new);
     }
 }

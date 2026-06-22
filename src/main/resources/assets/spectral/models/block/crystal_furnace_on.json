@@ -1,0 +1,8 @@
+{
+    "parent": "minecraft:block/orientable",
+    "textures": {
+        "top":   "spectral:block/crystal_furnace_top",
+        "front": "spectral:block/crystal_furnace_front_on",
+        "side":  "spectral:block/crystal_furnace_side"
+    }
+}

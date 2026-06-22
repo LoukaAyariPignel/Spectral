@@ -13,16 +13,17 @@ public class ModBlockEntities {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PrismStandBlockEntity>> PRISM_STAND =
             BLOCK_ENTITIES.register("prism_stand", () ->
-                    new BlockEntityType<>(PrismStandBlockEntity::new, ModBlocks.PRISM_STAND.get())
-            );
+                    new BlockEntityType<>(PrismStandBlockEntity::new, ModBlocks.PRISM_STAND.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SolarCollectorBlockEntity>> SOLAR_COLLECTOR =
             BLOCK_ENTITIES.register("solar_collector", () ->
-                    new BlockEntityType<>(SolarCollectorBlockEntity::new, ModBlocks.SOLAR_COLLECTOR.get())
-            );
+                    new BlockEntityType<>(SolarCollectorBlockEntity::new, ModBlocks.SOLAR_COLLECTOR.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LightEmitterBlockEntity>> LIGHT_EMITTER =
             BLOCK_ENTITIES.register("light_emitter", () ->
-                    new BlockEntityType<>(LightEmitterBlockEntity::new, ModBlocks.LIGHT_EMITTER.get())
-            );
+                    new BlockEntityType<>(LightEmitterBlockEntity::new, ModBlocks.LIGHT_EMITTER.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CrystalFurnaceBlockEntity>> CRYSTAL_FURNACE =
+            BLOCK_ENTITIES.register("crystal_furnace", () ->
+                    new BlockEntityType<>(CrystalFurnaceBlockEntity::new, ModBlocks.CRYSTAL_FURNACE.get()));
 }

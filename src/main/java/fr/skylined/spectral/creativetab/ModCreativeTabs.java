@@ -25,6 +25,7 @@ public class ModCreativeTabs {
                                 output.accept(ModItems.PRISM_STAND.get());
                                 output.accept(ModItems.SOLAR_COLLECTOR.get());
                                 output.accept(ModItems.LIGHT_EMITTER.get());
+                                output.accept(ModItems.CRYSTAL_FURNACE.get());
                             })
                             .build()
             );

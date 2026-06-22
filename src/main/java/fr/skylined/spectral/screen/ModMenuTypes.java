@@ -18,4 +18,8 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<LightEmitterMenu>> LIGHT_EMITTER =
             MENU_TYPES.register("light_emitter",
                     () -> IMenuTypeExtension.create((id, inv, buf) -> new LightEmitterMenu(id, inv)));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<CrystalFurnaceMenu>> CRYSTAL_FURNACE =
+            MENU_TYPES.register("crystal_furnace",
+                    () -> IMenuTypeExtension.create((id, inv, buf) -> new CrystalFurnaceMenu(id, inv)));
 }
