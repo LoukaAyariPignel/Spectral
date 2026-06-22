@@ -26,6 +26,8 @@ public class PrismStandBlockEntity extends BlockEntity {
 
     private ItemStack storedItem = ItemStack.EMPTY;
     private int progress = 0;
+    // DEBUG - à retirer avant la release
+    private int debugThrottle = 0;
 
     public PrismStandBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.PRISM_STAND.get(), pos, state);
@@ -53,6 +55,14 @@ public class PrismStandBlockEntity extends BlockEntity {
                 .findFirst();
 
         if (recipe.isEmpty()) {
+            // DEBUG - à retirer avant la release
+            be.debugThrottle++;
+            if (be.debugThrottle >= 40) {
+                be.debugThrottle = 0;
+                long dayTime = level.getOverworldClockTime() % 24000L;
+                Spectral.LOGGER.info("[PrismStand DEBUG] {} - aucune recette (item: {}, lumière: {}, heure: {})",
+                        pos, be.storedItem.getItem(), totalLight, dayTime);
+            }
             be.resetProgress();
             return;
         }
@@ -64,20 +74,31 @@ public class PrismStandBlockEntity extends BlockEntity {
             long dayTime = level.getOverworldClockTime() % 24000L;
             // MC 26.1 : nuit entre 12600 et 23401 (Timelines.java)
             if (dayTime >= 12600 && dayTime <= 23401) {
+                // DEBUG - à retirer avant la release
+                be.debugThrottle++;
+                if (be.debugThrottle >= 40) {
+                    be.debugThrottle = 0;
+                    Spectral.LOGGER.info("[PrismStand DEBUG] {} - suspendu (nuit, heure: {})", pos, dayTime);
+                }
                 be.resetProgress();
                 return;
             }
         }
 
+        be.debugThrottle = 0;
         be.progress++;
 
         // DEBUG - à retirer avant la release
+        if (be.progress == 1) {
+            Spectral.LOGGER.info("[PrismStand DEBUG] {} -> attunement démarré (item: {}, lumière: {})",
+                    pos, be.storedItem.getItem(), totalLight);
+        }
         if (be.progress % 10 == 0) {
             serverLevel.sendParticles(ParticleTypes.END_ROD,
                     pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5,
                     2, 0.15, 0.05, 0.15, 0.02);
-            Spectral.LOGGER.debug("[PrismStand] {} -> {}/{} ticks (item: {}, lumière: {})",
-                    pos, be.progress, r.processingTime(), be.storedItem.getItem(), totalLight);
+            Spectral.LOGGER.debug("[PrismStand] {} -> {}/{} ticks",
+                    pos, be.progress, r.processingTime());
         }
 
         if (be.progress >= r.processingTime()) {
@@ -85,7 +106,7 @@ public class PrismStandBlockEntity extends BlockEntity {
             serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
                     pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
                     20, 0.3, 0.3, 0.3, 0.05);
-            Spectral.LOGGER.debug("[PrismStand] {} -> attunement terminé !", pos);
+            Spectral.LOGGER.info("[PrismStand DEBUG] {} -> attunement terminé !", pos);
 
             ItemStack result = r.assemble(level);
             if (!result.isEmpty()) {
@@ -109,6 +130,7 @@ public class PrismStandBlockEntity extends BlockEntity {
     public void setStoredItem(ItemStack stack) {
         this.storedItem = stack;
         this.progress = 0;
+        this.debugThrottle = 0;
         setChanged();
     }
 
