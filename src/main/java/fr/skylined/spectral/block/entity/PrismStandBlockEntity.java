@@ -56,7 +56,7 @@ public class PrismStandBlockEntity extends BlockEntity {
 
         PrismStandRecipe r = recipe.get();
 
-        if (r.useSkyLight()) {
+        if (r.result().useSkyLight()) {
             long dayTime = level.getOverworldClockTime() % 24000L;
             // MC 26.1 : nuit entre 12600 et 23401 (Timelines.java)
             if (dayTime >= 12600 && dayTime <= 23401) {
@@ -77,7 +77,7 @@ public class PrismStandBlockEntity extends BlockEntity {
             serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
                     pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
                     20, 0.3, 0.3, 0.3, 0.05);
-            ItemStack result = r.assemble(level);
+            ItemStack result = r.result().assemble(level);
             if (!result.isEmpty()) {
                 be.storedItem = result;
                 be.setChanged();

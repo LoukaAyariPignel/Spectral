@@ -3,7 +3,10 @@
     "ingredient": "spectral:raw_crystal",
     "processing_time": 200,
     "min_light_level": 12,
-    "wavelength_min": 380.0,
-    "wavelength_max": 780.0,
-    "use_sky_light": true
+    "result": {
+        "item": "spectral:gem",
+        "wavelength_min": 380.0,
+        "wavelength_max": 780.0,
+        "use_sky_light": true
+    }
 }
