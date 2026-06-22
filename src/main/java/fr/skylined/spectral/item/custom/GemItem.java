@@ -6,10 +6,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.item.component.TooltipDisplay;
 
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 public class GemItem extends Item {
 
@@ -21,9 +21,9 @@ public class GemItem extends Item {
     }
 
     @Override
-    public void onCraftedBy(ItemStack stack, Level level, Player player) {
-        super.onCraftedBy(stack, level, player);
-        if (!level.isClientSide()) {
+    public void onCraftedBy(ItemStack stack, Player player) {
+        super.onCraftedBy(stack, player);
+        if (!player.level().isClientSide()) {
             initializeWavelength(stack);
         }
     }
@@ -36,11 +36,11 @@ public class GemItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, tooltip, flag);
         if (stack.has(ModComponents.WAVE_LENGTH.get())) {
             float wavelength = stack.getOrDefault(ModComponents.WAVE_LENGTH.get(), MIN_WAVELENGTH);
-            tooltipComponents.add(Component.literal(String.format("%.1f nm", wavelength))
+            tooltip.accept(Component.literal(String.format("%.1f nm", wavelength))
                     .withStyle(style -> style.withColor(0x646464)));
         }
     }
