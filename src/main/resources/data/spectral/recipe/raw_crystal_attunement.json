@@ -1,6 +1,6 @@
 {
     "type": "spectral:prism_stand",
-    "ingredient": {"item": "spectral:raw_crystal"},
+    "ingredient": "spectral:raw_crystal",
     "processing_time": 200,
     "min_light_level": 12,
     "wavelength_min": 380.0,
