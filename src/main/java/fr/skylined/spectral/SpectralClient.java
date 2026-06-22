@@ -1,6 +1,7 @@
 package fr.skylined.spectral;
 
 import fr.skylined.spectral.block.entity.ModBlockEntities;
+import fr.skylined.spectral.block.entity.PrismStandBlockEntity;
 import fr.skylined.spectral.client.color.WavelengthTintSource;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderState;
 import fr.skylined.spectral.client.renderer.PrismStandBlockEntityRenderer;
