@@ -3,10 +3,12 @@ package fr.skylined.spectral.block.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -37,6 +39,53 @@ public class SolarCollectorBlockEntity extends BlockEntity {
         }
 
         pushToAdjacentEmitters(level, pos, be);
+
+        // Particules de collecte de lumière (uniquement si actif et côté serveur)
+        if (produced > 0 && level instanceof ServerLevel serverLevel) {
+            spawnLightParticles(serverLevel, pos, produced);
+        }
+    }
+
+    private static void spawnLightParticles(ServerLevel level, BlockPos pos, int production) {
+        if (level.getGameTime() % 5 != 0) return;
+
+        // Centre du plateau collecteur (y=5/16 du modèle)
+        double cx = pos.getX() + 0.5;
+        double cy = pos.getY() + 0.38;
+        double cz = pos.getZ() + 0.5;
+
+        int count = production >= 7 ? 2 : 1;
+        var rng = level.getRandom();
+
+        for (int i = 0; i < count; i++) {
+            // Spawn éparpillé autour et au-dessus du collecteur
+            double radius = 0.4 + rng.nextDouble() * 1.0;
+            double angle  = rng.nextDouble() * Math.PI * 2;
+            double height = 0.4 + rng.nextDouble() * 1.6;
+
+            double px = cx + Math.cos(angle) * radius;
+            double py = pos.getY() + height;
+            double pz = cz + Math.sin(angle) * radius;
+
+            // Vecteur vers le centre du collecteur
+            double dx = cx - px;
+            double dy = cy - py;
+            double dz = cz - pz;
+            double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (dist < 0.01) continue;
+
+            // Vitesse inversement prop. à la distance → particules proches rapides,
+            // lointaines lentes : illusion d'accélération par densité visuelle
+            double speed = 0.012 + 0.05 / (dist + 0.15);
+
+            level.sendParticles(ParticleTypes.END_ROD,
+                    px, py, pz,
+                    0,                       // count=0 → dx/dy/dz sont la vélocité exacte
+                    (dx / dist) * speed,
+                    (dy / dist) * speed,
+                    (dz / dist) * speed,
+                    1.0);
+        }
     }
 
     private static int calculateProduction(Level level, BlockPos pos) {

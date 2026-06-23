@@ -1,32 +1,45 @@
 {
     "parent": "minecraft:block/block",
     "textures": {
-        "front":    "spectral:block/light_emitter_front",
-        "side":     "spectral:block/light_emitter_side",
-        "back":     "spectral:block/light_emitter_back",
-        "top":      "spectral:block/light_emitter_top",
-        "particle": "spectral:block/light_emitter_side"
+        "quartz":   "spectral:block/prism_stand_quartz",
+        "gold":     "spectral:block/prism_stand_gold",
+        "lens":     "spectral:block/light_emitter_lens",
+        "particle": "spectral:block/prism_stand_quartz"
     },
     "elements": [
         {
-            "from": [2, 2, 2], "to": [14, 14, 16],
+            "comment": "Base 12x4x12",
+            "from": [2, 0, 2], "to": [14, 4, 14],
             "faces": {
-                "north": { "texture": "#back" },
-                "south": { "texture": "#front" },
-                "west":  { "texture": "#side" },
-                "east":  { "texture": "#side" },
-                "up":    { "texture": "#top" },
-                "down":  { "texture": "#top" }
+                "down":  {"texture": "#quartz", "cullface": "down"},
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
             }
         },
         {
-            "from": [5, 5, 14], "to": [11, 11, 18],
+            "comment": "Corps principal 10x8x10",
+            "from": [3, 4, 3], "to": [13, 12, 13],
             "faces": {
-                "south": { "texture": "#front" },
-                "west":  { "texture": "#side" },
-                "east":  { "texture": "#side" },
-                "up":    { "texture": "#top" },
-                "down":  { "texture": "#top" }
+                "up":    {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Lentille emettrice 6x6x4 — depasse vers le sud",
+            "from": [5, 5, 12], "to": [11, 11, 16],
+            "faces": {
+                "south": {"texture": "#lens"},
+                "north": {"texture": "#gold"},
+                "west":  {"texture": "#gold"},
+                "east":  {"texture": "#gold"},
+                "up":    {"texture": "#gold"},
+                "down":  {"texture": "#gold"}
             }
         }
     ]

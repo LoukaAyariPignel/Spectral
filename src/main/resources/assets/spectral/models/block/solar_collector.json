@@ -1,21 +1,87 @@
 {
     "parent": "minecraft:block/block",
     "textures": {
-        "top":      "spectral:block/solar_collector_top",
-        "side":     "spectral:block/solar_collector_side",
-        "bottom":   "spectral:block/solar_collector_bottom",
-        "particle": "spectral:block/solar_collector_side"
+        "quartz":   "spectral:block/prism_stand_quartz",
+        "crystal":  "spectral:block/solar_collector_crystal",
+        "particle": "spectral:block/prism_stand_quartz"
     },
     "elements": [
         {
-            "from": [0, 0, 0], "to": [16, 10, 16],
+            "comment": "Base 14x3x14",
+            "from": [1, 0, 1], "to": [15, 3, 15],
             "faces": {
-                "down":  { "texture": "#bottom", "cullface": "down" },
-                "up":    { "texture": "#top",    "cullface": "up" },
-                "north": { "texture": "#side",   "cullface": "north" },
-                "south": { "texture": "#side",   "cullface": "south" },
-                "west":  { "texture": "#side",   "cullface": "west" },
-                "east":  { "texture": "#side",   "cullface": "east" }
+                "down":  {"texture": "#quartz", "cullface": "down"},
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Palier intermediaire 10x2x10",
+            "from": [3, 3, 3], "to": [13, 5, 13],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Surface collectrice cristalline 10x1x10",
+            "from": [3, 5, 3], "to": [13, 6, 13],
+            "faces": {
+                "up":    {"texture": "#crystal"},
+                "north": {"texture": "#crystal"},
+                "south": {"texture": "#crystal"},
+                "west":  {"texture": "#crystal"},
+                "east":  {"texture": "#crystal"}
+            }
+        },
+        {
+            "comment": "Pilier NW 3x7x3",
+            "from": [1, 5, 1], "to": [4, 12, 4],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz", "cullface": "north"},
+                "west":  {"texture": "#quartz", "cullface": "west"},
+                "south": {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Pilier NE 3x7x3",
+            "from": [12, 5, 1], "to": [15, 12, 4],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "north": {"texture": "#quartz", "cullface": "north"},
+                "east":  {"texture": "#quartz", "cullface": "east"},
+                "south": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Pilier SW 3x7x3",
+            "from": [1, 5, 12], "to": [4, 12, 15],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "south": {"texture": "#quartz", "cullface": "south"},
+                "west":  {"texture": "#quartz", "cullface": "west"},
+                "north": {"texture": "#quartz"},
+                "east":  {"texture": "#quartz"}
+            }
+        },
+        {
+            "comment": "Pilier SE 3x7x3",
+            "from": [12, 5, 12], "to": [15, 12, 15],
+            "faces": {
+                "up":    {"texture": "#quartz"},
+                "south": {"texture": "#quartz", "cullface": "south"},
+                "east":  {"texture": "#quartz", "cullface": "east"},
+                "north": {"texture": "#quartz"},
+                "west":  {"texture": "#quartz"}
             }
         }
     ]

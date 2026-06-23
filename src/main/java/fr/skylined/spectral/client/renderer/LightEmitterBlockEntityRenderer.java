@@ -37,6 +37,8 @@ public class LightEmitterBlockEntityRenderer
         state.facing      = be.getBlockState().getValue(LightEmitterBlock.FACING);
         state.gameTime    = be.getLevel() != null ? be.getLevel().getGameTime() : 0L;
         state.partialTick = partialTicks;
+        // Alpha : 50 % minimum quand émet, jusqu'à 100 % à buffer plein
+        state.beamAlpha   = 0.5f + 0.5f * (be.getStoredPhotons() / (float) LightEmitterBlockEntity.MAX_PHOTONS);
     }
 
     @Override
@@ -63,17 +65,46 @@ public class LightEmitterBlockEntityRenderer
 
         applyFacingRotation(poseStack, state.facing);
 
+        // Rétrécissement sur les 5 derniers blocs (inner beam = OPAQUE → alpha ignoré,
+        // on fait donc rétrécir les rayons pour simuler l'estompage)
+        final int   FADE_BLOCKS  = 5;
+        final int   FADE_START   = LightEmitterBlockEntity.BEAM_MAX_RANGE - FADE_BLOCKS;
+        final float RADIUS_INNER = 0.15f;
+        final float RADIUS_GLOW  = 0.20f;
+        final float FADE_MIN     = 0.20f; // taille minimale au dernier bloc (20 %)
+
         for (BeamSegment seg : state.segments) {
-            int segStart  = (int) seg.start();
-            int segHeight = (int) seg.end() - segStart;
-            if (segHeight <= 0) continue;
+            int segStart = (int) seg.start();
+            int segEnd   = (int) seg.end();
+            if (segEnd <= segStart) continue;
 
-            int colorARGB = seg.wavelength() > 0f
-                    ? WavelengthTintSource.colorFromWavelength(seg.wavelength())
-                    : 0xFFFFFFFF;
+            int alpha = Math.round(state.beamAlpha * 255f) & 0xFF;
+            int rgb   = seg.wavelength() > 0f
+                    ? (WavelengthTintSource.colorFromWavelength(seg.wavelength()) & 0x00FFFFFF)
+                    : 0x00FFFFFF;
+            int colorARGB = (alpha << 24) | rgb;
 
-            BeaconRenderer.submitBeaconBeam(poseStack, collector, BeaconRenderer.BEAM_LOCATION,
-                    1.0f, animTime, segStart, segHeight, colorARGB, 0.15f, 0.20f);
+            boolean fades  = segEnd >= LightEmitterBlockEntity.BEAM_MAX_RANGE;
+            int solidEnd   = fades ? Math.max(segStart, Math.min(segEnd, FADE_START)) : segEnd;
+
+            // ── Partie pleine ─────────────────────────────────────────
+            if (solidEnd > segStart) {
+                BeaconRenderer.submitBeaconBeam(poseStack, collector, BeaconRenderer.BEAM_LOCATION,
+                        1.0f, animTime, segStart, solidEnd - segStart,
+                        colorARGB, RADIUS_INNER, RADIUS_GLOW);
+            }
+
+            // ── Partie effilée (rayon décroissant, bloc par bloc) ────
+            if (fades) {
+                int fadeFrom = Math.max(segStart, FADE_START);
+                for (int b = fadeFrom; b < segEnd; b++) {
+                    float t = (b - FADE_START + 1) / (float) FADE_BLOCKS; // 0.2 → 1.0
+                    float scale = 1f - t * (1f - FADE_MIN);               // 100 % → 20 %
+                    BeaconRenderer.submitBeaconBeam(poseStack, collector, BeaconRenderer.BEAM_LOCATION,
+                            1.0f, animTime, b, 1,
+                            colorARGB, RADIUS_INNER * scale, RADIUS_GLOW * scale);
+                }
+            }
         }
 
         poseStack.popPose();

@@ -2210,6 +2210,42 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 
 
 
+---
+
+## État d'implémentation — Session 2025-06 (MC 26.1 / NeoForge)
+
+### Ce qui est implémenté et fonctionnel
+
+#### Chaîne énergétique de base
+- **Solar Collector** : collecte PH selon sky light (0–10 PH/tick), buffer 5000 PH, pousse vers LightEmitter adjacent. Particules `END_ROD` attirées vers le plateau cristallin (vitesse ∝ 1/distance, illusion d'accélération).
+- **Light Emitter** : consomme 5 PH/tick, émet un beam dans sa direction. Slot gem intégré (1 gem max, valide uniquement si `WAVE_LENGTH` component présent) — colore le beam dès la source. Particule émise colorée via `DustParticleOptions(argb, 1.2f)`. Alpha du beam dynamique (50–100% selon buffer).
+- **Prism Stand** : attunement Raw Crystal → Gem (lumière du ciel + heure), filtre de beam (remplace λ). Recettes modulaires via JSON (`spectral:prism_stand`), algorithme d'efficacité continu `(1 - δ/80)^0.4`, progression `float` exacte.
+- **Crystal Furnace** : reçoit beam via `receiveBeam(wavelength)`, cuisson ∝ efficacité (vitesse exacte `eff * 3f`), bonus 10% duplication à ≥90% eff. Beam requis (pas de fallback vanilla). L'emitter le détecte même avec `noOcclusion()`.
+
+#### Rendu du faisceau
+- **Beam renderer** : `BeaconRenderer.submitBeaconBeam` avec couleur issue de `WavelengthTintSource.colorFromWavelength()`.
+- **Effilement aux 5 derniers blocs** : sur les blocs 28–32, le rayon inner/glow rétrécit de 100% à 20% (inner beam = OPAQUE, alpha ignoré → solution : réduire les rayons). Au-delà de 32 blocs sans obstacle = beam disparaît progressivement.
+- **Alpha global** : `beamAlpha = 0.5 + 0.5 * (photons / MAX_PHOTONS)` — beam plus intense quand l'emitter est chargé.
+
+#### GUIs (MC 26.1 style vanilla)
+- **Crystal Furnace** : gradient spectre 380–780nm (baked PNG), sélecteurs target/actual dynamiques (9×1px sprites), flèche `burn_progress.png`, textes sans ombre (`dropShadow=false`).
+- **Light Emitter** : barre photons violet, slot gem centré, label "Gem Filter" + status, inventaire joueur (vanilla standard y=84/102/120, hotbar y=142), 4px gap avant bordure.
+- **Solar Collector** : barre photons + barre production, textes sans ombre.
+
+#### Modèles (style Prism Stand)
+- **Crystal Furnace** : base quartz 14×3 + corps 12×13, face sud = ouverture. VoxelShape : `box(1,0,1,15,3,15) + box(2,3,2,14,16,14)`. `noOcclusion()`.
+- **Solar Collector** : base 14×3 + palier 10×2 + plateau cristal + 4 piliers 3×7 aux coins. VoxelShape composée. `noOcclusion()`.
+- **Light Emitter** : base 12×4 + corps 10×8 + lentille or 6×6 dépassant en avant (facing-aware). VoxelShape par direction (lens dans la bonne direction).
+
+#### Notes techniques MC 26.1
+- `g.text(font, str, x, y, color, false)` → rendu sans ombre (le 6e bool est `dropShadow`)
+- `g.centeredText()` n'a pas d'overload shadow → remplacer par `g.text(..., x - fontWidth/2, ..., false)`
+- `BeaconRenderer.submitBeaconBeam` : inner beam = `BEACON_BEAM_OPAQUE` (alpha ignoré), outer glow = `BEACON_BEAM_TRANSLUCENT`. Pour l'effilement → modifier les rayons, pas l'alpha.
+- `DustParticleOptions(int argb, float size)` en MC 26.1 (pas de Vector3f)
+- `Math.clamp(value, min, max)` disponible en Java 21
+
+---
+
 ### Phase 1 — Version basique (vérifier le fonctionnement)
 
 1. **Nettoyage du code existant** (typos, constantes, imports, mixin vide)

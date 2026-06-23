@@ -18,12 +18,26 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
 public class SolarCollectorBlock extends BaseEntityBlock {
 
     public static final MapCodec<SolarCollectorBlock> CODEC = simpleCodec(SolarCollectorBlock::new);
+
+    private static final VoxelShape SHAPE = Shapes.or(
+        box(1,  0,  1,  15, 3,  15),  // base 14x3x14
+        box(3,  3,  3,  13, 5,  13),  // palier 10x2x10
+        box(3,  5,  3,  13, 6,  13),  // plateau cristal
+        box(1,  5,  1,  4,  12, 4),   // pilier NW
+        box(12, 5,  1,  15, 12, 4),   // pilier NE
+        box(1,  5,  12, 4,  12, 15),  // pilier SW
+        box(12, 5,  12, 15, 12, 15)   // pilier SE
+    );
 
     public SolarCollectorBlock(BlockBehaviour.Properties props) {
         super(props);
@@ -40,8 +54,11 @@ public class SolarCollectorBlock extends BaseEntityBlock {
     }
 
     @Override
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+    public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
+        return SHAPE;
     }
 
     @Override

@@ -25,7 +25,7 @@ public class ModBlocks {
     );
     public static final DeferredBlock<Block> SOLAR_COLLECTOR = BLOCKS.registerBlock(
             "solar_collector", SolarCollectorBlock::new,
-            () -> BlockBehaviour.Properties.of().strength(2f,6f).sound(SoundType.METAL).requiresCorrectToolForDrops()
+            () -> BlockBehaviour.Properties.of().strength(2f,6f).sound(SoundType.METAL).noOcclusion().requiresCorrectToolForDrops()
     );
     public static final DeferredBlock<Block> LIGHT_EMITTER = BLOCKS.registerBlock(
             "light_emitter", LightEmitterBlock::new,
@@ -33,6 +33,6 @@ public class ModBlocks {
     );
     public static final DeferredBlock<Block> CRYSTAL_FURNACE = BLOCKS.registerBlock(
             "crystal_furnace", CrystalFurnaceBlock::new,
-            () -> BlockBehaviour.Properties.of().strength(3f,8f).sound(SoundType.STONE).requiresCorrectToolForDrops()
+            () -> BlockBehaviour.Properties.of().strength(3f,8f).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()
     );
 }

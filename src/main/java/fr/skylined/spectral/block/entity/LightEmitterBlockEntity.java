@@ -6,7 +6,9 @@ import fr.skylined.spectral.component.ModComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import fr.skylined.spectral.client.color.WavelengthTintSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -29,7 +31,7 @@ public class LightEmitterBlockEntity extends BlockEntity {
     public static final long MAX_PHOTONS = 1000L;
     private static final long EMISSION_THRESHOLD = 5L;
     private static final long EMISSION_COST = 5L;
-    private static final int  BEAM_MAX_RANGE = 32;
+    public static final int  BEAM_MAX_RANGE = 32;
 
     private long storedPhotons = 0;
     private boolean emitting = false;
@@ -63,7 +65,7 @@ public class LightEmitterBlockEntity extends BlockEntity {
                 initialWavelength = gem.get(ModComponents.WAVE_LENGTH.get());
             }
             newSegments = computeBeam(serverLevel, pos, facing, initialWavelength);
-            spawnBeamParticle(serverLevel, pos, facing);
+            spawnBeamParticle(serverLevel, pos, facing, initialWavelength);
             // Deliver beam energy to terminal machine
             deliverBeamToTerminal(serverLevel, pos, facing, newSegments);
         } else {
@@ -103,6 +105,12 @@ public class LightEmitterBlockEntity extends BlockEntity {
                 continue;
             }
 
+            // La Crystal Furnace a noOcclusion() mais doit stopper le beam
+            if (level.getBlockEntity(checkPos) instanceof CrystalFurnaceBlockEntity) {
+                segments.add(new BeamSegment(segStart, d, currentWavelength));
+                return segments;
+            }
+
             if (!checkState.canOcclude()) continue;
 
             segments.add(new BeamSegment(segStart, d, currentWavelength));
@@ -131,12 +139,20 @@ public class LightEmitterBlockEntity extends BlockEntity {
         // Future machines can be added here
     }
 
-    private static void spawnBeamParticle(ServerLevel level, BlockPos pos, Direction facing) {
+    private static void spawnBeamParticle(ServerLevel level, BlockPos pos, Direction facing, float wavelength) {
         double cx = pos.getX() + 0.5 + facing.getStepX() * 0.7;
         double cy = pos.getY() + 0.5 + facing.getStepY() * 0.7;
         double cz = pos.getZ() + 0.5 + facing.getStepZ() * 0.7;
-        level.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 1,
-                facing.getStepX() * 0.15, facing.getStepY() * 0.15, facing.getStepZ() * 0.15, 0.01);
+
+        if (wavelength >= 380f && wavelength <= 780f) {
+            int argb = WavelengthTintSource.colorFromWavelength(wavelength);
+            var dust = new DustParticleOptions(argb, 1.2f);
+            level.sendParticles(dust, cx, cy, cz, 1,
+                    facing.getStepX() * 0.15, facing.getStepY() * 0.15, facing.getStepZ() * 0.15, 0.01);
+        } else {
+            level.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 1,
+                    facing.getStepX() * 0.15, facing.getStepY() * 0.15, facing.getStepZ() * 0.15, 0.01);
+        }
     }
 
     public SimpleContainer getGemContainer()           { return gemContainer; }

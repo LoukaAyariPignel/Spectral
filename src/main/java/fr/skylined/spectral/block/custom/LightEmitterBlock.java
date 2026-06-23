@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
@@ -38,8 +39,16 @@ public class LightEmitterBlock extends BaseEntityBlock {
     public static final MapCodec<LightEmitterBlock> CODEC = simpleCodec(LightEmitterBlock::new);
     public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    private static final VoxelShape SHAPE_NS = Block.box(2, 2, 0, 14, 14, 16);
-    private static final VoxelShape SHAPE_EW = Block.box(0, 2, 2, 16, 14, 14);
+    // Base + corps (symétriques pour toutes les directions)
+    private static final VoxelShape BASE_BODY = Shapes.or(
+        box(2, 0, 2, 14, 4, 14),    // base 12x4x12
+        box(3, 4, 3, 13, 12, 13)    // corps 10x8x10
+    );
+    // Lentille qui dépasse selon la direction facing
+    private static final VoxelShape SHAPE_S = Shapes.or(BASE_BODY, box(5, 5, 12, 11, 11, 16));
+    private static final VoxelShape SHAPE_N = Shapes.or(BASE_BODY, box(5, 5,  0, 11, 11,  4));
+    private static final VoxelShape SHAPE_E = Shapes.or(BASE_BODY, box(12, 5, 5, 16, 11, 11));
+    private static final VoxelShape SHAPE_W = Shapes.or(BASE_BODY, box( 0, 5, 5,  4, 11, 11));
 
     public LightEmitterBlock(BlockBehaviour.Properties props) {
         super(props);
@@ -63,8 +72,12 @@ public class LightEmitterBlock extends BaseEntityBlock {
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
-        Direction facing = state.getValue(FACING);
-        return (facing == Direction.NORTH || facing == Direction.SOUTH) ? SHAPE_NS : SHAPE_EW;
+        return switch (state.getValue(FACING)) {
+            case NORTH -> SHAPE_N;
+            case EAST  -> SHAPE_E;
+            case WEST  -> SHAPE_W;
+            default    -> SHAPE_S;
+        };
     }
 
     @Override
