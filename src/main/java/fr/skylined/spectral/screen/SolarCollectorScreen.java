@@ -11,17 +11,21 @@ import net.minecraft.world.entity.player.Inventory;
 public class SolarCollectorScreen extends AbstractContainerScreen<SolarCollectorMenu> {
 
     private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath(Spectral.MOD_ID, "textures/gui/solar_collector.png");
+            Identifier.fromNamespaceAndPath(Spectral.MOD_ID, "textures/gui/container/solar_collector/solar_collector.png");
+
+    private static final int BAR_X = 8, BAR_Y = 25, BAR_W = 159, BAR_H = 9;
+    private static final int PROD_X = 8, PROD_Y = 58, PROD_W = 159, PROD_H = 7;
 
     public SolarCollectorScreen(SolarCollectorMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title, 176, 120);
+        super(menu, inv, title, 176, 104);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.titleLabelX = (imageWidth - this.font.width(this.title)) / 2;
-        this.titleLabelY = 5;
+        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
+        this.titleLabelY = 6;
+        this.inventoryLabelY = this.imageHeight + 10;
     }
 
     @Override
@@ -35,37 +39,44 @@ public class SolarCollectorScreen extends AbstractContainerScreen<SolarCollector
         int prod   = menu.getProduction();
         boolean active = prod > 0;
 
-        // ── Energy bar fill (y 34..44) ──────────────────────────────
-        int barW = (imageWidth - 14) * stored / max;
-        if (barW > 0) {
-            g.fillGradient(x+7, y+34, x+7+barW, y+44, 0xFFFFDD44, 0xFFCC8800);
+        // ── Photon buffer bar ─────────────────────────────────────────
+        int bufW = BAR_W * stored / max;
+        if (bufW > 0) {
+            g.fillGradient(x + BAR_X, y + BAR_Y,
+                           x + BAR_X + bufW, y + BAR_Y + BAR_H,
+                           0xFFFFDD44, 0xFFCC8800);
         }
-        // Bar text
-        g.centeredText(this.font, stored + " / " + max + " PH", x+imageWidth/2, y+36, 0xFFFFFFFF);
+        String bufText = stored + " / " + max + " PH";
+        g.text(this.font, bufText,
+                x + BAR_X + (BAR_W - this.font.width(bufText)) / 2, y + BAR_Y + 1,
+                0xFF1A1A1A, false);
 
-        // ── Info strip (y 54..62) ────────────────────────────────────
-        g.text(this.font, "Production: " + prod + " PH/t", x+9, y+55,
-                active ? 0xFFFFCC44 : 0xFF887755);
-        String status = active ? "● Active" : "○ Inactive";
-        g.text(this.font, status, x+9, y+64, active ? 0xFF44EE88 : 0xFF885544);
+        // ── Labels production ─────────────────────────────────────────
+        g.text(this.font, "Production", x + 9, y + 45, 0xFF404040, false);
+        String prodVal = prod + " PH/t";
+        g.text(this.font, prodVal,
+                x + 168 - this.font.width(prodVal), y + 45, 0xFF404040, false);
 
-        // ── Efficiency bar (y 70..75) ────────────────────────────────
-        int effW = (imageWidth-14) * prod / 10;
-        if (effW > 0) {
-            g.fillGradient(x+7, y+70, x+7+effW, y+75,
-                    active ? 0xFFFFCC44 : 0xFF444433,
-                    active ? 0xFFCC8800 : 0xFF222211);
+        // ── Barre de production ───────────────────────────────────────
+        int prodW = PROD_W * prod / 10;
+        if (prodW > 0) {
+            g.fillGradient(x + PROD_X, y + PROD_Y,
+                           x + PROD_X + prodW, y + PROD_Y + PROD_H,
+                           active ? 0xFFFFEE66 : 0xFF555544,
+                           active ? 0xFFDD9900 : 0xFF333322);
         }
-        g.text(this.font, "Solar yield", x+9, y+79, 0xFF997744);
 
-        // ── Status detail (y 83..92) ─────────────────────────────────
-        String sky = active ? "Sky: clear" : "Sky: no light";
-        g.text(this.font, sky, x+9, y+84, active ? 0xFFAACC88 : 0xFF665544);
-        g.text(this.font, "Max: 10 PH/t (clear noon)", x+9, y+95, 0xFF665544);
+        // ── Infos bas ─────────────────────────────────────────────────
+        String status = active ? "Active" : "Inactive";
+        g.text(this.font, status, x + 9, y + 77,
+                active ? 0xFF44BB66 : 0xFF886655, false);
+
+        String sky = active ? "Sky light: clear" : "Sky blocked or nighttime";
+        g.text(this.font, sky, x + 9, y + 87, 0xFF404040, false);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor g, int mx, int my) {
-        g.centeredText(this.font, this.title, imageWidth/2, titleLabelY, 0xFFFFDD88);
+        super.extractLabels(g, mx, my);
     }
 }

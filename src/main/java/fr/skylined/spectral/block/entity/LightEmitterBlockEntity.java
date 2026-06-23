@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -33,6 +34,7 @@ public class LightEmitterBlockEntity extends BlockEntity {
     private long storedPhotons = 0;
     private boolean emitting = false;
     private List<BeamSegment> currentSegments = List.of();
+    private final SimpleContainer gemContainer = new SimpleContainer(1);
 
     public LightEmitterBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.LIGHT_EMITTER.get(), pos, state);
@@ -54,7 +56,13 @@ public class LightEmitterBlockEntity extends BlockEntity {
         List<BeamSegment> newSegments;
 
         if (be.emitting) {
-            newSegments = computeBeam(serverLevel, pos, facing);
+            // La gem dans le slot colore le faisceau dès la source
+            float initialWavelength = 0f;
+            ItemStack gem = be.gemContainer.getItem(0);
+            if (!gem.isEmpty() && gem.has(ModComponents.WAVE_LENGTH.get())) {
+                initialWavelength = gem.get(ModComponents.WAVE_LENGTH.get());
+            }
+            newSegments = computeBeam(serverLevel, pos, facing, initialWavelength);
             spawnBeamParticle(serverLevel, pos, facing);
             // Deliver beam energy to terminal machine
             deliverBeamToTerminal(serverLevel, pos, facing, newSegments);
@@ -70,9 +78,9 @@ public class LightEmitterBlockEntity extends BlockEntity {
         }
     }
 
-    private static List<BeamSegment> computeBeam(ServerLevel level, BlockPos origin, Direction facing) {
+    private static List<BeamSegment> computeBeam(ServerLevel level, BlockPos origin, Direction facing, float initialWavelength) {
         List<BeamSegment> segments = new ArrayList<>();
-        float currentWavelength = 0f;
+        float currentWavelength = initialWavelength;
         float segStart = 0f;
 
         for (int d = 1; d <= BEAM_MAX_RANGE; d++) {
@@ -131,6 +139,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
                 facing.getStepX() * 0.15, facing.getStepY() * 0.15, facing.getStepZ() * 0.15, 0.01);
     }
 
+    public SimpleContainer getGemContainer()           { return gemContainer; }
+
     public void addPhotons(long amount) {
         storedPhotons = Math.min(MAX_PHOTONS, storedPhotons + amount);
         setChanged();
@@ -175,6 +185,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
         super.saveAdditional(output);
         output.putLong("photons", storedPhotons);
         output.putBoolean("emitting", emitting);
+        if (!gemContainer.getItem(0).isEmpty())
+            output.store("gem", ItemStack.CODEC, gemContainer.getItem(0));
         var segList = output.list("segs", BeamSegment.CODEC);
         for (BeamSegment seg : currentSegments) segList.add(seg);
     }
@@ -184,6 +196,7 @@ public class LightEmitterBlockEntity extends BlockEntity {
         super.loadAdditional(input);
         storedPhotons   = input.getLongOr("photons", 0L);
         emitting        = input.getBooleanOr("emitting", false);
+        gemContainer.setItem(0, input.read("gem", ItemStack.CODEC).orElse(ItemStack.EMPTY));
         currentSegments = input.listOrEmpty("segs", BeamSegment.CODEC).stream().toList();
     }
 

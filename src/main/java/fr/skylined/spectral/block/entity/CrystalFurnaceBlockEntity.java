@@ -32,7 +32,7 @@ public class CrystalFurnaceBlockEntity extends BlockEntity {
     private final SimpleContainer inventory = new SimpleContainer(2);
     private float receivedWavelength = 0f;
     private int beamActiveTicks = 0;
-    private int cookProgress = 0;
+    private float cookProgress = 0f;
 
     public CrystalFurnaceBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CRYSTAL_FURNACE.get(), pos, state);
@@ -51,45 +51,37 @@ public class CrystalFurnaceBlockEntity extends BlockEntity {
 
         float eff = beamActive ? calculateEfficiency(be.receivedWavelength) : 0f;
         ItemStack input = be.inventory.getItem(0);
-        boolean shouldBeLit = eff > 0 && !input.isEmpty();
         boolean wasLit = state.getValue(CrystalFurnaceBlock.LIT);
 
-        if (shouldBeLit) {
+        if (beamActive && !input.isEmpty()) {
             Optional<RecipeHolder<SmeltingRecipe>> optRecipe = findSmeltingRecipe(serverLevel, input);
             if (optRecipe.isPresent()) {
-                int speed = Math.max(1, Math.round(eff * 3f));
-                be.cookProgress += speed;
+                // Vitesse exactement proportionnelle à l'efficacité : 0→3× vanilla
+                be.cookProgress += eff * 3f;
                 if (be.cookProgress >= COOK_TIME) {
                     completeRecipe(be, serverLevel, optRecipe.get(), eff);
                 }
                 be.setChanged();
-            } else {
-                if (be.cookProgress > 0) { be.cookProgress = 0; be.setChanged(); }
-                shouldBeLit = false;
-            }
-        } else {
-            if (be.cookProgress > 0) {
-                be.cookProgress = Math.max(0, be.cookProgress - 2);
-                be.setChanged();
+                if (!wasLit) level.setBlock(pos, state.setValue(CrystalFurnaceBlock.LIT, true), 3);
+                return;
             }
         }
 
-        if (shouldBeLit != wasLit) {
-            level.setBlock(pos, state.setValue(CrystalFurnaceBlock.LIT, shouldBeLit), 3);
+        // Pas d'input ou pas de recette : refroidissement
+        if (be.cookProgress > 0f) {
+            be.cookProgress = Math.max(0f, be.cookProgress - 2f);
+            be.setChanged();
         }
+        if (wasLit) level.setBlock(pos, state.setValue(CrystalFurnaceBlock.LIT, false), 3);
     }
 
     public static float calculateEfficiency(float wavelength) {
         float delta = Math.abs(wavelength - OPTIMAL_WAVELENGTH);
-        // Outside visible range for the furnace (620-780 nm)
-        if (wavelength < 620f || wavelength > 780f) return 0f;
-        if (delta == 0f)   return 1.00f;
-        if (delta <= 1f)   return 0.90f;
-        if (delta <= 3f)   return 0.75f;
-        if (delta <= 10f)  return 0.50f;
-        if (delta <= 30f)  return 0.25f;
-        if (delta <= 80f)  return 0.10f;
-        return 0f;
+        if (delta >= 80f) return 0f; // hors de la plage utile 620–780 nm
+        // Courbe en puissance : plate près de l'optimum, abrupte aux bords
+        // eff = (1 - δ/80)^0.4  →  89% à ±20nm, 76% à ±40nm, 59% à ±60nm
+        float t = 1f - delta / 80f;
+        return (float) Math.pow(t, 0.4);
     }
 
     @SuppressWarnings("unchecked")
@@ -130,23 +122,24 @@ public class CrystalFurnaceBlockEntity extends BlockEntity {
     public SimpleContainer getInventory() { return inventory; }
     public float getReceivedWavelength()  { return receivedWavelength; }
     public boolean isBeamActive()         { return beamActiveTicks > 0; }
-    public int getCookProgress()          { return cookProgress; }
+    public int getCookProgress()          { return (int) cookProgress; }
     public int getCookTimeTotal()         { return COOK_TIME; }
 
     public ContainerData getContainerData() {
         return new ContainerData() {
             @Override public int get(int i) {
                 return switch (i) {
-                    case 0 -> cookProgress;
-                    case 1 -> COOK_TIME;
+                    case 0 -> (int)(cookProgress * 10f);
+                    case 1 -> COOK_TIME * 10;
                     case 2 -> (int)(receivedWavelength * 10f);
                     case 3 -> Math.round(calculateEfficiency(receivedWavelength) * 100f);
                     case 4 -> beamActiveTicks > 0 ? 1 : 0;
+                    case 5 -> (int)(OPTIMAL_WAVELENGTH * 10f);
                     default -> 0;
                 };
             }
             @Override public void set(int i, int v) {}
-            @Override public int getCount() { return 5; }
+            @Override public int getCount() { return 6; }
         };
     }
 
@@ -162,7 +155,7 @@ public class CrystalFurnaceBlockEntity extends BlockEntity {
         if (!inventory.getItem(0).isEmpty()) output.store("slot_in",  ItemStack.CODEC, inventory.getItem(0));
         if (!inventory.getItem(1).isEmpty()) output.store("slot_out", ItemStack.CODEC, inventory.getItem(1));
         output.putFloat("wavelength", receivedWavelength);
-        output.putInt("progress", cookProgress);
+        output.putFloat("progress", cookProgress);
     }
 
     @Override
@@ -171,7 +164,7 @@ public class CrystalFurnaceBlockEntity extends BlockEntity {
         inventory.setItem(0, input.read("slot_in",  ItemStack.CODEC).orElse(ItemStack.EMPTY));
         inventory.setItem(1, input.read("slot_out", ItemStack.CODEC).orElse(ItemStack.EMPTY));
         receivedWavelength = input.getFloatOr("wavelength", 0f);
-        cookProgress = input.getIntOr("progress", 0);
+        cookProgress = input.getFloatOr("progress", 0f);
     }
 
     @Override

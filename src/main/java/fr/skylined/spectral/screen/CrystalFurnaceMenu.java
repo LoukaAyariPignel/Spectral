@@ -15,7 +15,7 @@ public class CrystalFurnaceMenu extends AbstractContainerMenu {
     private final ContainerData data;
 
     public CrystalFurnaceMenu(int id, Inventory inv) {
-        this(id, inv, new net.minecraft.world.SimpleContainer(2), new SimpleContainerData(5));
+        this(id, inv, new net.minecraft.world.SimpleContainer(2), new SimpleContainerData(6));
     }
 
     public CrystalFurnaceMenu(int id, Inventory inv, CrystalFurnaceBlockEntity be) {
@@ -27,9 +27,8 @@ public class CrystalFurnaceMenu extends AbstractContainerMenu {
         this.data = data;
         addDataSlots(data);
 
-        // Match classic furnace layout from the GUI texture
-        addSlot(new Slot(container, 0, 56, 17));          // input  — matches texture slot
-        addSlot(new OutputSlot(container, 1, 116, 35));   // output — matches texture slot
+        addSlot(new Slot(container, 0, 73, 34));            // input  (16×16 inner, border at 72,33)
+        addSlot(new OutputSlot(container, 1, 132, 34));    // output (16×16 centré dans le slot 25×25, border at 128,30)
 
         // Player inventory
         for (int row = 0; row < 3; row++)
@@ -40,11 +39,12 @@ public class CrystalFurnaceMenu extends AbstractContainerMenu {
             addSlot(new Slot(playerInv, col, 8 + col * 18, 142));
     }
 
-    public int   getCookProgress()  { return data.get(0); }
-    public int   getCookTimeTotal() { return Math.max(1, data.get(1)); }
-    public float getWavelength()    { return data.get(2) / 10f; }
-    public int   getEfficiencyPct() { return data.get(3); }
-    public boolean isBeamActive()   { return data.get(4) == 1; }
+    public int   getCookProgress()     { return data.get(0); }
+    public int   getCookTimeTotal()    { return Math.max(1, data.get(1)); }
+    public float getWavelength()       { return data.get(2) / 10f; }
+    public int   getEfficiencyPct()    { return data.get(3); }
+    public boolean isBeamActive()      { return data.get(4) == 1; }
+    public float getOptimalWavelength(){ return data.get(5) / 10f; }
 
     @Override
     public boolean stillValid(Player player) { return true; }

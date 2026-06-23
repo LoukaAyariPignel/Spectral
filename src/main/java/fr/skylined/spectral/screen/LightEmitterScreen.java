@@ -1,11 +1,9 @@
 package fr.skylined.spectral.screen;
 
 import fr.skylined.spectral.Spectral;
-import fr.skylined.spectral.client.color.WavelengthTintSource;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
@@ -13,17 +11,21 @@ import net.minecraft.world.entity.player.Inventory;
 public class LightEmitterScreen extends AbstractContainerScreen<LightEmitterMenu> {
 
     private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath(Spectral.MOD_ID, "textures/gui/light_emitter.png");
+            Identifier.fromNamespaceAndPath(Spectral.MOD_ID, "textures/gui/container/light_emitter/light_emitter.png");
+
+    private static final int BAR_X = 8, BAR_Y = 19, BAR_W = 159, BAR_H = 9;
 
     public LightEmitterScreen(LightEmitterMenu menu, Inventory inv, Component title) {
-        super(menu, inv, title, 176, 120);
+        super(menu, inv, title, 176, 166);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.titleLabelX = (imageWidth - this.font.width(this.title)) / 2;
-        this.titleLabelY = 5;
+        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
+        this.titleLabelY = 6;
+        this.inventoryLabelX = 8;
+        this.inventoryLabelY = 74;
     }
 
     @Override
@@ -32,51 +34,32 @@ public class LightEmitterScreen extends AbstractContainerScreen<LightEmitterMenu
         int x = leftPos, y = topPos;
         g.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0f, 0f, imageWidth, imageHeight, 256, 256);
 
-        int stored = menu.getStoredPhotons();
-        int max    = Math.max(1, menu.getMaxPhotons());
+        int stored  = menu.getStoredPhotons();
+        int max     = Math.max(1, menu.getMaxPhotons());
         boolean emit = menu.isEmitting();
-        Direction dir = menu.getFacing();
 
-        // ── Buffer bar fill (y 34..44) ───────────────────────────────
-        int barW = (imageWidth-14) * stored / max;
-        if (barW > 0) {
-            g.fillGradient(x+7, y+34, x+7+barW, y+44, 0xFFCC88FF, 0xFF8833CC);
+        // ── Photon buffer bar ─────────────────────────────────────────
+        int bufW = BAR_W * stored / max;
+        if (bufW > 0) {
+            g.fillGradient(x + BAR_X, y + BAR_Y,
+                           x + BAR_X + bufW, y + BAR_Y + BAR_H,
+                           0xFFDD88FF, 0xFF9933CC);
         }
-        g.centeredText(this.font, stored + " / " + max + " PH", x+imageWidth/2, y+36, 0xFFFFFFFF);
+        // Texte centré sans ombre
+        String bufText = stored + " / " + max + " PH";
+        g.text(this.font, bufText,
+                x + BAR_X + (BAR_W - this.font.width(bufText)) / 2, y + BAR_Y + 1,
+                0xFF1A1A1A, false);
 
-        // ── Compass needle ────────────────────────────────────────────
-        // Draw a colored arrow on the compass at the center (cx=88, cy=74)
-        int cx = x + 88, cy = y + 74;
-        double angle = switch (dir) {
-            case NORTH -> -Math.PI/2; case SOUTH -> Math.PI/2;
-            case EAST  -> 0;          default     -> Math.PI;
-        };
-        int needleCol = emit ? 0xFFCC88FF : 0xFF553366;
-        for (int r = 2; r <= 18; r++) {
-            int nx = cx + (int)(r * Math.cos(angle));
-            int ny = cy + (int)(r * Math.sin(angle));
-            g.fill(nx-1, ny-1, nx+1, ny+1, needleCol);
-        }
-        // Crosshair center
-        g.fill(cx-2, cy-1, cx+2, cy+1, 0xFF9966CC);
-        g.fill(cx-1, cy-2, cx+1, cy+2, 0xFF9966CC);
-
-        // Direction label around compass
-        int LG=0xFF6633AA, ACT=emit?0xFFCC88FF:0xFF665577;
-        g.centeredText(this.font, "N", x+88, y+46, LG);
-        g.centeredText(this.font, "S", x+88, y+98, LG);
-        g.text(this.font, "W", x+57, y+71, LG);
-        g.text(this.font, "E", x+115, y+71, LG);
-        // Direction name
-        g.centeredText(this.font, dir.getName().toUpperCase(), x+88, y+108, ACT);
-
-        // ── Status strip (y 97..106) ──────────────────────────────────
-        String status = emit ? "● Emitting" : "○ Standby";
-        g.centeredText(this.font, status, x+88, y+98, emit ? 0xFF88EEBB : 0xFF664466);
+        // ── Label gem + statut ────────────────────────────────────────
+        g.text(this.font, "Gem Filter", x + 9, y + 31, 0xFF404040, false);
+        String status = emit ? "Emitting" : "Standby";
+        int statusCol = emit ? 0xFF2A8A55 : 0xFF886666;
+        g.text(this.font, status, x + 168 - this.font.width(status), y + 31, statusCol, false);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor g, int mx, int my) {
-        g.centeredText(this.font, this.title, imageWidth/2, titleLabelY, 0xFFDDAAFF);
+        super.extractLabels(g, mx, my);
     }
 }
