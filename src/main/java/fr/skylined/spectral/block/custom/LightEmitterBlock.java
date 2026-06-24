@@ -14,6 +14,7 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -68,6 +69,15 @@ public class LightEmitterBlock extends BaseEntityBlock {
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state,
+            @Nullable LivingEntity placer, ItemStack stack) {
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof LightEmitterBlockEntity be) {
+            Direction facing = state.getValue(FACING);
+            be.setDirection(facing.getStepX(), 0f, facing.getStepZ());
+        }
     }
 
     @Override
