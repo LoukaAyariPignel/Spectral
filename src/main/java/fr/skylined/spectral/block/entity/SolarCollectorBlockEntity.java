@@ -20,7 +20,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 public class SolarCollectorBlockEntity extends BlockEntity {
 
     public static final long MAX_PHOTONS = 5000L;
-    private static final int BASE_PRODUCTION = 10;
+    private static final int BASE_PRODUCTION = 5;
 
     private long storedPhotons = 0;
     private int currentProduction = 0;
@@ -101,13 +101,14 @@ public class SolarCollectorBlockEntity extends BlockEntity {
         if (be.storedPhotons <= 0) return;
         for (Direction dir : Direction.values()) {
             if (dir == Direction.UP) continue;
+            if (be.storedPhotons <= 0) break;
             BlockPos neighbor = pos.relative(dir);
-            if (!(level.getBlockEntity(neighbor) instanceof LightEmitterBlockEntity emitter)) continue;
-            long space = LightEmitterBlockEntity.MAX_PHOTONS - emitter.getStoredPhotons();
+            if (!(level.getBlockEntity(neighbor) instanceof IPhotonAcceptor acceptor)) continue;
+            long space = acceptor.getMaxPhotons() - acceptor.getStoredPhotons();
             if (space <= 0) continue;
             long transfer = Math.min(be.storedPhotons, Math.min(space, 20L));
             be.storedPhotons -= transfer;
-            emitter.addPhotons(transfer);
+            acceptor.addPhotons(transfer);
             be.setChanged();
         }
     }

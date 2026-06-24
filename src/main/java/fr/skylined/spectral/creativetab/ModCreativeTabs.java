@@ -26,6 +26,10 @@ public class ModCreativeTabs {
                                 output.accept(ModItems.SOLAR_COLLECTOR.get());
                                 output.accept(ModItems.LIGHT_EMITTER.get());
                                 output.accept(ModItems.CRYSTAL_FURNACE.get());
+                                output.accept(ModItems.LIGHT_BATTERY.get());
+                                output.accept(ModItems.LIGHT_BATTERY_T2.get());
+                                output.accept(ModItems.LIGHT_BATTERY_T3.get());
+                                output.accept(ModItems.LIGHT_BATTERY_T4.get());
                             })
                             .build()
             );

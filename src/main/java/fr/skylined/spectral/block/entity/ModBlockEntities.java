@@ -26,4 +26,12 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CrystalFurnaceBlockEntity>> CRYSTAL_FURNACE =
             BLOCK_ENTITIES.register("crystal_furnace", () ->
                     new BlockEntityType<>(CrystalFurnaceBlockEntity::new, ModBlocks.CRYSTAL_FURNACE.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LightBatteryBlockEntity>> LIGHT_BATTERY =
+            BLOCK_ENTITIES.register("light_battery", () ->
+                    new BlockEntityType<>(LightBatteryBlockEntity::new,
+                            ModBlocks.LIGHT_BATTERY.get(),
+                            ModBlocks.LIGHT_BATTERY_T2.get(),
+                            ModBlocks.LIGHT_BATTERY_T3.get(),
+                            ModBlocks.LIGHT_BATTERY_T4.get()));
 }

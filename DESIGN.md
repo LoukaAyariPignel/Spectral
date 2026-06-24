@@ -1069,6 +1069,27 @@ Le mod calcule le vecteur réfléchi : `R = D - 2(D·N)N` où `N` est la normale
 ```
 ("Verre Poli" = Glass Pane ou Polished item — à confirmer selon disponibilité MC 26.1)
 
+**Implémentation technique (prévu) :**
+
+- `MirrorBlock` — bloc sans block entity, propriété `ROTATION` (IntegerProperty, 0–7, pas de 45°)
+  - Normale de surface calculée depuis `ROTATION` : `n = (cos(r × π/4), 0, sin(r × π/4))`
+  - Placement : `rotation = round(playerYaw / 45) mod 8` — snap automatique au 45° le plus proche
+  - Sneak + clic droit : cycle le `ROTATION` d'un pas de 45°
+- Intégration dans `LightEmitterBlockEntity.computeBeam` :
+  - Quand le DDA rencontre un `MirrorBlock` : clôt le segment courant, calcule le vecteur réfléchi `R = D − 2(D·N)N`, et relance récursivement `computeBeam` depuis ce bloc (max 4 réflexions, évite les boucles infinies)
+  - Perte de 5% du débit par réflexion (`currentDebit *= 0.95f`)
+- Changement de données — `BeamSegment` doit porter son propre repère monde pour que le renderer positionne chaque branche indépendamment :
+  ```java
+  // BeamSegment étendu
+  record BeamSegment(
+      float ox, float oy, float oz,   // centre du bloc origine de ce tronçon
+      float dx, float dy, float dz,   // direction normalisée
+      float start, float end,          // distance depuis l'origine
+      float wavelength
+  )
+  ```
+- Renderer — `LightEmitterBlockEntityRenderer.submit` itère chaque segment, translate vers `(seg.ox − emitterX, ...)` puis aligne Y → `seg.direction` avant de soumettre la géométrie `SpectralBeamRenderer.submitTranslucentBeam`
+
 ---
 
 ### Photon Relay
@@ -2223,9 +2244,13 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 - **Crystal Furnace** : reçoit beam via `receiveBeam(wavelength)`, cuisson ∝ efficacité (vitesse exacte `eff * 3f`), bonus 10% duplication à ≥90% eff. Beam requis (pas de fallback vanilla). L'emitter le détecte même avec `noOcclusion()`.
 
 #### Rendu du faisceau
-- **Beam renderer** : `BeaconRenderer.submitBeaconBeam` avec couleur issue de `WavelengthTintSource.colorFromWavelength()`.
-- **Effilement aux 5 derniers blocs** : sur les blocs 28–32, le rayon inner/glow rétrécit de 100% à 20% (inner beam = OPAQUE, alpha ignoré → solution : réduire les rayons). Au-delà de 32 blocs sans obstacle = beam disparaît progressivement.
+- **`SpectralBeamRenderer`** : renderer custom (remplace `BeaconRenderer.submitBeaconBeam`) utilisant `RenderTypes.beaconBeam(texture, true)` pour les deux couches (inner + glow) — le `true` active le render type translucide qui respecte l'alpha, contrairement au type opaque de vanilla.
+- **Fondu aux 5 derniers blocs** : les blocs 28–32 reçoivent `ARGB.multiplyAlpha(baseColor, 1 − t*(1−0.2))` sur l'alpha au lieu de réduire le rayon. Le beam devient transparent progressivement.
 - **Alpha global** : `beamAlpha = 0.5 + 0.5 * (photons / MAX_PHOTONS)` — beam plus intense quand l'emitter est chargé.
+- **Direction 3D arbitraire** : le poseStack est positionné au centre du bloc emitter `(0.5, 0.5, 0.5)`, puis une rotation quaternion `Quaternionf().rotationTo(Y+, dir)` aligne l'axe local Y sur le vecteur direction du beam. Fonctionne pour tout angle (cardinal, diagonal, 45°, vertical…).
+- **DDA Amanatides & Woo** : `computeBeam` utilise le DDA 3D pour traverser les voxels dans n'importe quelle direction. Les axes à égalité sont avancés simultanément (epsilon 1e-9) pour éviter le blocage aux coins diagonaux.
+- **`/spectral beam <dx> <dy> <dz>`** : commande de debug pour forcer une direction sur l'emitter ciblé (vecteur normalisé automatiquement).
+- **`/spectral beam sweep`** : mode sweep — le beam tourne automatiquement à travers tous les angles de la sphère (spirale θ/φ, ~3s/tour) pour valider le rendu dans toutes les directions.
 
 #### GUIs (MC 26.1 style vanilla)
 - **Crystal Furnace** : gradient spectre 380–780nm (baked PNG), sélecteurs target/actual dynamiques (9×1px sprites), flèche `burn_progress.png`, textes sans ombre (`dropShadow=false`).
@@ -2284,3 +2309,110 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 25. **Faisceaux UV/IR** (invisibles + particules à la place)
 26. **Rendu gemmes UV/IR** (halos, particules)
 27. **Lumière dynamique** sur les blocs traversés par le beam
+
+---
+
+## Crafts à implémenter
+
+> **Note** : Tous les crafts sont actuellement supprimés. Les ingrédients marqués `[À définir]` attendent les nouveaux matériaux (minerais, cristaux spéciaux, alliages). Les machines marquées `[machine pas encore implémentée]` nécessitent que la machine soit d'abord codée.
+
+### Table de craft (Crafting Table)
+
+| Item / Bloc | Ingrédients | Progression |
+|---|---|---|
+| **Prism Stand** | Verre × 2 · Raw Crystal × 1 · Quartz × 2 · Pierre × 2 · Fer × 1 | Early game |
+| **Solar Collector** | Verre × 3 · Cuivre × 2 · Raw Crystal × 1 · Fer × 2 · Redstone × 1 | Early game |
+| **Light Emitter** | Quartz × 4 · Verre × 1 · Fer × 4 · Gemme × 1 · Redstone × 1 | Early game |
+| **Crystal Furnace** | Brique de Pierre × 4 · Verre × 1 · Fer × 2 · Gemme × 1 · Quartz × 1 | Early game |
+| **Light Battery T1** | Cuivre × 4 · Verre × 1 · Gemme × 2 · Quartz × 1 · Redstone × 1 | Early game |
+| **Light Battery T2** | Light Battery T1 × 1 · `[À définir]` | Mid game |
+| **Light Battery T3** | Light Battery T2 × 1 · `[À définir]` | Late game |
+| **Light Battery T4** | Light Battery T3 × 1 · `[À définir]` | End game |
+| **Dampening Glass** | Amethyste × 2 · Verre × 2 · Gemme × 1 | Early-mid game |
+| **Fiber Optic Cable** × 4 | Or × 4 · Quartz Nether × 2 · Raw Crystal × 2 · Blaze Rod × 1 | Mid game (Nether requis) |
+| **Beam Mirror** | Fer × 6 · Verre Poli × 1 · Raw Crystal × 1 | Early-mid game |
+| **Light Gate** | Fer × 4 · Dampening Glass × 2 · Or × 1 · Redstone × 2 | Mid game |
+| **Wavelength Sensor** | Dampening Glass × 2 · Quartz × 2 · Fer × 2 · Or × 1 · Quartz Nether × 1 · Redstone × 1 | Mid game |
+| **Thermal Generator** | Pierre Lisse × 4 · Fer × 4 · Raw Crystal × 1 · Redstone × 1 | Mid game |
+| **Photosynthesis Accelerator** | Verre × 2 · Cuivre × 2 · Gemme × 1 · Fer × 2 · Poudre d'Os × 1 · Quartz × 1 | Mid game |
+| **Spectral Refiner T1** (Crude) | Or × 2 · Améthyste × 1 · Dampening Glass × 2 · Diamant × 1 · Fer × 2 · Redstone × 1 | Mid game |
+| **Photon Relay** | Dampening Glass × 4 · Raw Crystal × 2 · Fiber Optic × 1 · Quartz Nether × 1 · Redstone × 1 | Mid game |
+| **Concentrating Lens T1** (Basic) | Verre × 4 · Quartz × 1 | Mid game |
+| **Beam Splitter T1** (Basic) | Verre × 4 · Raw Crystal × 2 · Dampening Glass × 2 · Quartz × 1 | Mid game |
+| **Purification Chamber** | Or × 4 · Dampening Glass × 2 · Raw Crystal × 1 · Améthyste × 1 · Redstone × 1 | Mid game |
+| **Light Condenser** | Verre × 4 · Raw Crystal × 1 · Fiber Optic × 2 · Diamant × 1 · Redstone × 1 | Mid game |
+| **Spectral Analyzer** | Or × 4 · Dampening Glass × 1 · Améthyste × 1 · Quartz Nether × 2 · Redstone × 1 | Mid game |
+| **Beam Amplifier** | Or × 4 · Fiber Optic × 1 · Raw Crystal × 1 · Diamant × 2 · Redstone × 1 | Mid game |
+| **Energy Converter** | Or × 4 · Diamant × 2 · Gemme × 1 · Redstone × 2 | Mid game |
+| **Photon Upgrade Station** | `[À définir]` | Mid game |
+| **Spectral Goggles** | Or × 4 · Cuir × 1 · Gemme × 2 · Verre × 1 · Fiber Optic × 1 | Mid game |
+| **UV Sterilizer** | `[À définir]` · Gemme UV (Tier 2 requis) | Late game |
+| **Thermal Forge** | `[À définir]` · Netherite Ingot × 1 | Late game |
+| **Chromatic Compressor** | `[À définir]` · Amethyste × 4 · Echo Shard × 1 | Late game |
+| **Thermal Expander** | `[À définir]` · Blaze Rod × 2 · Magma Block × 1 · Netherite Ingot × 1 | Late game |
+| **Spectral Forge** | `[À définir]` · Nether Star × 1 (nécessite Beacon actif à 10 blocs) | End game |
+| **Spectral Transmitter** | `[À définir]` · Gemme IR Lointain requis | End game |
+| **Spectral Receiver** | `[À définir]` · Spectral Link Crystal | End game |
+| **X-Ray Scanner** | `[À définir]` · Gemme X-ray requis | End game |
+
+---
+
+### Photon Upgrade Station `[machine pas encore implémentée]`
+
+Upgrades des blocs upgradables (T1 → T2, T2 → T3, etc.) :
+
+| Upgrade | Ingrédients ajoutés | Résultat |
+|---|---|---|
+| Concentrating Lens T1 → T2 | Quartz × 2 · Améthyste × 1 | Basic → Concentrating Lens |
+| Concentrating Lens T2 → T3 | Verre Teinté × 2 · Diamant × 1 · Gemme raffinée × 1 | → Advanced Concentrating Lens |
+| Concentrating Lens T3 → T4 | Verre Parfait × 2 · Netherite Ingot × 1 · Gemme raffinée × 1 | → Perfect Concentrating Lens |
+| Spectral Refiner T1 → T2 | Diamant × 2 · Or × 4 · Dampening Glass × 2 | Crude → Spectral Refiner |
+| Spectral Refiner T2 → T3 | Netherite × 1 · Améthyste × 4 · Gemme précise × 1 | → Precision Spectral Refiner |
+| Spectral Refiner T3 → T4 | `[À définir — matériaux end-game]` | → Quantum Spectral Refiner |
+| Beam Splitter T1 → T2 | `[À définir]` | Basic → Beam Splitter |
+| Beam Splitter T2 → T3 | `[À définir]` | → Advanced Beam Splitter |
+| Beam Splitter T3 → T4 | `[À définir]` | → Perfect Beam Splitter |
+
+---
+
+### Prism Stand (attunement)
+
+| Résultat | Ingrédient | Condition | Machine |
+|---|---|---|---|
+| **Gem** (λ selon lumière) | Raw Crystal × 1 | Sky light ≥ 12 · durée 3–10 min | Prism Stand (lumière naturelle) |
+| **Gem** (λ fixé par verre) | Raw Crystal × 1 | Beam via verre teinté · durée 1 min | Prism Stand (faisceau filtré) |
+| **Gem** (λ précis via Beacon) | Raw Crystal × 1 | Beam via Beacon coloré · durée 1 min | Prism Stand (Beacon) |
+
+---
+
+### Chromatic Compressor `[machine pas encore implémentée]`
+
+| Résultat | Ingrédient | Consommation | Durée |
+|---|---|---|---|
+| **Gem UV Proche** (300–380 nm) | Gem visible (≤ 400 nm) · Améthyste × 4 · Echo Shard × 1 | 100 PH/tick | 5 min |
+
+---
+
+### Thermal Expander `[machine pas encore implémentée]`
+
+| Résultat | Ingrédient | Consommation | Durée |
+|---|---|---|---|
+| **Gem IR Proche** (780–1400 nm) | Gem visible (≥ 720 nm) · Blaze Rod × 2 · Magma Block × 1 · Netherite Ingot × 1 | `[À définir]` | `[À définir]` |
+
+---
+
+### Spectral Forge `[machine pas encore implémentée]` (nécessite Beacon actif à 10 blocs)
+
+| Résultat | Ingrédient | Consommation | Durée |
+|---|---|---|---|
+| **Gem UV Profond** (100–300 nm) | Gem UV Proche · Nether Star × 1 · `[À définir]` | 500 PH/tick | 10 min |
+| **Gem IR Lointain** (1400–10 000 nm) | Gem IR Proche · Nether Star × 1 · `[À définir]` | 500 PH/tick | 10 min |
+
+---
+
+### Machine Ultime `[À définir — End game, Portail de l'End requis]`
+
+| Résultat | Ingrédient |
+|---|---|
+| **Gem X-ray** (0.01–10 nm) | Dragon Egg × 1 · Nether Star × 4 · Gems de tous les tiers précédents |
+| **Gem Gamma** (< 0.01 nm) | Dragon Egg × 1 · Nether Star × 4 · Gems X-ray · `[À définir]` |

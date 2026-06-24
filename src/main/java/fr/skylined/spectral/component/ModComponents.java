@@ -15,4 +15,10 @@ public class ModComponents {
             COMPONENTS.register("wave_length",
                     () -> DataComponentType.<Float>builder().persistent(Codec.FLOAT).build()
             );
+
+    /** Photons stockés dans une Light Battery — persistés dans l'item lors du drop. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> STORED_PHOTONS =
+            COMPONENTS.register("stored_photons",
+                    () -> DataComponentType.<Long>builder().persistent(Codec.LONG).build()
+            );
 }

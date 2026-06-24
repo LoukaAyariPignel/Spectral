@@ -1,0 +1,10 @@
+{
+    "variants": {
+        "charged=false": {
+            "model": "spectral:block/light_battery_t2"
+        },
+        "charged=true": {
+            "model": "spectral:block/light_battery_t2_charged"
+        }
+    }
+}

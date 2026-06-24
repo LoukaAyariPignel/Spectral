@@ -1,0 +1,12 @@
+{
+    "parent": "minecraft:block/cube",
+    "textures": {
+        "particle": "spectral:block/light_battery_t3_side",
+        "down": "spectral:block/light_battery_bottom",
+        "up": "spectral:block/light_battery_top",
+        "north": "spectral:block/light_battery_t3_side",
+        "south": "spectral:block/light_battery_t3_side",
+        "west": "spectral:block/light_battery_t3_side",
+        "east": "spectral:block/light_battery_t3_side"
+    }
+}

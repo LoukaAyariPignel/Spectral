@@ -2,6 +2,10 @@ package fr.skylined.spectral.block;
 
 import fr.skylined.spectral.Spectral;
 import fr.skylined.spectral.block.custom.CrystalFurnaceBlock;
+import fr.skylined.spectral.block.custom.LightBatteryBlock;
+import fr.skylined.spectral.block.custom.LightBatteryT2Block;
+import fr.skylined.spectral.block.custom.LightBatteryT3Block;
+import fr.skylined.spectral.block.custom.LightBatteryT4Block;
 import fr.skylined.spectral.block.custom.LightEmitterBlock;
 import fr.skylined.spectral.block.custom.PrismStandBlock;
 import fr.skylined.spectral.block.custom.SolarCollectorBlock;
@@ -35,4 +39,11 @@ public class ModBlocks {
             "crystal_furnace", CrystalFurnaceBlock::new,
             () -> BlockBehaviour.Properties.of().strength(3f,8f).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()
     );
+    private static BlockBehaviour.Properties batteryProps() {
+        return BlockBehaviour.Properties.of().strength(3f,8f).sound(SoundType.METAL).requiresCorrectToolForDrops();
+    }
+    public static final DeferredBlock<Block> LIGHT_BATTERY    = BLOCKS.registerBlock("light_battery",    LightBatteryBlock::new,   ModBlocks::batteryProps);
+    public static final DeferredBlock<Block> LIGHT_BATTERY_T2 = BLOCKS.registerBlock("light_battery_t2", LightBatteryT2Block::new, ModBlocks::batteryProps);
+    public static final DeferredBlock<Block> LIGHT_BATTERY_T3 = BLOCKS.registerBlock("light_battery_t3", LightBatteryT3Block::new, ModBlocks::batteryProps);
+    public static final DeferredBlock<Block> LIGHT_BATTERY_T4 = BLOCKS.registerBlock("light_battery_t4", LightBatteryT4Block::new, ModBlocks::batteryProps);
 }

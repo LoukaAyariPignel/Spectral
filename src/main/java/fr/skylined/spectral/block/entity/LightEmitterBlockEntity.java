@@ -26,7 +26,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LightEmitterBlockEntity extends BlockEntity {
+public class LightEmitterBlockEntity extends BlockEntity implements IPhotonAcceptor {
 
     public static final long MAX_PHOTONS = 1000L;
     private static final long EMISSION_THRESHOLD = 5L;
@@ -207,6 +207,8 @@ public class LightEmitterBlockEntity extends BlockEntity {
 
         if (level.getBlockEntity(terminalPos) instanceof CrystalFurnaceBlockEntity furnace) {
             furnace.receiveBeam(last.wavelength());
+        } else if (level.getBlockEntity(terminalPos) instanceof LightBatteryBlockEntity battery) {
+            battery.receiveBeam(last.wavelength());
         }
     }
 
@@ -233,6 +235,7 @@ public class LightEmitterBlockEntity extends BlockEntity {
     }
 
     public long getStoredPhotons()                { return storedPhotons; }
+    @Override public long getMaxPhotons()         { return MAX_PHOTONS; }
     public boolean isEmitting()                   { return emitting; }
     public List<BeamSegment> getCurrentSegments() { return currentSegments; }
 

@@ -6,5 +6,9 @@
     "block.spectral.solar_collector": "Solar Collector",
     "block.spectral.light_emitter": "Light Emitter",
     "block.spectral.crystal_furnace": "Crystal Furnace",
+    "block.spectral.light_battery": "Light Battery",
+    "block.spectral.light_battery_t2": "Enhanced Light Battery",
+    "block.spectral.light_battery_t3": "Advanced Light Battery",
+    "block.spectral.light_battery_t4": "Quantum Light Battery",
     "itemGroup.spectral": "Spectral"
 }
