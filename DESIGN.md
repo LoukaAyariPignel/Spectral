@@ -2314,99 +2314,92 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 
 ## Crafts à implémenter
 
-> **Note** : Tous les crafts sont actuellement supprimés. Les ingrédients marqués `[À définir]` attendent les nouveaux matériaux (minerais, cristaux spéciaux, alliages). Les machines marquées `[machine pas encore implémentée]` nécessitent que la machine soit d'abord codée.
+> Tous les crafts sont supprimés en attendant les nouveaux matériaux. Les ingrédients seront définis ultérieurement.
 
 ### Table de craft (Crafting Table)
 
-| Item / Bloc | Ingrédients | Progression |
-|---|---|---|
-| **Prism Stand** | Verre × 2 · Raw Crystal × 1 · Quartz × 2 · Pierre × 2 · Fer × 1 | Early game |
-| **Solar Collector** | Verre × 3 · Cuivre × 2 · Raw Crystal × 1 · Fer × 2 · Redstone × 1 | Early game |
-| **Light Emitter** | Quartz × 4 · Verre × 1 · Fer × 4 · Gemme × 1 · Redstone × 1 | Early game |
-| **Crystal Furnace** | Brique de Pierre × 4 · Verre × 1 · Fer × 2 · Gemme × 1 · Quartz × 1 | Early game |
-| **Light Battery T1** | Cuivre × 4 · Verre × 1 · Gemme × 2 · Quartz × 1 · Redstone × 1 | Early game |
-| **Light Battery T2** | Light Battery T1 × 1 · `[À définir]` | Mid game |
-| **Light Battery T3** | Light Battery T2 × 1 · `[À définir]` | Late game |
-| **Light Battery T4** | Light Battery T3 × 1 · `[À définir]` | End game |
-| **Dampening Glass** | Amethyste × 2 · Verre × 2 · Gemme × 1 | Early-mid game |
-| **Fiber Optic Cable** × 4 | Or × 4 · Quartz Nether × 2 · Raw Crystal × 2 · Blaze Rod × 1 | Mid game (Nether requis) |
-| **Beam Mirror** | Fer × 6 · Verre Poli × 1 · Raw Crystal × 1 | Early-mid game |
-| **Light Gate** | Fer × 4 · Dampening Glass × 2 · Or × 1 · Redstone × 2 | Mid game |
-| **Wavelength Sensor** | Dampening Glass × 2 · Quartz × 2 · Fer × 2 · Or × 1 · Quartz Nether × 1 · Redstone × 1 | Mid game |
-| **Thermal Generator** | Pierre Lisse × 4 · Fer × 4 · Raw Crystal × 1 · Redstone × 1 | Mid game |
-| **Photosynthesis Accelerator** | Verre × 2 · Cuivre × 2 · Gemme × 1 · Fer × 2 · Poudre d'Os × 1 · Quartz × 1 | Mid game |
-| **Spectral Refiner T1** (Crude) | Or × 2 · Améthyste × 1 · Dampening Glass × 2 · Diamant × 1 · Fer × 2 · Redstone × 1 | Mid game |
-| **Photon Relay** | Dampening Glass × 4 · Raw Crystal × 2 · Fiber Optic × 1 · Quartz Nether × 1 · Redstone × 1 | Mid game |
-| **Concentrating Lens T1** (Basic) | Verre × 4 · Quartz × 1 | Mid game |
-| **Beam Splitter T1** (Basic) | Verre × 4 · Raw Crystal × 2 · Dampening Glass × 2 · Quartz × 1 | Mid game |
-| **Purification Chamber** | Or × 4 · Dampening Glass × 2 · Raw Crystal × 1 · Améthyste × 1 · Redstone × 1 | Mid game |
-| **Light Condenser** | Verre × 4 · Raw Crystal × 1 · Fiber Optic × 2 · Diamant × 1 · Redstone × 1 | Mid game |
-| **Spectral Analyzer** | Or × 4 · Dampening Glass × 1 · Améthyste × 1 · Quartz Nether × 2 · Redstone × 1 | Mid game |
-| **Beam Amplifier** | Or × 4 · Fiber Optic × 1 · Raw Crystal × 1 · Diamant × 2 · Redstone × 1 | Mid game |
-| **Energy Converter** | Or × 4 · Diamant × 2 · Gemme × 1 · Redstone × 2 | Mid game |
-| **Photon Upgrade Station** | `[À définir]` | Mid game |
-| **Spectral Goggles** | Or × 4 · Cuir × 1 · Gemme × 2 · Verre × 1 · Fiber Optic × 1 | Mid game |
-| **UV Sterilizer** | `[À définir]` · Gemme UV (Tier 2 requis) | Late game |
-| **Thermal Forge** | `[À définir]` · Netherite Ingot × 1 | Late game |
-| **Chromatic Compressor** | `[À définir]` · Amethyste × 4 · Echo Shard × 1 | Late game |
-| **Thermal Expander** | `[À définir]` · Blaze Rod × 2 · Magma Block × 1 · Netherite Ingot × 1 | Late game |
-| **Spectral Forge** | `[À définir]` · Nether Star × 1 (nécessite Beacon actif à 10 blocs) | End game |
-| **Spectral Transmitter** | `[À définir]` · Gemme IR Lointain requis | End game |
-| **Spectral Receiver** | `[À définir]` · Spectral Link Crystal | End game |
-| **X-Ray Scanner** | `[À définir]` · Gemme X-ray requis | End game |
+| Item / Bloc | Machine |
+|---|---|
+| Prism Stand | Crafting Table |
+| Solar Collector | Crafting Table |
+| Light Emitter | Crafting Table |
+| Crystal Furnace | Crafting Table |
+| Light Battery T1 | Crafting Table |
+| Light Battery T2 | Crafting Table |
+| Light Battery T3 | Crafting Table |
+| Light Battery T4 | Crafting Table |
+| Dampening Glass | Crafting Table |
+| Fiber Optic Cable | Crafting Table |
+| Beam Mirror | Crafting Table |
+| Light Gate | Crafting Table |
+| Wavelength Sensor | Crafting Table |
+| Thermal Generator | Crafting Table |
+| Photosynthesis Accelerator | Crafting Table |
+| Spectral Refiner T1 (Crude) | Crafting Table |
+| Photon Relay | Crafting Table |
+| Concentrating Lens T1 (Basic) | Crafting Table |
+| Beam Splitter T1 (Basic) | Crafting Table |
+| Purification Chamber | Crafting Table |
+| Light Condenser | Crafting Table |
+| Spectral Analyzer | Crafting Table |
+| Beam Amplifier | Crafting Table |
+| Energy Converter | Crafting Table |
+| Photon Upgrade Station | Crafting Table |
+| Spectral Goggles | Crafting Table |
+| Chromatic Compressor | Crafting Table |
+| Thermal Expander | Crafting Table |
+| UV Sterilizer | Crafting Table |
+| Thermal Forge | Crafting Table |
+| Spectral Transmitter | Crafting Table |
+| Spectral Receiver | Crafting Table |
+| X-Ray Scanner | Crafting Table |
 
----
+### Photon Upgrade Station
 
-### Photon Upgrade Station `[machine pas encore implémentée]`
+| Item | Machine |
+|---|---|
+| Concentrating Lens T2 | Photon Upgrade Station |
+| Concentrating Lens T3 | Photon Upgrade Station |
+| Concentrating Lens T4 | Photon Upgrade Station |
+| Spectral Refiner T2 | Photon Upgrade Station |
+| Spectral Refiner T3 | Photon Upgrade Station |
+| Spectral Refiner T4 | Photon Upgrade Station |
+| Beam Splitter T2 | Photon Upgrade Station |
+| Beam Splitter T3 | Photon Upgrade Station |
+| Beam Splitter T4 | Photon Upgrade Station |
 
-Upgrades des blocs upgradables (T1 → T2, T2 → T3, etc.) :
+### Prism Stand
 
-| Upgrade | Ingrédients ajoutés | Résultat |
-|---|---|---|
-| Concentrating Lens T1 → T2 | Quartz × 2 · Améthyste × 1 | Basic → Concentrating Lens |
-| Concentrating Lens T2 → T3 | Verre Teinté × 2 · Diamant × 1 · Gemme raffinée × 1 | → Advanced Concentrating Lens |
-| Concentrating Lens T3 → T4 | Verre Parfait × 2 · Netherite Ingot × 1 · Gemme raffinée × 1 | → Perfect Concentrating Lens |
-| Spectral Refiner T1 → T2 | Diamant × 2 · Or × 4 · Dampening Glass × 2 | Crude → Spectral Refiner |
-| Spectral Refiner T2 → T3 | Netherite × 1 · Améthyste × 4 · Gemme précise × 1 | → Precision Spectral Refiner |
-| Spectral Refiner T3 → T4 | `[À définir — matériaux end-game]` | → Quantum Spectral Refiner |
-| Beam Splitter T1 → T2 | `[À définir]` | Basic → Beam Splitter |
-| Beam Splitter T2 → T3 | `[À définir]` | → Advanced Beam Splitter |
-| Beam Splitter T3 → T4 | `[À définir]` | → Perfect Beam Splitter |
+| Item | Machine |
+|---|---|
+| Gem (attunement lumière naturelle) | Prism Stand |
+| Gem (attunement via faisceau + verre teinté) | Prism Stand |
 
----
+### Chromatic Compressor
 
-### Prism Stand (attunement)
+| Item | Machine |
+|---|---|
+| Gem UV Proche (Tier 2) | Chromatic Compressor |
 
-| Résultat | Ingrédient | Condition | Machine |
-|---|---|---|---|
-| **Gem** (λ selon lumière) | Raw Crystal × 1 | Sky light ≥ 12 · durée 3–10 min | Prism Stand (lumière naturelle) |
-| **Gem** (λ fixé par verre) | Raw Crystal × 1 | Beam via verre teinté · durée 1 min | Prism Stand (faisceau filtré) |
-| **Gem** (λ précis via Beacon) | Raw Crystal × 1 | Beam via Beacon coloré · durée 1 min | Prism Stand (Beacon) |
+### Thermal Expander
 
----
+| Item | Machine |
+|---|---|
+| Gem IR Proche (Tier 3) | Thermal Expander |
 
-### Chromatic Compressor `[machine pas encore implémentée]`
+### Spectral Forge
 
-| Résultat | Ingrédient | Consommation | Durée |
-|---|---|---|---|
-| **Gem UV Proche** (300–380 nm) | Gem visible (≤ 400 nm) · Améthyste × 4 · Echo Shard × 1 | 100 PH/tick | 5 min |
+| Item | Machine |
+|---|---|
+| Gem UV Profond (Tier 4) | Spectral Forge |
+| Gem IR Lointain (Tier 5) | Spectral Forge |
 
----
+### Machine Ultime (End game)
 
-### Thermal Expander `[machine pas encore implémentée]`
-
-| Résultat | Ingrédient | Consommation | Durée |
-|---|---|---|---|
-| **Gem IR Proche** (780–1400 nm) | Gem visible (≥ 720 nm) · Blaze Rod × 2 · Magma Block × 1 · Netherite Ingot × 1 | `[À définir]` | `[À définir]` |
-
----
-
-### Spectral Forge `[machine pas encore implémentée]` (nécessite Beacon actif à 10 blocs)
-
-| Résultat | Ingrédient | Consommation | Durée |
-|---|---|---|---|
-| **Gem UV Profond** (100–300 nm) | Gem UV Proche · Nether Star × 1 · `[À définir]` | 500 PH/tick | 10 min |
-| **Gem IR Lointain** (1400–10 000 nm) | Gem IR Proche · Nether Star × 1 · `[À définir]` | 500 PH/tick | 10 min |
+| Item | Machine |
+|---|---|
+| Gem X-ray (Tier 6) | Machine Ultime |
+| Gem Gamma (Tier 7) | Machine Ultime |
 
 ---
 
