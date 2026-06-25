@@ -1,8 +1,7 @@
 package fr.skylined.spectral.block.custom;
 
 import com.mojang.serialization.MapCodec;
-import fr.skylined.spectral.block.entity.PrismStandBlockEntity;
-import fr.skylined.spectral.block.entity.ModBlockEntities;
+import fr.skylined.spectral.block.entity.CrystalLensBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
@@ -25,19 +24,17 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
-public class PrismStandBlock extends BaseEntityBlock {
+public class CrystalLensBlock extends BaseEntityBlock {
 
-    public static final MapCodec<PrismStandBlock> CODEC = simpleCodec(PrismStandBlock::new);
+    public static final MapCodec<CrystalLensBlock> CODEC = simpleCodec(CrystalLensBlock::new);
 
     private static final VoxelShape SHAPE = Shapes.or(
-        box(1,  0,  1,  15, 2,  15),   // grande base
-        box(3,  2,  3,  13, 4,  13),   // petite base
-        box(6,  4,  6,  10, 10, 10),   // pilier
-        box(4,  10, 4,  12, 12, 12),   // plateau
-        box(4,  12, 4,  12, 16, 12)    // crochets (bounding box)
+        box(2, 0, 4, 14, 1, 12),  // base — empreinte complète (bandes y=0-1)
+        box(3, 1, 5, 13, 2, 11),  // base — corps central y=1-2
+        box(3, 2, 7, 13, 12, 9)   // arceau + creux intérieur
     );
 
-    public PrismStandBlock(BlockBehaviour.Properties props) {
+    public CrystalLensBlock(BlockBehaviour.Properties props) {
         super(props);
     }
 
@@ -48,7 +45,7 @@ public class PrismStandBlock extends BaseEntityBlock {
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new PrismStandBlockEntity(pos, state);
+        return new CrystalLensBlockEntity(pos, state);
     }
 
     @Override
@@ -65,7 +62,7 @@ public class PrismStandBlock extends BaseEntityBlock {
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
             BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.TRY_WITH_EMPTY_HAND;
-        if (!(level.getBlockEntity(pos) instanceof PrismStandBlockEntity be))
+        if (!(level.getBlockEntity(pos) instanceof CrystalLensBlockEntity be))
             return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (!be.isEmpty()) return InteractionResult.TRY_WITH_EMPTY_HAND;
 
@@ -82,7 +79,7 @@ public class PrismStandBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
             Player player, BlockHitResult hit) {
-        if (!(level.getBlockEntity(pos) instanceof PrismStandBlockEntity be)) return InteractionResult.PASS;
+        if (!(level.getBlockEntity(pos) instanceof CrystalLensBlockEntity be)) return InteractionResult.PASS;
 
         if (!be.isEmpty()) {
             if (!level.isClientSide()) {
@@ -96,13 +93,12 @@ public class PrismStandBlock extends BaseEntityBlock {
 
     @Override
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
-        return createTickerHelper(type, ModBlockEntities.PRISM_STAND.get(), PrismStandBlockEntity::serverTick);
+        return null;
     }
 
     @Override
     protected void spawnAfterBreak(BlockState state, ServerLevel level, BlockPos pos, ItemStack tool, boolean dropExperience) {
-        if (level.getBlockEntity(pos) instanceof PrismStandBlockEntity be && !be.isEmpty()) {
+        if (level.getBlockEntity(pos) instanceof CrystalLensBlockEntity be && !be.isEmpty()) {
             Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), be.getStoredItem());
         }
         super.spawnAfterBreak(state, level, pos, tool, dropExperience);

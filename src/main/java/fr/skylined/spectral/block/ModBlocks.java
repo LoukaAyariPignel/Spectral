@@ -7,7 +7,7 @@ import fr.skylined.spectral.block.custom.LightBatteryT2Block;
 import fr.skylined.spectral.block.custom.LightBatteryT3Block;
 import fr.skylined.spectral.block.custom.LightBatteryT4Block;
 import fr.skylined.spectral.block.custom.LightEmitterBlock;
-import fr.skylined.spectral.block.custom.PrismStandBlock;
+import fr.skylined.spectral.block.custom.CrystalLensBlock;
 import fr.skylined.spectral.block.custom.SolarCollectorBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -23,8 +23,8 @@ public class ModBlocks {
             "raw_crystal_ore",
             () -> BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE)
     );
-    public static final DeferredBlock<Block> PRISM_STAND = BLOCKS.registerBlock(
-            "prism_stand", PrismStandBlock::new,
+    public static final DeferredBlock<Block> CRYSTAL_LENS = BLOCKS.registerBlock(
+            "crystal_lens", CrystalLensBlock::new,
             () -> BlockBehaviour.Properties.of().strength(1.5f,6f).sound(SoundType.STONE).noOcclusion()
     );
     public static final DeferredBlock<Block> SOLAR_COLLECTOR = BLOCKS.registerBlock(

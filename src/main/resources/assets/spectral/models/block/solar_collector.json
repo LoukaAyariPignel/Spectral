@@ -1,9 +1,9 @@
-{
+﻿{
     "parent": "minecraft:block/block",
     "textures": {
-        "quartz":   "spectral:block/prism_stand_quartz",
+        "quartz":   "spectral:block/crystal_lens_quartz",
         "crystal":  "spectral:block/solar_collector_crystal",
-        "particle": "spectral:block/prism_stand_quartz"
+        "particle": "spectral:block/crystal_lens_quartz"
     },
     "elements": [
         {

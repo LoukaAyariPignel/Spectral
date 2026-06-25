@@ -2,9 +2,15 @@
 
 ## Vision générale
 
-Un mod **NeoForge** (Minecraft 26.1, Java 21) qui transforme la lumière en source d'énergie.  
-La lumière est collectée, convertie en **Photons (PH)**, transportée via des **faisceaux**, filtrée par des **gemmes**, et consommée par des **machines**.  
-Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa couleur et les effets qu'elle peut produire sur un faisceau.
+Un mod **NeoForge** (Minecraft 26.1, Java 21) qui transforme la lumière en source d'énergie de haute technologie.  
+La lumière est collectée, convertie en **Photons (PH)**, transportée via des **faisceaux lumineux colorés**, stockée dans des **gemmes atténuées**, et consommée par des **machines spécialisées**.  
+Chaque gemme possède une longueur d'onde (en nm) qui détermine sa couleur et l'efficacité des machines qu'elle alimente.
+
+**Mécanique centrale — Multi-beam :** combiner plusieurs faisceaux de longueurs d'onde différentes sur une même machine débloque des traitements impossibles autrement, produisant des matériaux uniques (**Photon Alloys**, cristaux avancés) introuvables dans tout autre mod.
+
+**Compatibilité FE :** Spectral est également une **source d'énergie FE/RF de premier ordre** pour les modpacks. Les Solar Collectors amplifiés par Concentrating Lens et le générateur multi-bloc **Photon Dynamo** alimentent l'infrastructure entière d'un modpack via conversion PH → FE.
+
+**Pas de système de bruit :** la propagation du beam dans l'air n'accumule aucune dégradation. L'efficacité dépend uniquement de la précision de la gemme.
 
 ---
 
@@ -32,7 +38,7 @@ Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa coule
 
 | Tier | Nom | Plage (nm) | Couleur visible | Obtention | Effets principaux |
 |---|---|---|---|---|---|
-| 1 | Visible | 380–780 | Toutes couleurs | Prism Stand + lumière | Faisceaux colorés, machines de base |
+| 1 | Visible | 380–780 | Toutes couleurs | Crystal Resonator | Faisceaux colorés, machines de base |
 | 2 | Proche UV | 300–380 | Noir + halo violet | Chromatic Compressor | Révèle minerais, désinfection, buff plantes |
 | 3 | Proche IR | 780–1400 | Noir + halo rouge | Thermal Expander | Chaleur, forge rapide, vision thermique |
 | 4 | UV profond | 100–300 | Noir + halo blanc-violet | Spectral Forge | Désintégration, purification, dégâts mobs |
@@ -42,6 +48,20 @@ Chaque gemme possède une longueur d'onde unique (en nm) qui détermine sa coule
 
 **Règle stricte** : les Tiers 2–7 ne peuvent **jamais** être produits par exposition à la lumière naturelle.  
 La plage d'exposition naturelle est clampée à `[380, 780]` dans le code.
+
+### Familles de couleur (multi-beam)
+
+Pour les recettes multi-beams, la longueur d'onde exacte n'est pas requise — seule la **famille de couleur** compte.
+
+| Famille | Plage (nm) | Couleur visible |
+|---|---|---|
+| Violet | 380–450 | Violet |
+| Bleu | 450–495 | Bleu |
+| Cyan | 495–520 | Cyan |
+| Vert | 520–565 | Vert |
+| Jaune | 565–590 | Jaune |
+| Orange | 590–625 | Orange |
+| Rouge | 625–780 | Rouge |
 
 ### Rendu visuel par tier
 
@@ -77,98 +97,31 @@ La plage d'exposition naturelle est clampée à `[380, 780]` dans le code.
 
 - Cristal brut, incolore, sans longueur d'onde
 - Ne peut pas être utilisé comme gemme directement
-- Peut être posé dans un Prism Stand pour l'attunement
+- Peut être inséré dans un Crystal Resonator pour l'atténuation
 - Stack de 64
 
-### Étape 2a — Attunement via faisceau + verre teinté (Early game, rapide)
+### Étape 2 — Atténuation via Crystal Resonator (Early game)
 
-La méthode la plus accessible dès le début : tirer un faisceau à travers du **verre teinté** vers un Prism Stand contenant un Raw Crystal.
+Le **Crystal Resonator** est la machine centrale d'atténuation des gemmes.
 
-```
-[Light Emitter] ──► [Verre teinté] ──► [Prism Stand (Raw Crystal)] → Gem
-   (beam blanc)      (filtre grossier)    (absorbe la longueur d'onde)
-```
+**Fonctionnement :**
+- Slot d'entrée : 1 Raw Crystal (gemme vierge)
+- Le joueur définit une **longueur d'onde cible** via un slider dans le GUI (380–780 nm)
+- La machine consomme des PH en continu (15–20 PH/tick)
+- La longueur d'onde de la gemme évolue progressivement vers la cible — **visible en temps réel**
+- **La machine ne peut jamais atteindre exactement la cible** — elle s'arrête à ±10–20 nm, résultant en ~75% d'efficacité
 
-**Le verre teinté filtre le beam vers une plage approximative :**
+**Alimentation :** Radiant Furnace (early game) ou Solar Collector.
 
-| Couleur verre | Longueur d'onde produite | Variation aléatoire |
-|---|---|---|
-| Rouge | ~700 nm | ±40 nm |
-| Orange | ~630 nm | ±40 nm |
-| Jaune | ~575 nm | ±40 nm |
-| Vert | ~530 nm | ±40 nm |
-| Cyan | ~495 nm | ±40 nm |
-| Bleu | ~465 nm | ±40 nm |
-| Violet | ~415 nm | ±40 nm |
-| Blanc / incolore | ~590 nm | ±60 nm |
-| Noir | Bloque le beam | — |
+### Étape 3 — Raffinement (Spectral Refiner — Mid game / Early late game)
 
-**Caractéristiques :**
-- Durée d'attunement : **1 minute** (bien plus rapide que le soleil)
-- La variation `±40 nm` est intentionnelle : la gemme obtenue est **rarement à la valeur optimale d'une machine**
-- C'est la méthode de démarrage — fonctionnelle mais imprécise
-- Plusieurs panneaux de verre en série n'affinent pas davantage (le premier verre fixe la plage)
+| Tier | Précision | Efficacité max | Progression | Consommation |
+|---|---|---|---|---|
+| T1 | ±1–3 nm | ~90% | Mid game | 20 PH/tick |
+| T2 | Exacte (0.0 nm) | 100% | Early late game | 40 PH/tick |
 
-> **Design intent** : le joueur obtient une gemme verte à ~548 nm alors que la Photosynthesis Accelerator est optimale à 530 nm. La machine fonctionne à 70% d'efficacité. Il a envie de raffiner sa gemme.
-
----
-
-### Étape 2b — Attunement via lumière naturelle (Early game, lent mais plus précis)
-
-Le `Prism Stand` détecte la lumière ambiente et attribue une longueur d'onde au Raw Crystal.
-
-**Algorithme de détermination de la longueur d'onde :**
-
-1. **Source principale** (détermine la plage de base) :
-
-| Condition | Plage de base | Longueur d'onde cible |
-|---|---|---|
-| Lumière du soleil (sky light ≥ 12) + midi (ticks 9000–15000) | 520–570 nm | Vert/jaune |
-| Lumière du soleil + matin/après-midi (ticks 6000–9000 / 15000–18000) | 570–640 nm | Jaune/orange |
-| Lever/coucher de soleil (ticks 4000–6000 / 18000–20000) | 600–680 nm | Orange/rouge |
-| Nuit + lune visible (ticks 13000–23000, sky light ≥ 4) | 410–460 nm | Violet/bleu |
-| Nuit sans lune / orage (sky light = 0) | 380–420 nm | Violet profond |
-| Torche / lanterne dans rayon de 3 blocs | 650–700 nm | Rouge chaud |
-| Lave dans rayon de 3 blocs | 680–740 nm | Rouge profond |
-| Feu dans rayon de 3 blocs | 620–670 nm | Orange-rouge |
-| Glowstone dans rayon de 3 blocs | 560–600 nm | Jaune |
-| Beacon (avec verre coloré) | Fixe selon couleur | Précise |
-
-2. **Modificateur de biome** (±15 nm) :
-   - Biomes désertiques/chauds : +10 nm (vers le rouge)
-   - Biomes enneigés/froids : -10 nm (vers le bleu)
-   - Biomes océaniques : -5 nm
-
-3. **Modificateur météo** :
-   - Pluie : -20 nm
-   - Orage : -40 nm
-
-4. **Variation aléatoire finale** : ±8 nm (gaussian)
-
-5. **Clamp final** : `[380, 780]` nm (jamais hors visible)
-
-**Durée d'attunement :**
-- Plein soleil à midi : 3 minutes (3600 ticks)
-- Conditions partielles : 5 à 8 minutes
-- Torche/lave uniquement : 6 minutes
-- Nuit (lune) : 10 minutes
-- Un indicateur de progression (barre) s'affiche dans le GUI du Prism Stand
-
-**Cas spéciaux avec le Beacon :**
-- Couleur du verre → longueur d'onde précise mappée
-- Rouge → 700 nm, Orange → 630 nm, Jaune → 575 nm, Vert → 530 nm, Cyan → 495 nm, Bleu → 465 nm, Violet → 415 nm
-- Durée d'attunement réduite à 1 minute (source de lumière pure)
-
-### Étape 3 — Raffinement (Spectral Refiner — Mid game)
-
-- Insère une gemme existante + définit une longueur d'onde cible
-- La cible peut être définie :
-  - En insérant une **gemme de référence** dans un second slot
-  - Manuellement via un curseur dans le GUI (précision ±5 nm)
-- Vitesse de raffinement : **1 nm par seconde** (20 ticks) en conditions normales
-- Consomme 20 PH/tick pendant l'opération
-- Limite du Spectral Refiner de base : ne peut pas dépasser les bornes du visible `[380, 780]`
-- Les gemmes hors-visible nécessitent les machines Tier 2+
+- Le T2 est une **upgrade du T1** (Photon Upgrade Station)
+- Les gemmes hors-visible (UV/IR) nécessitent les machines Tier 2+ (Chromatic Compressor, Thermal Expander)
 
 ### Étape 4 — Gemmes hors-visible (Late/End game)
 
@@ -215,82 +168,45 @@ Le `Prism Stand` détecte la lumière ambiente et attribue une longueur d'onde a
 
 ### Propagation du faisceau
 
-Deux modes de propagation coexistent :
-
-**Mode raycasting** (défaut, en ligne droite) :
+**Propagation raycasting** (ligne droite) :
 - Calculé instantanément
 - Voyage en ligne droite depuis la face de l'émetteur
 - Portée maximale : 32 blocs
 - Bloqué par tout bloc solide opaque
-- Accumule du bruit dans l'air (voir ci-dessous)
-
-**Mode fibre optique** (via Fiber Optic Cable) :
-- Le beam suit le câble bloc par bloc, quelle que soit la direction
-- Bruit : **0** sur tout le trajet câblé
-- Pas de limite de portée tant que le câble est continu
-- Permet de contourner les obstacles sans miroir
-- Fonctionne comme un câble AE2 : le beam entre dans la fibre et en ressort à l'autre extrémité
-
-### Accumulation du bruit dans l'air
-
-Chaque bloc d'**air** traversé en mode raycasting ajoute du bruit au beam :
-
-```
-bruit += 0.005 par bloc d'air traversé
-bruit plafonné à 0.5 (max 50% de pénalité, quelle que soit la distance)
-```
-
-| Distance (tout air) | Bruit accumulé | Pénalité d'efficacité |
-|---|---|---|
-| 5 blocs | 0.025 | −2.5% |
-| 10 blocs | 0.05 | −5% |
-| 20 blocs | 0.10 | −10% |
-| 32 blocs | 0.16 | −16% |
-| 100 blocs (cap) | 0.50 | −50% (plafonné) |
-
-Le verre transparent et le verre teinté vanilla **n'accumulent pas** de bruit (le beam les traverse proprement).  
-L'eau accumule le même bruit que l'air (en plus de la perte de débit).
-
-### Réduction du bruit : Dampening Glass
-
-Un bloc spécialisé — le **Dampening Glass** (verre antiparasitage) — peut être posé dans le trajet du beam à la place de l'air. Il :
-- Laisse passer le beam **sans modifier λ, qualité, ni débit**
-- N'accumule **aucun bruit** pour le bloc qu'il occupe
-- Ne nécessite pas d'être posé sur tout le trajet — chaque bloc couvert supprime sa contribution
-
-```
-Exemple : trajet de 20 blocs, 10 blocs avec Dampening Glass
-→ bruit = (10 × 0.005) + (10 × 0.0015) = 0.05 + 0.015 = 0.065 au lieu de 0.10
-→ pénalité réduite de 10% à 6.5%
-
-Exemple : trajet de 20 blocs, couverture totale en Dampening Glass
-→ bruit = 20 × 0.0015 = 0.03  (30% du bruit sans glass qui aurait été 0.10)
-→ pénalité : 3% au lieu de 10%
-```
-
-> Le Dampening Glass réduit le bruit du bloc couvert de **70%** (pas à 0). Un bloc d'air sans glass = +0.005, le même bloc avec Dampening Glass = +0.0015. Couverture totale → 30% du bruit normal. Pour atteindre exactement 0, il faut la fibre optique.
+- **Aucun bruit** ni dégradation avec la distance
 
 ### Interactions avec les blocs (résumé)
 
-| Bloc rencontré | Bruit | Autres effets |
-|---|---|---|
-| Air | +0.005/bloc | — |
-| Verre transparent | 0 | Traverse sans modification |
-| Verre teinté (vanilla) | 0 | Décale λ de ±30 nm |
-| **Dampening Glass** | **+0.0015/bloc (−70%)** | **Traverse sans modification de λ** |
-| **Fiber Optic Cable** | **0** (tout le trajet) | **Routage libre, pas de line-of-sight** |
-| Eau | +0.005/bloc | −5 PH/bloc |
-| Prism Stand (avec gemme) | 0 | Remplace λ, −15% débit |
-| Prism Stand (sans gemme) | — | Bloque le beam |
-| Light Battery | — | Absorbe, stocke PH |
-| Machine réceptrice | — | Consomme pour fonctionner |
-| Bloc solide | — | Arrêt du beam |
+| Bloc rencontré | Effet sur le beam |
+|---|---|
+| Air | Traverse sans modification |
+| Verre transparent | Traverse sans modification |
+| Verre teinté (vanilla) | Décale λ de ±30 nm |
+| Eau | −5 PH/bloc |
+| Crystal Lens (avec gemme) | Remplace λ, −15% débit |
+| Crystal Lens (sans gemme) | Bloque le beam |
+| Light Battery | Absorbe, stocke PH (beam-in-series) |
+| Machine réceptrice | Consomme pour fonctionner (beam-in-series) |
+| Bloc solide | Arrêt du beam |
 
-### Chaînage des Prism Stands
+### Passage en série — Beam continu
 
-Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
-- Chaque Prism Stand **remplace** la longueur d'onde par celle de sa gemme
-- Exemple : beam blanc → Prism Stand (700nm rouge) → Prism Stand (530nm vert) → beam vert à 530nm
+Un beam ne s'arrête pas à la première machine qu'il rencontre : il la traverse et **continue** dans la même direction avec un débit réduit.
+
+```
+[Light Emitter 40 PH/t] ──► [Crystal Furnace −16 PH/t] ──► [Light Battery −20 PH/t] ──► [mur]
+                                   reste 24 PH/t                  reste 4 PH/t
+```
+
+- Chaque machine consomme son PH/tick requis en traversée
+- Le beam continue avec `débit_restant = débit_entrant − consommation_machine`
+- Si le débit restant est insuffisant pour la prochaine machine, celle-ci ne fonctionne pas
+
+### Chaînage des Crystal Lens
+
+Plusieurs Crystal Lens peuvent être placées en série sur le chemin d'un beam :
+- Chaque Crystal Lens **remplace** la longueur d'onde par celle de sa gemme
+- Exemple : beam blanc → Crystal Lens (700nm rouge) → Crystal Lens (530nm vert) → beam vert à 530nm
 - Utile pour créer des effets complexes ou rediriger la longueur d'onde progressivement
 
 ### Rendu visuel du faisceau
@@ -308,70 +224,45 @@ Plusieurs Prism Stands peuvent être placés en série sur le chemin d'un beam :
 
 ## Système d'efficacité des machines
 
-Chaque machine a une **longueur d'onde optimale exacte**. La machine n'est à **100% que si la longueur d'onde du beam correspond exactement à l'optimum ET que le bruit est nul**. Le bruit rend la longueur d'onde du beam imprécise à la réception — même une gemme parfaite ne suffit pas sans fibre optique.
+Chaque machine a une **longueur d'onde optimale exacte**. L'efficacité dépend uniquement de la précision de la gemme. **Il n'y a pas de système de bruit** — la distance n'affecte pas la qualité du beam.
 
 ### Les paramètres d'un beam
 
-Chaque faisceau porte trois valeurs indépendantes :
-- **Longueur d'onde** `λ` (nm) — détermine quelle machine peut l'utiliser
-- **Qualité** `q` (0.0 → 1.0) — mesure la cohérence/pureté du beam (fixée à la source)
-- **Bruit** `n` (0.0 → 1.0) — interférence accumulée pendant la transmission (commence à 0)
+- **Longueur d'onde** `λ` (nm) — détermine quelle machine peut l'utiliser et à quelle efficacité
+- **Qualité** `q` (0.0 → 1.0) — fixée par la gemme utilisée
 
 ### Formule d'efficacité
 
-Le bruit s'ajoute au delta de longueur d'onde effectif reçu par la machine. Même avec une gemme parfaitement accordée, du bruit dans le trajet dégrade la correspondance λ comme si la longueur d'onde était légèrement décalée.
-
 ```
-delta_effectif = |λ_beam - λ_optimale| + bruit × 50
+delta = |λ_beam - λ_optimale|
 
 correspondance_λ =
-  delta_effectif = 0.0 nm  → 1.00   ← impossible avec bruit > 0
-  delta_effectif ≤ 1 nm    → 0.90
-  delta_effectif ≤ 3 nm    → 0.75
-  delta_effectif ≤ 10 nm   → 0.50
-  delta_effectif ≤ 30 nm   → 0.25
-  delta_effectif ≤ 80 nm   → 0.10
-  delta_effectif > 80 nm   → 0.00 (machine inactive)
+  delta = 0.0 nm   → 1.00   (Spectral Refiner T2 uniquement)
+  delta ≤ 1 nm     → 0.90
+  delta ≤ 3 nm     → 0.75
+  delta ≤ 10 nm    → 0.50
+  delta ≤ 30 nm    → 0.25
+  delta ≤ 80 nm    → 0.10
+  delta > 80 nm    → 0.00 (machine inactive)
 
 efficacité_finale = correspondance_λ × qualité
 ```
 
-**Conséquence directe :** atteindre `correspondance_λ = 1.00` (delta_effectif = 0) n'est possible que si `bruit = 0`, c'est-à-dire uniquement avec la **Fiber Optic Cable** sur l'intégralité du trajet.
-
-**Exemples avec une gemme parfaite (λ = optimum exact) :**
-
-| Trajet | Bruit | delta_effectif | correspondance_λ |
-|---|---|---|---|
-| Fibre optique | 0.000 | 0.0 nm | 1.00 ✓ |
-| 5 blocs air | 0.025 | 1.25 nm | 0.90 |
-| 10 blocs air | 0.050 | 2.5 nm | 0.75 |
-| 20 blocs air | 0.100 | 5.0 nm | 0.75 |
-| 32 blocs air | 0.160 | 8.0 nm | 0.50 |
-| 20 blocs air + Dampening Glass total | 0.030 | 1.5 nm | 0.90 |
-
-**Exemple complet :** gemme à 533 nm (delta réel 3 nm sur optimum 530), qualité 0.85, 20 blocs d'air (bruit 0.10) :
-`delta_effectif = 3 + 0.10 × 50 = 8 nm → correspondance 0.50`
-`efficacité = 0.50 × 0.85 = 42.5%`
+**Exemple :** gemme à 533 nm (delta 3 nm sur optimum 530), qualité 0.80 :
+`efficacité = 0.75 × 0.80 = 60%`
 
 L'efficacité affecte :
-- La **vitesse** de traitement (Crystal Furnace, Photosynthesis Accelerator…)
+- La **vitesse** de traitement
 - Le **rendement** (chance de doubler les outputs)
 - La **consommation** : une machine consomme toujours le même PH/tick mais produit proportionnellement moins
 
 ### Qualité transmise par la gemme
 
-La qualité d'un beam est fixée par la gemme dans le Prism Stand qui le filtre :
-
 | Origine de la gemme | Qualité transmise |
 |---|---|
-| Attunement verre teinté (±40 nm) | 0.50 |
-| Attunement solaire naturel (±8 nm) | 0.70 |
-| Spectral Refiner Tier 1 (pas 5.0 nm) | 0.75 |
-| Spectral Refiner Tier 2 (pas 1.0 nm) | 0.85 |
-| Spectral Refiner Tier 3 (pas 0.1 nm) | 0.95 |
-| Spectral Refiner Tier 4 (pas 0.01 nm) | 1.00 |
-
-Un beam non filtré (sorti directement de l'émetteur) a une qualité de `1.0` mais une longueur d'onde neutre non optimale.
+| Crystal Resonator (±10–20 nm) | 0.60 |
+| Spectral Refiner T1 (±1–3 nm) | 0.80 |
+| Spectral Refiner T2 (exact) | 1.00 |
 
 ### Fusion naturelle de deux beams
 
@@ -417,67 +308,42 @@ Deux longueurs d'onde très différentes mélangées produisent une lumière inc
 
 ## Tiers du Spectral Refiner
 
-Le Spectral Refiner existe en **4 tiers**. Le tier détermine le **pas minimal de changement** (la précision) à chaque opération. Atteindre exactement l'optimum d'une machine nécessite un refiner suffisamment précis.
-
-### Pourquoi le pas compte
-
-L'optimum d'une machine est une valeur exacte (ex: `530.0 nm`). Si ton refiner ne peut changer la longueur d'onde que par paliers de 5 nm, il est impossible d'atteindre exactement 530.0 — tu te retrouves à 530 nm ou 535 nm, jamais pile à la cible si la gemme vient d'une valeur non-multiple de 5.
+Le Spectral Refiner existe en **2 tiers**.
 
 ```
-Exemple : gemme à 548.3 nm, cible 530.0 nm
-
-Tier 1 (pas 5.0 nm) :  548.3 → 543.3 → 538.3 → 533.3 → 528.3  ← bloqué, ne peut pas atteindre 530.0
-Tier 2 (pas 1.0 nm) :  548.3 → 547.3 → ... → 531.3 → 530.3 → 529.3  ← dépasse, ne peut pas faire 530.0
-Tier 3 (pas 0.1 nm) :  548.3 → ... → 530.3 → 530.2 → 530.1 → 530.0  ← atteint exactement !
-Tier 4 (pas 0.01 nm) : Permet d'atteindre n'importe quelle valeur à 2 décimales
+Crystal Resonator  (±10–20 nm)  →  ~75% eff   [early game]
+Spectral Refiner T1 (±1–3 nm)   →  ~90% eff   [mid game]
+Spectral Refiner T2 (exact)     →  100% eff   [early late game]
 ```
 
-### Tableau des tiers
+| Tier | Précision | Efficacité max | Vitesse | Consommation |
+|---|---|---|---|---|
+| 1 | ±1–3 nm | ~90% | 1 nm/s (20 ticks) | 20 PH/tick |
+| 2 | Exacte | 100% | 0.1 nm/s (2 ticks) | 40 PH/tick |
 
-| Tier | Nom | Pas (nm/op) | Précision max | Efficacité max atteignable | Recette |
-|---|---|---|---|---|---|
-| 1 | Crude Spectral Refiner | 5.0 nm | ±2.5 nm de la cible | ~75% | Fer + Quartz + gemme quelconque |
-| 2 | Spectral Refiner | 1.0 nm | ±0.5 nm de la cible | ~90% | Or + Diamant + gemme raffinée |
-| 3 | Precision Spectral Refiner | 0.1 nm | ±0.05 nm de la cible | ~99% | Netherite + Amethyste + gemme précise |
-| 4 | Quantum Spectral Refiner | 0.01 nm | ±0.005 nm de la cible | 100% | Matériaux end-game (Photon Alloy, Echo Shard…) |
-
-**Chaque tier est une upgrade du précédent** (on insère le refiner Tier N dans une station d'upgrade pour obtenir le Tier N+1 — pas de recette from scratch).
-
-### Vitesse de raffinage par tier
-
-| Tier | Vitesse | Consommation |
-|---|---|---|
-| 1 | 1 pas / 2 secondes (40 ticks) | 10 PH/tick |
-| 2 | 1 pas / seconde (20 ticks) | 20 PH/tick |
-| 3 | 2 pas / seconde (10 ticks) | 35 PH/tick |
-| 4 | 5 pas / seconde (4 ticks) | 60 PH/tick |
+**Le T2 est une upgrade du T1** (Photon Upgrade Station).
 
 ### Indicateur visuel d'efficacité (GUI des machines)
 
-Le GUI de chaque machine affiche :
-- La longueur d'onde reçue (ex: `533.3 nm`)
-- La longueur d'onde optimale (ex: `530.0 nm`)
-- Le delta (ex: `Δ 3.3 nm`)
-- Un indicateur coloré :
-  - **Vert vif** : 100% (delta = 0.0)
-  - **Vert** : ≥ 75%
-  - **Jaune** : 25–74%
-  - **Orange** : 10–24%
-  - **Rouge** : < 10%
-  - **Gris** : 0% (hors plage)
+- **Vert vif** : 100% (T2 uniquement)
+- **Vert** : ≥ 75% (T1 optimisé)
+- **Jaune** : 25–74% (Crystal Resonator brut)
+- **Orange** : 10–24%
+- **Rouge** : < 10%
+- **Gris** : 0% (hors plage)
 
 ### Boucle de progression complète
 
 ```
-[Verre teinté + beam]
+[Crystal Resonator, cible 700 nm]
        ↓
-Gemme ≈ 548.3 nm → Crystal Furnace à 50% (delta 151.7 nm sur optimum 700.0)
-       ↓ (le joueur veut mieux)
-[Crude Spectral Refiner Tier 1, pas 5 nm]
+Gemme ≈ 685 nm → Crystal Furnace à ~75%
        ↓
-Gemme ≈ 703.3 nm → Crystal Furnace à 90% (delta 3.3 nm)
-       ↓ (le joueur veut 100%)
-[Spectral Refiner Tier 3, pas 0.1 nm]
+[Spectral Refiner T1]
+       ↓
+Gemme ≈ 698 nm → Crystal Furnace à ~90%
+       ↓
+[Spectral Refiner T2]
        ↓
 Gemme = 700.0 nm → Crystal Furnace à 100% !
 ```
@@ -494,7 +360,7 @@ Le débit (PH/tick) d'un beam dépend de la source qui alimente le Light Emitter
 |---|---|---|---|
 | Solar Collectors empilés | Illimité (linéaire) | Oui | Early game |
 | Concentrating Lens | ×5 par collector | Oui | Mid game |
-| Thermal Generator | 40 PH/tick | Non | Mid game |
+| Radiant Furnace | 40 PH/tick | Non | Mid game |
 
 ---
 
@@ -593,9 +459,9 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 ---
 
-### Thermal Generator
+### Radiant Furnace
 
-**Description** : Brûle du combustible pour produire des Photons en permanence, indépendamment du soleil. Idéal pour la nuit ou les bases souterraines.
+**Description** : Brûle du combustible vanilla pour produire des Photons en permanence. C'est la **source d'énergie de base** de Spectral, accessible dès le premier jour.
 
 **Production selon le combustible :**
 
@@ -621,7 +487,7 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 **Recette craft :**
 ```
 [Pierre Lisse] [Fer]          [Pierre Lisse]
-[Fer]          [Raw Crystal]  [Fer]           → 1 Thermal Generator
+[Fer]          [Raw Crystal]  [Fer]           → 1 Radiant Furnace
 [Pierre Lisse] [Redstone]     [Pierre Lisse]
 ```
 (Le Raw Crystal converti la chaleur de combustion en Photons)
@@ -653,20 +519,13 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 ### Prism Stand
 
-**Description** : Bloc à double fonction — attunement des Raw Crystals ET filtrage des faisceaux.
+**Description** : Filtre un faisceau lumineux en remplaçant sa longueur d'onde par celle de la gemme insérée. Renommé **Crystal Lens** dans le code.
 
-**Mode Attunement** (pas de beam entrant) :
-- Slot : 1 Raw Crystal en entrée
-- Détecte la lumière ambiente (algorithme détaillé plus haut)
-- Après la durée d'attunement, produit 1 Gem en sortie
-- GUI : slot input, slot output, barre de progression, affichage de la longueur d'onde en cours d'attribution
-
-**Mode Filtre** (beam entrant détecté) :
-- Slot : 1 Gemme insérée
+**Fonctionnement :**
+- Slot : 1 Gemme insérée (atténuée par Crystal Resonator ou raffinée par Spectral Refiner)
 - Le faisceau entrant est remplacé par la longueur d'onde de la gemme
 - Perte de 15% du débit (absorption partielle)
-- Le beam de sortie sort par la face opposée à l'entrée
-- GUI : slot gemme, affichage longueur d'onde entrante / sortante, débit
+- Sans gemme insérée : bloque le beam
 
 **Recette craft :**
 ```
@@ -674,7 +533,28 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 [Quartz] [Air]         [Quartz]    → 1 Prism Stand
 [Pierre] [Fer]         [Pierre]
 ```
-(Le Raw Crystal est le foyer optique — c'est lui qui capte la lumière ambiente)
+
+---
+
+### Crystal Resonator
+
+**Description** : Machine d'atténuation des gemmes vierges. Le joueur choisit une longueur d'onde cible et la machine imprime progressivement cette longueur d'onde sur un Raw Crystal.
+
+**Fonctionnement :**
+- Slot d'entrée : 1 Raw Crystal (gemme vierge)
+- Slider longueur d'onde cible (380–780 nm)
+- Consomme 15–20 PH/tick en continu
+- Progression visible en temps réel (la gemme change de couleur dans le slot)
+- **Limite :** s'arrête à ±10–20 nm de la cible (~75% d'efficacité max)
+
+**Alimentation :** Radiant Furnace ou Solar Collector.
+
+**Recette craft :**
+```
+[Verre]    [Raw Crystal] [Verre]
+[Quartz]   [Diamant]     [Quartz]    → 1 Crystal Resonator
+[Redstone] [Fer]         [Redstone]
+```
 
 ---
 
@@ -762,6 +642,23 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 ---
 
+### Photon Forge (Machine multi-beam)
+
+**Description** : Machine avancée qui accepte jusqu'à **3 beams simultanés**. En combinant des faisceaux de familles de couleurs différentes, elle débloque des recettes impossibles dans toute autre machine.
+
+**Recettes exemples :**
+
+| Beams requis | Output |
+|---|---|
+| Rouge seul | Raw Iron → Iron Ingot ×2 |
+| Rouge + Vert | Steel Ingot (impossible autrement) |
+| Rouge + Bleu | Photon Bronze |
+| Rouge + Vert + Bleu | Photon Alloy |
+
+**Débit minimum :** 10 PH/tick par beam actif.
+
+---
+
 ### Photosynthesis Accelerator
 
 **Description** : Accélère la croissance des plantes dans une zone grâce à la lumière verte.
@@ -806,10 +703,10 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 **Recette craft :**
 ```
 [Or]              [Améthyste]  [Or]
-[Dampening Glass] [Diamant]    [Dampening Glass]    → 1 Spectral Refiner (Tier 1)
+[Verre] [Diamant]    [Verre]    → 1 Spectral Refiner (Tier 1)
 [Fer]             [Redstone]   [Fer]
 ```
-(Le Dampening Glass assure la stabilité optique nécessaire à la précision du raffinement)
+(Le Verre stabilise l'optique nécessaire à la précision du raffinement)
 
 ---
 
@@ -844,10 +741,10 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 **Recette Tier 1 :**
 ```
 [Verre]           [Raw Crystal]    [Verre]
-[Dampening Glass] [Quartz]         [Dampening Glass]    → 1 Basic Beam Splitter
+[Verre] [Quartz]         [Verre]    → 1 Basic Beam Splitter
 [Verre]           [Raw Crystal]    [Verre]
 ```
-(Le Raw Crystal divise le beam, le Dampening Glass évite le bruit introduit par la division)
+(Le Raw Crystal divise le beam, le Verre stabilise la sortie)
 
 **Upgrade :** Chaque tier s'obtient en upgrageant le tier précédent dans une station dédiée (pas de recette from scratch).
 
@@ -872,76 +769,10 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Fer]      [Dampening Glass] [Fer]
+[Fer]      [Verre] [Fer]
 [Redstone] [Or]              [Redstone]    → 1 Light Gate
-[Fer]      [Dampening Glass] [Fer]
+[Fer]      [Verre] [Fer]
 ```
-
----
-
-### Dampening Glass
-
-**Description** : Bloc posé dans le trajet d'un faisceau pour supprimer l'accumulation de bruit sur ce bloc. Transparent et sans effet sur λ, qualité ni débit.
-
-**Comportement :**
-- Posé à la place de l'air dans le chemin du beam
-- Le beam le traverse normalement (pas de blocage, pas de modification)
-- Réduit le bruit du bloc couvert de **70%** : `+0.005 → +0.0015` par bloc
-- N'a pas besoin de couvrir tout le trajet — chaque bloc couvert réduit sa contribution individuelle
-- Couverture totale du trajet → **30% du bruit qu'il y aurait eu sans glass**
-
-**Usage :**
-- Réduction partielle ou totale du bruit sur des faisceaux en ligne droite
-- Plus économique que la fibre optique pour de courtes distances
-
-**Progression :** late early game — nécessite une gemme (donc un Prism Stand fonctionnel) et de l'améthyste (biome géode, underground).
-
-**Recette craft :**
-```
-[Air]        [Améthyste]  [Air]
-[Verre]      [Gemme]      [Verre]    → 4 Dampening Glass
-[Air]        [Améthyste]  [Air]
-```
-
----
-
-### Fiber Optic Cable
-
-**Description** : Câble qui transporte un faisceau lumineux le long de son trajet, sans perte de bruit et sans contrainte de ligne droite. Fonctionne comme un câble AE2 — le beam entre à une extrémité et ressort à l'autre, en suivant le câble bloc par bloc.
-
-**Comportement :**
-- Se pose bloc par bloc pour former un chemin continu
-- Le beam entre dans la fibre depuis un Light Emitter ou un autre bloc émetteur
-- Il suit le câble quelle que soit la direction (horizontal, vertical, courbes, coins)
-- **Bruit : 0** sur l'intégralité du trajet câblé
-- Pas de limite de portée tant que le câble est continu et non interrompu
-- Un bloc non-fibre dans le câble interrompt le beam (bruit reprend depuis zéro après la coupure)
-- À la sortie du câble : le beam reprend en mode raycasting normal (bruit repart de 0 à ce point)
-
-**Pas besoin de miroir** : la fibre permet tous les angles, remplaçant le miroir pour le routage.
-
-**Comparaison avec les autres solutions :**
-
-| Solution | Bruit | Flexibilité trajet | Coût |
-|---|---|---|---|
-| Air seul | +0.005/bloc | Ligne droite | Gratuit |
-| Dampening Glass | 0 par bloc couvert | Ligne droite | Bas |
-| **Fiber Optic Cable** | **0 total** | **Libre (tout angle)** | **Élevé** |
-
-**Progression :** mid-game — nécessite le Nether (Blaze Rod, Gold, Nether Quartz) et une gemme raffinée (Spectral Refiner Tier 1 minimum).
-
-**Recette craft (4 câbles) :**
-```
-[Or]          [Quartz Nether] [Or]
-[Raw Crystal] [Blaze Rod]     [Raw Crystal]    → 4 Fiber Optic Cable
-[Or]          [Quartz Nether] [Or]
-```
-(Le Raw Crystal fondu par la Blaze Rod forme le cœur de la fibre ; l'or assure la gaine conductrice)
-
-**Rendu visuel :**
-- Câble fin (modèle type pipe) avec une teinte colorée selon la λ du beam qu'il transporte
-- Si pas de beam actif : câble gris neutre
-- Légère lueur de la couleur du beam quand actif
 
 ---
 
@@ -954,7 +785,6 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 - Mode configurable (sneak + clic droit) :
   - **Mode λ :** signal redstone = `(λ - 380) / 400 × 15` (arrondi à l'entier 0–15)
   - **Mode qualité :** signal redstone = `qualité × 15` (arrondi à l'entier 0–15)
-  - **Mode bruit :** signal redstone = `bruit × 15` (arrondi à l'entier 0–15) — utile pour déclencher une alarme si le bruit dépasse un seuil
 - Si aucun beam détecté : signal = 0
 
 **Exemples mode λ :**
@@ -971,11 +801,11 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 
 **Recette craft :**
 ```
-[Dampening Glass] [Or]           [Dampening Glass]
+[Verre] [Or]           [Verre]
 [Quartz]          [Redstone]     [Quartz]           → 1 Wavelength Sensor
 [Fer]             [Quartz Nether][Fer]
 ```
-(Le Dampening Glass lit le beam sans le perturber ; le Quartz Nether amplifie le signal redstone)
+(Le Verre lit le beam sans le perturber ; le Quartz Nether amplifie le signal redstone)
 
 ---
 
@@ -992,7 +822,7 @@ La lens amplifie le **débit effectif reçu** par la machine — comme si la mac
 **Recette craft :**
 ```
 [Or]    [Cuir]           [Or]
-[Gemme] [Fiber Optic Cable] [Gemme]    → 1 Spectral Goggles
+[Gemme] [Quartz]            [Gemme]    → 1 Spectral Goggles
 [Or]    [Verre]          [Or]
 ```
 (Les deux gemmes sont les oculaires — une rouge ~700 nm et une bleue ~450 nm pour couvrir tout le spectre visible. La fibre optique relie les deux lentilles pour transmettre les données de beam en overlay)
@@ -1055,11 +885,10 @@ Le mod calcule le vecteur réfléchi : `R = D - 2(D·N)N` où `N` est la normale
 **Perte :** −5% du débit par réflexion. λ et qualité préservés.
 
 **Usage :**
-- Contourner des obstacles sans fiber optic
+- Contourner des obstacles
 - Router un beam à la verticale (du sol vers une machine en hauteur)
-- Complément naturel entre le raycasting et la fibre optique
 
-**Progression :** early-mid game — avant la fiber optic.
+**Progression :** early-mid game.
 
 **Recette craft :**
 ```
@@ -1092,31 +921,6 @@ Le mod calcule le vecteur réfléchi : `R = D - 2(D·N)N` où `N` est la normale
 
 ---
 
-### Photon Relay
-
-**Description** : Reçoit un beam, remet son bruit à 0, et le réémet dans la même direction. Agit comme un répéteur optique pour les longues distances.
-
-**Comportement :**
-- Posé dans le trajet du beam
-- Absorbe le beam entrant (bruit accumulé quelconque)
-- Réémet un beam identique en λ, qualité et débit, mais **bruit = 0**
-- Consomme de l'énergie pour régénérer le signal : **5 PH/tick** en fonctionnement
-
-**Usage :**
-- Long trajet en air sans fiber optic sur tout le parcours
-- Associé au Dampening Glass : relay tous les 20 blocs + glass entre les relays → bruit quasi nul sans le coût de la fibre
-
-**Progression :** mid game.
-
-**Recette craft :**
-```
-[Dampening Glass] [Quartz Nether]   [Dampening Glass]
-[Raw Crystal]     [Fiber Optic ×1] [Raw Crystal]       → 1 Photon Relay
-[Dampening Glass] [Redstone]        [Dampening Glass]
-```
-
----
-
 ### Purification Chamber
 
 **Description** : Améliore progressivement la **qualité** d'une gemme sans modifier sa longueur d'onde. La vitesse de purification dépend de la proximité entre la longueur d'onde du beam entrant et celle de la gemme à purifier.
@@ -1143,12 +947,6 @@ Exemples :
 
 **Design intent :** pour purifier une gemme à 700.0 nm rapidement, il faut un beam à 700.0 nm — donc une autre gemme déjà accordée ou le résultat d'un Spectral Refiner. La Purification Chamber crée une dépendance circulaire intéressante : améliorer la qualité d'une gemme demande déjà d'avoir une bonne gemme de référence.
 
-**Le bruit du beam affecte aussi la vitesse :**
-```
-vitesse_finale = proximité × (1 - bruit)
-```
-Envoyer un beam bruité dans une Purification Chamber est contre-productif — il faut un beam propre (fiber optic ou relay).
-
 **GUI :** slot gemme, λ gemme affichée, λ beam reçu, delta, barre de progression, qualité actuelle → qualité cible
 
 **Progression :** mid game.
@@ -1156,7 +954,7 @@ Envoyer un beam bruité dans une Purification Chamber est contre-productif — i
 **Recette craft :**
 ```
 [Or]              [Améthyste]      [Or]
-[Dampening Glass] [Raw Crystal]    [Dampening Glass]    → 1 Purification Chamber
+[Verre] [Raw Crystal]    [Verre]    → 1 Purification Chamber
 [Or]              [Redstone]       [Or]
 ```
 
@@ -1188,7 +986,7 @@ Envoyer un beam bruité dans une Purification Chamber est contre-productif — i
 **Recette craft :**
 ```
 [Verre]           [Raw Crystal]    [Verre]
-[Fiber Optic ×1]  [Diamant]        [Fiber Optic ×1]    → 1 Light Condenser
+[Quartz]  [Diamant]        [Quartz]    → 1 Light Condenser
 [Verre]           [Redstone]       [Verre]
 ```
 
@@ -1225,7 +1023,7 @@ Envoyer un beam bruité dans une Purification Chamber est contre-productif — i
 
 **Recette craft :**
 ```
-[Or]              [Dampening Glass] [Or]
+[Or]              [Verre] [Or]
 [Quartz Nether]   [Améthyste]      [Quartz Nether]    → 1 Spectral Analyzer
 [Or]              [Redstone]        [Or]
 ```
@@ -1256,14 +1054,25 @@ Envoyer un beam bruité dans une Purification Chamber est contre-productif — i
 
 **Recette craft :**
 ```
-[Or]      [Fiber Optic ×1] [Or]
+[Or]      [Quartz] [Or]
 [Diamant] [Raw Crystal]    [Diamant]    → 1 Beam Amplifier
 [Or]      [Redstone]       [Or]
 ```
 
 ---
 
+### Photon Dynamo (Multi-bloc — Générateur FE)
 
+**Description** : Structure multi-bloc qui convertit des Photons en **Forge Energy (FE/RF)**. Passerelle principale PH → FE pour les modpacks.
+
+**Taux de conversion :**
+- Beam ~75% eff : 1 PH → 8 FE
+- Beam ~90% eff : 1 PH → 10 FE
+- Beam 100% eff : 1 PH → 12 FE
+
+> Détails du multi-bloc à définir en cours de développement.
+
+---
 
 ### Spectral Transmitter + Receiver (End game — Tier 5)
 
@@ -1298,30 +1107,35 @@ Envoyer un beam bruité dans une Purification Chamber est contre-productif — i
 ```
 EARLY GAME (Jours 1–7)
 ├── Trouver et miner du Raw Crystal Ore (Y: -20 à -64)
-├── Crafter un Prism Stand
-├── Exposer les Raw Crystals à la lumière (soleil, torche) → gemmes visibles aléatoires
+├── Crafter une Radiant Furnace (source PH immédiate, fonctionne au charbon)
+├── Crafter un Crystal Resonator
+├── Atténuer les premiers Raw Crystals → Gems colorées (~75% eff)
 ├── Crafter un Solar Collector + Light Emitter
-└── Premier faisceau lumineux → Crystal Furnace → four amélioré
+├── Premier faisceau lumineux coloré → Crystal Furnace
+└── Light Battery T1 → stocker les PH pour la nuit
 
 MID GAME (Jours 7–30)
-├── Crafter un Spectral Refiner
-├── Affiner les gemmes vers des longueurs d'onde précises
-├── Construire des réseaux de faisceaux (Solar → Emitter → Prism Stand → Machine)
+├── Crafter un Spectral Refiner T1 → ~90% efficacité
+├── Construire des chaînes en série (beam traverse plusieurs machines)
 ├── Photosynthesis Accelerator → ferme automatisée
-└── Light Battery → stockage d'énergie pour la nuit
+├── Crafter un Photon Forge → premières recettes multi-beam
+└── Light Battery T2/T3 → stockage massif
 
-LATE GAME (Jours 30–100)
-├── Chromatic Compressor → premières gemmes UV (Tier 2)
-├── Thermal Expander → premières gemmes IR (Tier 3)
-├── UV Sterilizer → défense passive de la base
-├── Thermal Forge → alliages spéciaux, meilleures recettes
+EARLY LATE GAME (Jours 30–60)
+├── Upgrade Spectral Refiner T1 → T2 (100% efficacité)
+├── Photon Forge 3 beams → Photon Alloy
+├── Photon Dynamo (multi-bloc) → production FE pour le modpack
+├── Chromatic Compressor → gemmes UV (Tier 2)
+└── Thermal Expander → gemmes IR (Tier 3)
+
+LATE GAME (Jours 60–100)
+├── UV Sterilizer, Thermal Forge
 └── Spectral Forge → gemmes Tier 4–5
 
 END GAME
-├── Spectral Transmitter/Receiver → énergie sans fil sur toute la carte
-├── X-Ray Scanner → trouver facilement tous les minerais rares
-├── Gemmes X-ray et Gamma → effets combinés, puissance maximale
-└── Machines ultimes (à définir en cours de développement)
+├── Spectral Transmitter/Receiver → énergie sans fil
+├── X-Ray Scanner
+└── Gemmes X-ray et Gamma
 ```
 
 ---
@@ -1335,7 +1149,7 @@ END GAME
 | Solar Collector (×1) | 10 | Plein soleil |
 | Solar Collector + 4 Lens | 50 | Plein soleil, ciel dégagé |
 | N Solar Collectors | N × 10 | Plein soleil |
-| Thermal Generator (lava) | 30 | Aucune |
+| Radiant Furnace (lava) | 30 | Aucune |
 | Energy Converter | Illimité (dépend du mod source) | TR Energy requis |
 
 **Consommation des machines :**
@@ -1352,7 +1166,7 @@ END GAME
 | Spectral Transmitter | 200 | 1400+ nm | Énergie sans fil |
 | X-Ray Scanner | 200 | < 10 nm | Reveal minerais |
 
-**Perte par Prism Stand :** 15% du débit  
+**Perte par Crystal Lens :** 15% du débit  
 **Perte dans l'eau :** 5 PH/bloc  
 **Capacité Light Battery Tier 1 :** 50 000 PH
 
@@ -1653,7 +1467,7 @@ fr.skylined.spectral/
 │   └── custom/
 │       ├── SolarCollectorBlock.java
 │       ├── ConcentratingLensBlock.java
-│       ├── ThermalGeneratorBlock.java
+│       ├── RadiantFurnaceBlock.java
 │       ├── EnergyConverterBlock.java       (IEnergyStorage → PH, FE natif)
 │       ├── LightEmitterBlock.java
 │       ├── PrismStandBlock.java
@@ -1702,7 +1516,7 @@ public static final DeferredHolder<Item, GemItem> GEM =
 - Rendu client : `RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS`
 
 **Énergie (FE natif) :**
-- `IEnergyStorage` pour Solar Collector, Thermal Generator, Light Battery, Energy Converter
+- `IEnergyStorage` pour Solar Collector, Radiant Furnace, Light Battery, Energy Converter
 - Capabilities NeoForge : `BlockCapabilityCache` pour la découverte des adjacents
 - Taux de conversion Energy Converter : `10 FE → 1 PH`
 
@@ -2115,7 +1929,7 @@ Le Photon Upgrade Station utilise son propre `RecipeType<UpgradeRecipe>` :
   "additions": [
     { "item": "minecraft:diamond",         "count": 2 },
     { "item": "minecraft:gold_ingot",      "count": 4 },
-    { "item": "spectral:dampening_glass", "count": 2 }
+    { "item": "minecraft:glass", "count": 2 }
   ],
   "result": { "item": "spectral:spectral_refiner_t2" }
 }
@@ -2221,7 +2035,7 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 │  [Spectral Refiner T1]                            │
 │  [Diamond ×2]          →→→  [Spectral Refiner T2]│
 │  [Gold Ingot ×4]                                  │
-│  [Dampening Glass ×2]                             │
+│  [Verre ×2]                                       │
 │                                                   │
 │  Upgrade : Tier 1 → Tier 2  (pas : 5.0 → 1.0 nm)│
 └─────────────────────────────────────────────────┘
@@ -2273,34 +2087,37 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 
 ### Phase 1 — Version basique (vérifier le fonctionnement)
 
-1. **Nettoyage du code existant** (typos, constantes, imports, mixin vide)
-2. **`WavelengthUtil.java`** (constantes MIN/MAX, formule efficacité, formule fusion)
-3. **`RawCrystalItem` + `RawCrystalOre`** (item + bloc + génération monde)
-4. **`LightBeam.java`** (structure de données : λ, qualité, débit, direction)
-5. **`LightBeamManager.java`** (propagation par raycasting, détection intersections)
-6. **`SolarCollectorBlock`** (production PH/tick selon lumière du ciel)
+1. ✓ **Nettoyage du code existant** (typos, constantes, imports, mixin vide)
+2. ✓ **`WavelengthUtil.java`** (constantes MIN/MAX, formule efficacité)
+3. ✓ **`RawCrystalItem` + `RawCrystalOre`** (item + bloc + génération monde)
+4. ✓ **`LightBeam.java`** (structure de données : λ, qualité, débit, direction)
+5. ✓ **`LightBeamManager.java`** (propagation par raycasting DDA 3D, beam-in-series)
+6. ✓ **`SolarCollectorBlock`** (production PH/tick selon lumière du ciel)
 6b. **`ConcentratingLensBlock`** (amplificateur empilable au-dessus d'un Solar Collector)
-6c. **`ThermalGeneratorBlock`** (combustible → PH/tick constant, indépendant du soleil)
-7. **`LightEmitterBlock`** (convertit PH → beam, émission directionelle)
-7b. **`LightEmitterRenderer`** (BER — rendu quad billboard coloré selon λ, synchronisation NBT serveur→client)
-8. **`PrismStandBlock`** (attunement Raw Crystal + filtrage beam)
-9. **`CrystalFurnaceBlock`** (premier consommateur — four accéléré)
-10. **`LightBatteryBlock`** (stockage PH)
+6c. ✓ **`RadiantFurnaceBlock`** (combustible → PH/tick constant, source de base)
+7. ✓ **`LightEmitterBlock`** (convertit PH → beam, émission directionelle, slot gemme)
+7b. ✓ **`LightEmitterRenderer`** (BER — rendu translucide coloré selon λ, fondu, direction 3D)
+8. ✓ **`CrystalLensBlock`** (Crystal Lens — filtrage beam, remplace λ par gemme)
+8b. **`CrystalResonatorBlock`** (atténuation Raw Crystal → Gem avec slider λ)
+9. ✓ **`CrystalFurnaceBlock`** (premier consommateur — four accéléré, beam-in-series)
+10. ✓ **`LightBatteryBlock`** (stockage PH, beam-in-series)
 11. **`BasicBeamSplitterBlock`** (Tier 1 — 2 sorties)
 12. **`LightGateBlock`** (contrôle redstone)
 13. **`WavelengthSensorBlock`** (sortie redstone selon λ ou qualité)
-14. **`SpectralRefinerBlock` Tier 1** (Crude — pas 5 nm)
+14. **`SpectralRefinerBlock` T1** (±1–3 nm, upgrade vers T2)
 15. **`PhotosynthesisAcceleratorBlock`** (second consommateur)
-16. **`SpectralGogglesItem`** (overlay basique sans effets visuels avancés)
+16. **`PhotonForgeBlock`** (multi-beam, familles de couleur)
+17. **`SpectralGogglesItem`** (overlay basique sans effets visuels avancés)
 
 ### Phase 2 — Extension (après validation)
 
-17. **Spectral Refiner Tiers 2–4** (upgrades du Tier 1)
-18. **Beam Splitter Tiers 2–3**
-19. **Chromatic Compressor + Thermal Expander** (gemmes UV/IR)
-20. **Machines late game** (UV Sterilizer, Thermal Forge)
-21. **Spectral Forge** (gemmes Tier 4–5)
-22. **Machines end game** (Transmitter/Receiver, X-Ray Scanner)
+18. **Spectral Refiner T2** (upgrade du T1 — précision exacte)
+19. **Beam Splitter Tiers 2–3**
+20. **Chromatic Compressor + Thermal Expander** (gemmes UV/IR)
+21. **Photon Dynamo** (multi-bloc, générateur FE)
+22. **Machines late game** (UV Sterilizer, Thermal Forge)
+23. **Spectral Forge** (gemmes Tier 4–5)
+24. **Machines end game** (Transmitter/Receiver, X-Ray Scanner)
 
 ### Phase 3 — Effets visuels (après Phase 2)
 
@@ -2320,7 +2137,8 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 
 | Item / Bloc | Machine |
 |---|---|
-| Prism Stand | Crafting Table |
+| Prism Stand (Crystal Lens) | Crafting Table |
+| Crystal Resonator | Crafting Table |
 | Solar Collector | Crafting Table |
 | Light Emitter | Crafting Table |
 | Crystal Furnace | Crafting Table |
@@ -2328,15 +2146,13 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 | Light Battery T2 | Crafting Table |
 | Light Battery T3 | Crafting Table |
 | Light Battery T4 | Crafting Table |
-| Dampening Glass | Crafting Table |
-| Fiber Optic Cable | Crafting Table |
 | Beam Mirror | Crafting Table |
 | Light Gate | Crafting Table |
 | Wavelength Sensor | Crafting Table |
-| Thermal Generator | Crafting Table |
+| Radiant Furnace | Crafting Table |
 | Photosynthesis Accelerator | Crafting Table |
-| Spectral Refiner T1 (Crude) | Crafting Table |
-| Photon Relay | Crafting Table |
+| Spectral Refiner T1 | Crafting Table |
+| Photon Forge | Crafting Table |
 | Concentrating Lens T1 (Basic) | Crafting Table |
 | Beam Splitter T1 (Basic) | Crafting Table |
 | Purification Chamber | Crafting Table |
@@ -2362,18 +2178,15 @@ Le Spectral Refiner n'a pas de recette fixe, mais JEI peut afficher sa **logique
 | Concentrating Lens T3 | Photon Upgrade Station |
 | Concentrating Lens T4 | Photon Upgrade Station |
 | Spectral Refiner T2 | Photon Upgrade Station |
-| Spectral Refiner T3 | Photon Upgrade Station |
-| Spectral Refiner T4 | Photon Upgrade Station |
 | Beam Splitter T2 | Photon Upgrade Station |
 | Beam Splitter T3 | Photon Upgrade Station |
 | Beam Splitter T4 | Photon Upgrade Station |
 
-### Prism Stand
+### Crystal Resonator
 
 | Item | Machine |
 |---|---|
-| Gem (attunement lumière naturelle) | Prism Stand |
-| Gem (attunement via faisceau + verre teinté) | Prism Stand |
+| Gem atténuée (~75% eff) | Crystal Resonator |
 
 ### Chromatic Compressor
 

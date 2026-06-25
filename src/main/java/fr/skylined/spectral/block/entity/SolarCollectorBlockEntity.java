@@ -59,8 +59,8 @@ public class SolarCollectorBlockEntity extends BlockEntity {
 
         for (int i = 0; i < count; i++) {
             // Spawn éparpillé autour et au-dessus du collecteur
-            double radius = 0.4 + rng.nextDouble() * 1.0;
-            double angle  = rng.nextDouble() * Math.PI * 2;
+            double radius = 0.3 + rng.nextDouble() * 1.0;
+            double angle  = rng.nextDouble() * Math.PI * 1.5;
             double height = 0.4 + rng.nextDouble() * 1.6;
 
             double px = cx + Math.cos(angle) * radius;

@@ -1,10 +1,10 @@
-{
+﻿{
     "parent": "minecraft:block/block",
     "textures": {
-        "quartz":   "spectral:block/prism_stand_quartz",
+        "quartz":   "spectral:block/crystal_lens_quartz",
         "top":      "spectral:block/crystal_furnace_top",
         "front":    "spectral:block/crystal_furnace_front_on",
-        "particle": "spectral:block/prism_stand_quartz"
+        "particle": "spectral:block/crystal_lens_quartz"
     },
     "elements": [
         {
@@ -20,7 +20,7 @@
             }
         },
         {
-            "comment": "Corps du four 12x13x12 — allumé",
+            "comment": "Corps du four 12x13x12 â€” allumÃ©",
             "from": [2, 3, 2], "to": [14, 16, 14],
             "faces": {
                 "up":    {"texture": "#top",   "cullface": "up"},

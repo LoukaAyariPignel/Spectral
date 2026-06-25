@@ -61,7 +61,7 @@ public class LightBatteryBlockEntity extends BlockEntity implements IPhotonAccep
         boolean receiving = be.beamActiveTicks > 0;
         if (be.beamActiveTicks > 0) be.beamActiveTicks--;
 
-        if (!receiving && be.storedPhotons > 0) {
+        if (be.storedPhotons > 0) {
             for (Direction dir : Direction.values()) {
                 if (be.storedPhotons <= 0) break;
                 BlockPos neighbor = pos.relative(dir);

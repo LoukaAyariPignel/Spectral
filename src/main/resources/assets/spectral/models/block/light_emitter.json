@@ -1,10 +1,10 @@
-{
+﻿{
     "parent": "minecraft:block/block",
     "textures": {
-        "quartz":   "spectral:block/prism_stand_quartz",
-        "gold":     "spectral:block/prism_stand_gold",
+        "quartz":   "spectral:block/crystal_lens_quartz",
+        "gold":     "spectral:block/crystal_lens_gold",
         "lens":     "spectral:block/light_emitter_lens",
-        "particle": "spectral:block/prism_stand_quartz"
+        "particle": "spectral:block/crystal_lens_quartz"
     },
     "elements": [
         {
@@ -31,7 +31,7 @@
             }
         },
         {
-            "comment": "Lentille emettrice 6x6x4 — depasse vers le sud",
+            "comment": "Lentille emettrice 6x6x4 â€” depasse vers le sud",
             "from": [5, 5, 12], "to": [11, 11, 16],
             "faces": {
                 "south": {"texture": "#lens"},

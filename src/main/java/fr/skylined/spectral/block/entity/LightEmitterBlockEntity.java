@@ -96,9 +96,11 @@ public class LightEmitterBlockEntity extends BlockEntity implements IPhotonAccep
             if (!gem.isEmpty() && gem.has(ModComponents.WAVE_LENGTH.get())) {
                 initialWavelength = gem.get(ModComponents.WAVE_LENGTH.get());
             }
-            newSegments = computeBeam(serverLevel, pos, be.dirX, be.dirY, be.dirZ, initialWavelength);
+            List<BlockPos> intercepted = new ArrayList<>();
+            List<Float> interceptedWavelengths = new ArrayList<>();
+            newSegments = computeBeam(serverLevel, pos, be.dirX, be.dirY, be.dirZ, initialWavelength, intercepted, interceptedWavelengths);
             spawnBeamParticle(serverLevel, pos, be.dirX, be.dirY, be.dirZ, initialWavelength);
-            deliverBeamToTerminal(serverLevel, pos, be.dirX, be.dirY, be.dirZ, newSegments);
+            deliverBeamToMachines(serverLevel, intercepted, interceptedWavelengths);
         } else {
             newSegments = List.of();
         }
@@ -117,7 +119,8 @@ public class LightEmitterBlockEntity extends BlockEntity implements IPhotonAccep
      * Segment start/end values are distances from the emitter block center.
      */
     private static List<BeamSegment> computeBeam(ServerLevel level, BlockPos origin,
-            float dirX, float dirY, float dirZ, float initialWavelength) {
+            float dirX, float dirY, float dirZ, float initialWavelength,
+            List<BlockPos> intercepted, List<Float> interceptedWavelengths) {
         float len = (float) Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
         if (len < 1e-6f) return List.of();
         final float dx = dirX/len, dy = dirY/len, dz = dirZ/len;
@@ -158,7 +161,7 @@ public class LightEmitterBlockEntity extends BlockEntity implements IPhotonAccep
             BlockState checkState = level.getBlockState(checkPos);
 
             if (!checkState.isAir()) {
-                if (level.getBlockEntity(checkPos) instanceof PrismStandBlockEntity psbe) {
+                if (level.getBlockEntity(checkPos) instanceof CrystalLensBlockEntity psbe) {
                     segments.add(new BeamSegment(segStart, t, currentWavelength));
                     ItemStack stored = psbe.getStoredItem();
                     if (!stored.isEmpty() && stored.has(ModComponents.WAVE_LENGTH.get())) {
@@ -167,9 +170,11 @@ public class LightEmitterBlockEntity extends BlockEntity implements IPhotonAccep
                     } else {
                         return segments;
                     }
-                } else if (level.getBlockEntity(checkPos) instanceof CrystalFurnaceBlockEntity) {
-                    segments.add(new BeamSegment(segStart, t, currentWavelength));
-                    return segments;
+                } else if (level.getBlockEntity(checkPos) instanceof CrystalFurnaceBlockEntity
+                        || level.getBlockEntity(checkPos) instanceof LightBatteryBlockEntity) {
+                    intercepted.add(checkPos.immutable());
+                    interceptedWavelengths.add(currentWavelength);
+                    // beam continues through the machine with same wavelength
                 } else if (checkState.canOcclude()) {
                     segments.add(new BeamSegment(segStart, t, currentWavelength));
                     return segments;
@@ -190,25 +195,16 @@ public class LightEmitterBlockEntity extends BlockEntity implements IPhotonAccep
         return segments;
     }
 
-    private static void deliverBeamToTerminal(ServerLevel level, BlockPos origin,
-            float dx, float dy, float dz, List<BeamSegment> segments) {
-        if (segments.isEmpty()) return;
-        BeamSegment last = segments.get(segments.size() - 1);
-        float endT = last.end();
-        if (endT >= BEAM_MAX_RANGE - 0.01f) return;
-
-        // Push slightly past the boundary to land inside the terminal block
-        double eps = 0.02;
-        BlockPos terminalPos = new BlockPos(
-            (int) Math.floor(origin.getX() + 0.5 + dx * (endT + eps)),
-            (int) Math.floor(origin.getY() + 0.5 + dy * (endT + eps)),
-            (int) Math.floor(origin.getZ() + 0.5 + dz * (endT + eps))
-        );
-
-        if (level.getBlockEntity(terminalPos) instanceof CrystalFurnaceBlockEntity furnace) {
-            furnace.receiveBeam(last.wavelength());
-        } else if (level.getBlockEntity(terminalPos) instanceof LightBatteryBlockEntity battery) {
-            battery.receiveBeam(last.wavelength());
+    private static void deliverBeamToMachines(ServerLevel level,
+            List<BlockPos> positions, List<Float> wavelengths) {
+        for (int i = 0; i < positions.size(); i++) {
+            BlockEntity be = level.getBlockEntity(positions.get(i));
+            float wl = wavelengths.get(i);
+            if (be instanceof CrystalFurnaceBlockEntity furnace) {
+                furnace.receiveBeam(wl);
+            } else if (be instanceof LightBatteryBlockEntity battery) {
+                battery.receiveBeam(wl);
+            }
         }
     }
 

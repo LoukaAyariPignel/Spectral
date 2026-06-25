@@ -11,9 +11,9 @@ public class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Spectral.MOD_ID);
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PrismStandBlockEntity>> PRISM_STAND =
-            BLOCK_ENTITIES.register("prism_stand", () ->
-                    new BlockEntityType<>(PrismStandBlockEntity::new, ModBlocks.PRISM_STAND.get()));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CrystalLensBlockEntity>> CRYSTAL_LENS =
+            BLOCK_ENTITIES.register("crystal_lens", () ->
+                    new BlockEntityType<>(CrystalLensBlockEntity::new, ModBlocks.CRYSTAL_LENS.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SolarCollectorBlockEntity>> SOLAR_COLLECTOR =
             BLOCK_ENTITIES.register("solar_collector", () ->

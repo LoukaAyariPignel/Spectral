@@ -22,7 +22,7 @@ public class ModCreativeTabs {
                                 output.accept(ModItems.RAW_CRYSTAL_ORE.get());
                                 output.accept(ModItems.RAW_CRYSTAL.get());
                                 output.accept(ModItems.GEM.get());
-                                output.accept(ModItems.PRISM_STAND.get());
+                                output.accept(ModItems.CRYSTAL_LENS.get());
                                 output.accept(ModItems.SOLAR_COLLECTOR.get());
                                 output.accept(ModItems.LIGHT_EMITTER.get());
                                 output.accept(ModItems.CRYSTAL_FURNACE.get());

@@ -1,4 +1,4 @@
-{
+﻿{
     "type": "minecraft:block",
     "pools": [
         {
@@ -6,7 +6,7 @@
             "entries": [
                 {
                     "type": "minecraft:item",
-                    "name": "spectral:prism_stand"
+                    "name": "spectral:crystal_lens"
                 }
             ],
             "conditions": [
